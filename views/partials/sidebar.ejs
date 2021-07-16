@@ -1,0 +1,95 @@
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="./" class="brand-link">
+      <img src="/images/acequill.png" alt="ACE Quill" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">ACE Quill</span>
+    </a>
+
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <li class="nav-header">
+            <i class="fa fa-gears"></i>
+            SETTINGS
+          </li>
+          <li class="nav-item">
+            <a id="settings_stt_engines_treeview" href="./stt_engines" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>STT Engines</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a id="settings_tts_engines_treeview" href="./tts_engines" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>TTS Engines</p>
+            </a>
+          </li>
+          <li class="nav-item">
+              <a id="settings_translation_engines_treeview" href="./translation_engines" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Translation Engines</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a id="settings_scenario_treeview" href="./scenarios" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Scenarios</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a id="settings_iprelay_treeview" href="./iprelay" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Iprelay</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a id="settings_advanced_controls_treeview" href="./configs" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Configurations</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a id="settings_advanced_controls_treeview" href="./contacts" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Contacts</p>
+            </a>
+          </li>
+
+          <li class="nav-header">
+            <i class="fa fa-bar-chart"></i>
+            REPORTS
+          </li>
+
+          <li class="nav-item">
+            <a id="reports_cdr_treeview" href="./cdr" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>CDR</p></a>
+          </li>
+          <li class="nav-item">
+            <a id="reports_research_data_treeview" href="./research_data" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Research Data</p></a>
+          </li>
+          <% if (role == 'admin') { %>
+
+          <li class="nav-header">
+            <i class="fa fa-lock"></i>
+            ADMINISTRATOR
+          </li>
+          <li class="nav-item">
+            <a id="admin_groups_treeview" href="./groups" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Group Management</p></a>
+          </li>
+          <li class="nav-item">
+            <a id="admin_servertest_treeview" href="./servertest" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>Server Test</p></a>
+          </li>
+          <li class="nav-item">
+            <a id="admin_users_treeview" href="./users" class="nav-link">
+              <i class="fa fa-circle-o nav-icon"></i><p>User Management</p></a>
+          </li>
+
+          <% } %>
+
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>
+

@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+
+/*
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+*/
+
+/**
+ * Module dependencies.
+ */
+// const debug = require('debug')('init:server');
+const https = require('https');
+// const http = require('http');
+const fs = require('fs');
+const nconf = require('nconf');
+let io = require('socket.io');
+const log4js = require('log4js');
+
+const winston = require('winston');
+const logger = require('../utils/logger')
+const error = winston.loggers.get('error');
+const info = winston.loggers.get('info');
+const debug = winston.loggers.get('debug');
+
+
+// Get the name of the config file from the command line (optional)
+nconf.argv().env();
+const cfile = 'configs/acequill.json';
+
+// Validate the incoming JSON config file
+try {
+  const content = fs.readFileSync(cfile, 'utf8');
+  const myjson = JSON.parse(content);
+  if (myjson) {
+    info.info('Valid JSON config file');
+  }
+} catch (ex) {
+  error.error(`Error in ${cfile}`);
+  error.error('Exiting...');
+  error.error(ex);
+  process.exit(1);
+}
+
+nconf.file({
+  file: cfile,
+});
+
+log4js.loadAppender('file');
+log4js.configure({
+  appenders: [{
+    type: 'dateFile',
+    category: 'admin',
+    filename: 'logs/admin.log',
+    pattern: '-yyyy-MM-dd',
+    alwaysIncludePattern: false,
+    maxLogSize: 20480,
+    backups: 10,
+  }, {
+    type: 'dateFile',
+    category: 'caller',
+    filename: 'logs/caller.log',
+    pattern: '-yyyy-MM-dd',
+    alwaysIncludePattern: false,
+    maxLogSize: 20480,
+    backups: 10,
+  }, {
+    type: 'dateFile',
+    category: 'asterisk',
+    filename: 'logs/asterisk.log',
+    pattern: '-yyyy-MM-dd',
+    alwaysIncludePattern: false,
+    maxLogSize: 20480,
+    backups: 10,
+  }],
+});
+
+/**
+ * Get port from environment and store in Express.
+ */
+const decode = require('../utils/decode');
+const app = require('../app');
+
+const port = decode(nconf.get('port'));
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+* */
+info.info('Listening for HTTPS connections');
+const credentials = {
+  key: fs.readFileSync(decode(nconf.get('ssl:key'))),
+  cert: fs.readFileSync(decode(nconf.get('ssl:cert'))),
+};
+const server = https.createServer(credentials, app);
+/*
+console.log("Listening for HTTP connections");
+var server = http.createServer(app);
+*/
+
+io = require('socket.io').listen(server);
+require('../sockets/admin')(io.of('/admin'), nconf);
+require('../asterisk');
+
+if (decode(nconf.get('sttService')) === 'enabled') {
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = `${process.cwd()}/configs/google/google.json`;
+  debug.debug(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+} else {
+  info.info(`STT Service is currently DISABLED.
+  This allows the ACE Quill web server to be run without including the STT node_modules.`);
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof port === 'string'
+    ? `Pipe ${port}`
+    : `Port ${port}`;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      error.error(`${bind} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      error.error(`${bind} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string'
+    ? `pipe ${addr}`
+    : `port ${addr.port}`;
+  info.info(`Listening on port: ${bind}`);
+}
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);

@@ -1,0 +1,90 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="hold-transition register-page">
+
+    <div class="register-box">
+        <div class="register-logo">
+            <b>ACE Quill</b>
+        </div>
+
+        <div class="register-box-body">
+            <p class="login-box-msg">Create the admin account</p>
+
+            <form class="form test-form toggle-disabled has-validation-callback disabled-without-errors" id="addUserForm">
+                <div class="form-group">
+                    <label for="inputUsername" class="control-label">Username</label>
+                    <input type="text" class="form-control" id="inputUsername" data-minlength="4" data-maxlength="15" required data-validation="length"
+                        data-validation-length="4-15" placeholder="admin username">
+
+                </div>
+                <div class="form-group">
+
+                    <label for="inputPassword" class="control-label">Password</label>
+                    <input type="password" class="form-control" id="inputPassword" data-minlength="8" data-maxlength="64" placeholder="password" data-validation="custom"
+                        data-validation-regexp="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,64}$" required data-validation-error-msg="You did not enter a password">
+                    <p class="help-block">Password must be 8 to 64 characters and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.</p>
+                </div>
+                <div class="form-group">
+                    <label for="inputFirstname" class="control-label">First Name</label>
+                    <input type="text" class="form-control" id="inputFirstname" data-maxlength="25" placeholder="First name" required data-validation="length"
+                        data-validation-length="max25">
+
+                </div>
+                <div class="form-group">
+                    <label for="inputLastname" class="control-label">Last Name</label>
+                    <input type="text" class="form-control" id="inputLastname" data-maxlength="25" placeholder="Last name" required data-validation="length"
+                        data-validation-length="max25">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id='loadConfig'>Create Admin Account</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.form-box -->
+    </div>
+    <script>
+        $("#addUserForm").submit(function (event) {
+            event.preventDefault();
+            $.post("./CreateAdmin", {
+                    "username": $('#inputUsername').val(),
+                    "password": $('#inputPassword').val(),
+                    "firstname": $('#inputFirstname').val(),
+                    "lastname": $('#inputLastname').val()
+                },
+                function (data, status) {
+                    console.log("Saved!!!!")
+                    location.reload();
+                });
+
+        });
+
+        $.validate({
+            modules: 'toggleDisabled',
+            disabledFormFilter: 'form.toggle-disabled',
+            showErrorDialogs: false
+        });
+    </script>
+
+</body>
+
+</html>

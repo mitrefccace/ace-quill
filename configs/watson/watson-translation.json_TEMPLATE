@@ -1,0 +1,5 @@
+{
+  "auth_type": "bearer_token or iam",
+  "apikey": "<iam api key>",
+  "url": "https://gateway.watsonplatform.net/language-translator/api"
+}

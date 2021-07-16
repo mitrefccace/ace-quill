@@ -1,0 +1,438 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+
+        <% include ..//partials/sidebar %>
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Server Test</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-lock"></i>&nbsp;Administrator</li>
+                                <li class="breadcrumb-item active">Server Test</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Speech to Text Engines</h3>
+                                <div class="card-tools pull-right">
+                                    <button id="test_stt_btn" type="button"
+                                        class="btn btn-block btn-primary btn-xs">Test STT Engines</button>
+                                </div>
+                            </div>
+                            <div class="card-body no-padding">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 70px">Engine</th>
+                                            <th>Transcipts</th>
+                                            <th style="width: 40px">Results</th>
+                                        </tr>
+                                        <tr>
+                                            <td>Azure</td>
+                                            <td id='azure_transcripts'></td>
+                                            <td id='azure_results'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Azure Spanish</td>
+                                            <td id='azureSpanish_transcripts'>
+                                            </td>
+                                            <td id='azureSpanish_results'>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amazon</td>
+                                            <td id='amazon_transcripts'></td>
+                                            <td id='amazon_results'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amazon Spanish</td>
+                                            <td id='amazonSpanish_transcripts'></td>
+                                            <td id='amazonSpanish_results'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Google</td>
+                                            <td id='google_transcripts'>
+                                            </td>
+                                            <td id='google_results'>
+                                            </td>
+                                        </tr>
+                     <tr>
+
+                                            <td>Google Spanish</td>
+                                            <td id='googleSpanish_transcripts'>
+                                            </td>
+                                            <td id='googleSpanish_results'>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Watson</td>
+                                            <td id='watson_transcripts'>
+                                            </td>
+                                            <td id='watson_results'>
+                                            </td>
+                                        </tr>
+                    <tr>
+                                            <td>Watson Spanish</td>
+                                            <td id='watsonSpanish_transcripts'>
+                                            </td>
+                                            <td id='watsonSpanish_results'>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <audio id="player" controls="controls" controlsList="nodownload" style="width: 100%;">
+                                    <source id="wav_src" src="/sounds/rain_in_spain.wav" type="audio/wav" /> Your
+                                    browser does not support audio.
+                                </audio>
+                                <audio id="player" controls="controls" controlsList="nodownload" style="width: 100%;">
+                                    <source id="wav_src" src="/sounds/rain_in_spain_spanish.wav" type="audio/wav" /> Your
+                                    browser does not support audio.
+                                </audio>
+                            </div>
+                            <!-- /.card-footer-->
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Server Resources</h3>
+                                <div class="card-tools pull-right">
+                                    <button id="test_resources_btn" type="button"
+                                        class="btn btn-block btn-primary btn-xs">Test Resources</button>
+                                </div>
+                            </div>
+                            <div class="card-body no-padding">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th>Resource</th>
+                                            <th style="width: 40px">Results</th>
+                                        </tr>
+                                        <tr>
+                                            <td>Asterisk</td>
+                                            <td id='asterisk_results'>
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>MySQL</td>
+                                            <td id='mysql_results'>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                            </div>
+                            <!-- /.card-footer-->
+                        </div>
+                    </div>
+                                        <!-- translate-->
+                                        <div class="col-lg-8">
+                                            <div class="card">
+                                                <div class="card-header with-border">
+                                                    <h3 class="card-title">Translation Engines</h3>
+                                                    <div class="card-tools pull-right">
+                                                        <button id="test_translation_btn" type="button"
+                                                            class="btn btn-block btn-primary btn-xs">Test Translation Engines</button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body no-padding">
+                                                    <table class="table">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th style="width: 70px">Engine</th>
+                                                                <th>Translations</th>
+                                                                <th style="width: 40px">Results</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Azure</td>
+                                                                <td id='azure_translation'></td>
+                                                                <td id='azureT_results'></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Amazon</td>
+                                                                <td id='amazon_translation'></td>
+                                                                <td id='amazonT_results'></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Google</td>
+                                                                <td id='google_translation'></td>
+                                                                <td id='googleT_results'></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Watson</td>
+                                                                <td id='watson_translation'></td>
+                                                                <td id='watsonT_results'></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+    <script src='/socket.io/socket.io.js'></script>
+    <script type="text/javascript">
+        $('#admin_servertest_treeview').addClass('active');
+
+        var azureTimer, azureSpanishTimer, amazonTimer, amazonSpanishTimer, googleTimer
+        , watsonTimer, asteriskTimer, mysqlTimer, azureTTimer, amazonTTimer, googleTTimer, watsonTTimer;
+        var socket = io('/admin', {
+            path:'/socket.io'
+        });
+        socket.on('test-stt-engines-results', function (data) {
+            switch (data.engine) {
+                case 'azure':
+                    clearTimeout(azureTimer);
+                    $('#azure_transcripts').html(data.transcript);
+                    $('#azure_results').html(createTestResult('pass'));
+                    break;
+                case 'azureSpanish':
+                    clearTimeout(azureSpanishTimer);
+                    $('#azureSpanish_transcripts').html(data.transcript);
+                    $('#azureSpanish_results').html(createTestResult('pass'));
+                    break;
+                case 'amazon':
+                    clearTimeout(amazonTimer);
+                    $('#amazon_transcripts').html(data.transcript);
+                    $('#amazon_results').html(createTestResult('pass'));
+                    break;
+                case 'amazonSpanish':
+                    clearTimeout(amazonTimer);
+                    $('#amazonSpanish_transcripts').html(data.transcript);
+                    $('#amazonSpanish_results').html(createTestResult('pass'));
+                    break;
+                case 'google':
+                    clearTimeout(googleTimer);
+                    $('#google_transcripts').html(data.transcript);
+                    $('#google_results').html(createTestResult('pass'));
+                    break;
+                case 'googleSpanish':
+                    clearTimeout(googleSpanishTimer);
+                    $('#googleSpanish_transcripts').html(data.transcript);
+                    $('#googleSpanish_results').html(createTestResult('pass'));
+                   console.log("google Spanish" + data.transcript);
+                    break;
+                case 'watson':
+                    clearTimeout(watsonTimer);
+                    $('#watson_transcripts').html(data.transcript);
+                    $('#watson_results').html(createTestResult('pass'));
+                    break;
+                case 'watsonSpanish':
+                    clearTimeout(watsonSpanishTimer);
+                    $('#watsonSpanish_transcripts').html(data.transcript);
+                    $('#watsonSpanish_results').html(createTestResult('pass'));
+                    console.log("watson Spanish" + data.transcript);
+                    break;
+            }
+        }).on('test-translation-engine-results', function (data) {
+            switch (data.engine) {
+                case 'azure':
+                    clearTimeout(azureTTimer);
+                    $('#azure_translation').html(data.TranslatedText);
+                    $('#azureT_results').html(createTestResult('pass'));
+                    break;
+                case 'amazon':
+                    clearTimeout(amazonTTimer);
+                    $('#amazon_translation').html(data.TranslatedText);
+                    $('#amazonT_results').html(createTestResult('pass'));
+                    break;
+                case 'google':
+                    clearTimeout(googleTTimer);
+                    $('#google_translation').html(data.TranslatedText);
+                    $('#googleT_results').html(createTestResult('pass'));
+                    break;
+                case 'watson':
+                    clearTimeout(watsonTTimer);
+                    $('#watson_translation').html(data.TranslatedText);
+                    $('#watsonT_results').html(createTestResult('pass'));
+                    break;
+            }
+        }).on('test-resources-asterisk-results', function (result) {
+            clearTimeout(asteriskTimer);
+            result = (result) ? result : 'fail';
+            $('#asterisk_results').html(createTestResult(result))
+        }).on('test-resources-mysql-results', function (result) {
+            clearTimeout(mysqlTimer);
+            result = (result) ? result : 'fail';
+            $('#mysql_results').html(createTestResult(result));
+        });
+
+        $('#test_stt_btn').on('click', function (e) {
+            e.preventDefault();
+            clearSTTTests();
+            startEngineFailTimers();
+            socket.emit('test-stt-engines', {});
+        });
+
+        $('#test_translation_btn').on('click', function (e) {
+            e.preventDefault();
+            clearTranslationTests();
+            startTranslationFailTimers();
+            socket.emit('test-translation-engines', {});
+        });
+
+        function clearSTTTests() {
+            $('#azure_transcripts').html('&nbsp;');
+            $('#azureSpanish_transcripts').html('&nbsp;');
+            $('#amazonSpanish_transcripts').html('&nbsp;');
+            $('#amazon_transcripts').html('&nbsp;');
+            $('#google_transcripts').html('&nbsp;');
+            $('#watson_transcripts').html('&nbsp;');
+            $('#googleSpanish_transcripts').html('&nbsp;');
+            $('#watsonSpanish_transcripts').html('&nbsp;');
+            $('#azure_results').html(createTestResult());
+            $('#azureSpanish_results').html(createTestResult());
+            $('#amazonSpanish_results').html(createTestResult());
+            $('#amazon_results').html(createTestResult());
+            $('#google_results').html(createTestResult());
+            $('#watson_results').html(createTestResult());
+            $('#googleSpanish_results').html(createTestResult());
+            $('#watsonSpanish_results').html(createTestResult());
+        }
+
+        function clearTranslationTests() {
+            $('#azure_translation').html('&nbsp;');
+            $('#azureT_results').html(createTestResult());
+            $('#amazon_translation').html('&nbsp;');
+            $('#amazonT_results').html(createTestResult());
+            $('#google_translation').html('&nbsp;');
+            $('#googleT_results').html(createTestResult());
+            $('#watson_translation').html('&nbsp;');
+            $('#watsonT_results').html(createTestResult());
+        }
+
+        function startEngineFailTimers() {
+            azureTimer = setTimeout(function () {
+                $('#azure_results').html(createTestResult('fail'));
+            }, 10000);
+            azureSpanishTimer = setTimeout(function () {
+                $('#azureSpanish_results').html(createTestResult('fail'));
+            }, 10000);
+            amazonTimer = setTimeout(function () {
+                $('#amazon_results').html(createTestResult('fail'));
+            }, 10000);
+            amazonSpanishTimer = setTimeout(function () {
+                $('#amazonSpanish_results').html(createTestResult('fail'));
+            }, 10000);
+            googleTimer = setTimeout(function () {
+                $('#google_results').html(createTestResult('fail'));
+            }, 10000);
+            watsonTimer = setTimeout(function () {
+                $('#watson_results').html(createTestResult('fail'));
+            }, 10000);
+            googleSpanishTimer = setTimeout(function () {
+                $('#googleSpanish_results').html(createTestResult('fail'));
+            }, 10000);
+            watsonSpanishTimer = setTimeout(function () {
+                $('#watsonSpanish_results').html(createTestResult('fail'));
+            }, 10000);
+        }
+
+        function startTranslationFailTimers() {
+            azureTTimer = setTimeout(function () {
+                $('#azureT_results').html(createTestResult('fail'));
+            }, 10000);
+            amazonTTimer = setTimeout(function () {
+                $('#amazonT_results').html(createTestResult('fail'));
+            }, 10000);
+            googleTTimer = setTimeout(function () {
+                $('#googleT_results').html(createTestResult('fail'));
+            }, 10000);
+            watsonTTimer = setTimeout(function () {
+                $('#watsonT_results').html(createTestResult('fail'));
+            }, 10000);
+        }
+
+        $('#test_resources_btn').on('click', function (e) {
+            e.preventDefault();
+            clearResourceTests();
+            startResourceFailTimers()
+            socket.emit('test-resources', {});
+        });
+
+        function clearResourceTests() {
+            $('#asterisk_results').html(createTestResult());
+            $('#mysql_results').html(createTestResult());
+        }
+
+        function startResourceFailTimers() {
+            asteriskTimer = setTimeout(function () {
+                $('#asterisk_results').html(createTestResult('fail'));
+            }, 4000);
+            mysqlTimer = setTimeout(function () {
+                $('#mysql_results').html(createTestResult('fail'));
+            }, 4000);
+        }
+
+        function createTestResult(result) {
+            if (result == 'fail') {
+                return '<span class="badge bg-red">Fail</span>'
+            } else if (result == 'pass') {
+                return '<span class="badge bg-green">Pass</span>'
+            } else {
+                return '<span class="badge bg-gray">Pending</span>'
+            }
+        }
+    </script>
+</body>
+
+</html>
+
+
+
+

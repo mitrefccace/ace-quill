@@ -1,0 +1,985 @@
+a {
+  color: #0068D2;
+  cursor: pointer;
+}
+
+a:link,
+a:visited {
+  text-decoration: none;
+  color: #0068D2;
+}
+
+a:hover,
+a:active {
+  text-decoration: underline;
+  color: #0068D2;
+}
+
+#contacts-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#contacts-table,
+#contacts-table th,
+#contacts-table td {
+  font-family: "Roboto Medium";
+  padding: 8px 16px;
+  text-align: left;
+  border: 0px solid #FFFFFF;
+}
+
+#contacts-table th {
+  font-weight: bold;
+  font-size: 14px;
+  color: #29344B;
+}
+
+#contacts-table td {
+  color: #000;
+}
+
+#contacts-table tr:nth-child(2n) {
+  background: #FFFFFF;
+}
+
+#contacts-form {
+  padding: 10px;
+}
+
+.text input,
+.button input {
+  padding: 5px;
+  margin: 0;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+#contacts-form .item {
+  margin: 3px 0;
+}
+
+#contacts-form label,
+#contacts-form .field {
+  display: inline-block;
+  color: #0C0B07;
+}
+
+#contacts-form label {
+  width: 110px;
+  font-weight: bold;
+  text-align: right;
+  color: #666;
+}
+
+#contacts-form .text input {
+  width: 176px;
+  padding: 3px;
+}
+
+#contacts-form .button {
+  display: inline-block;
+}
+
+#contacts-form .button-wrapper {
+  padding-left: 113px;
+}
+
+.button input {
+  padding: 4px 8px;
+  color: #343434;
+  background-color: #fdfdfd;
+  background: -moz-linear-gradient(#fdfdfd, #e1e1e1);
+  background: -webkit-gradient(linear, 0 0, 0 100%, from(#fdfdfd), to(#e1e1e1));
+}
+
+.button-default input {
+  font-weight: bold;
+  color: #fff;
+  background-color: #7ca0c7;
+  background: -moz-linear-gradient(#acc6e1, #7ca0c7);
+  background: -webkit-gradient(linear, 0 0, 0 100%, from(#acc6e1), to(#7ca0c7));
+  border-color: #5b80b2;
+}
+
+.icon_favorite {
+  width: 30px;
+  height: 30px;
+}
+
+.icon_contact {
+  width: 50px;
+  height: 50px;
+}
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+}
+
+body {
+  -webkit-touch-callout: none;
+  /* prevent callout to copy image, etc when tap to hold */
+  -webkit-text-size-adjust: none;
+  /* prevent webkit from resizing text to fit */
+  -webkit-user-select: none;
+  /* prevent copy paste, to allow, change 'none' to 'text' */
+  background-attachment: fixed;
+  font-size: 12px;
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+}
+
+/* Portrait layout (default) */
+
+.app {
+  background: url("../img/logo.png") no-repeat center top;
+  /* 170px x 200px */
+  position: absolute;
+  /* position in the center of the screen */
+  left: 50%;
+  top: 50%;
+  height: 50px;
+  /* text area height */
+  width: 225px;
+  /* text area width */
+  text-align: center;
+  padding: 180px 0px 0px 0px;
+  /* image height is 200px (bottom 20px are overlapped with text) */
+  margin: -115px 0px 0px -112px;
+  /* offset vertical: half of image height and text area height */
+  /* offset horizontal: half of text area width */
+}
+
+/* Landscape layout (with min-width) */
+
+@media screen and (min-aspect-ratio: 1/1) and (min-width: 400px) {
+  .app {
+    background-position: left center;
+    padding: 75px 0px 75px 170px;
+    /* padding-top + padding-bottom + text area = image height */
+    margin: -90px 0px 0px -198px;
+    /* offset vertical: half of image height */
+    /* offset horizontal: half of image width and text area width */
+  }
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: normal;
+  margin: 0px;
+  overflow: visible;
+  padding: 0px;
+  text-align: center;
+}
+
+.event {
+  border-radius: 4px;
+  -webkit-border-radius: 4px;
+  color: #FFFFFF;
+  font-size: 12px;
+  margin: 0px 30px;
+  padding: 2px 0px;
+}
+
+.event.listening {
+  background-color: #333333;
+  display: block;
+}
+
+.event.received {
+  background-color: #4B946A;
+  display: none;
+}
+
+@keyframes fade {
+  from {
+    opacity: 1.0;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1.0;
+  }
+}
+
+@-webkit-keyframes fade {
+  from {
+    opacity: 1.0;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1.0;
+  }
+}
+
+.blink {
+  animation: fade 3000ms infinite;
+  -webkit-animation: fade 3000ms infinite;
+}
+a {
+  color: #0068D2;
+  cursor: pointer;
+}
+
+a:link,
+a:visited {
+  text-decoration: none;
+  color: #0068D2;
+}
+
+a:hover,
+a:active {
+  text-decoration: underline;
+  color: #0068D2;
+}
+
+#history-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#history-table,
+#history-table th,
+#history-table td {
+  padding: 8px 0px;
+  text-align: left;
+  border: 0px solid #FFFFFF;
+}
+
+#history-table th {
+  font-weight: bold;
+  font-size: 14px;
+  color: #29344B;
+}
+
+#history-table td {
+  color: #000;
+}
+
+#history-table tr:nth-child(2n) {
+  background: #FFFFFF;
+}
+
+#history-form {
+  padding: 10px;
+}
+
+.text input,
+.button input {
+  padding: 5px;
+  margin: 0;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+#history-form .item {
+  margin: 3px 0;
+}
+
+#history-form label,
+#history-form .field {
+  display: inline-block;
+  color: #0C0B07;
+}
+
+#history-form label {
+  width: 110px;
+  font-weight: bold;
+  text-align: right;
+  color: #666;
+}
+
+#history-form .text input {
+  width: 176px;
+  padding: 3px;
+}
+
+#history-form .button {
+  display: inline-block;
+}
+
+#history-form .button-wrapper {
+  padding-left: 113px;
+}
+
+.button input {
+  padding: 4px 8px;
+  color: #343434;
+  background-color: #fdfdfd;
+  background: -moz-linear-gradient(#fdfdfd, #e1e1e1);
+  background: -webkit-gradient(linear, 0 0, 0 100%, from(#fdfdfd), to(#e1e1e1));
+}
+
+.button-default input {
+  font-weight: bold;
+  color: #fff;
+  background-color: #7ca0c7;
+  background: -moz-linear-gradient(#acc6e1, #7ca0c7);
+  background: -webkit-gradient(linear, 0 0, 0 100%, from(#acc6e1), to(#7ca0c7));
+  border-color: #5b80b2;
+}
+
+#histTranscriptBox {
+  overflow-y: scroll;
+  height: 300px;
+}
+
+.profileImage {
+  height: 150px;
+}
+p {
+  margin: 0;
+  padding: 0 0 5px 0;
+  line-height: 20px;
+}
+
+.phone {
+  width: 300px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.span4 {
+  width: 85px;
+  float: left;
+  margin: 20px 10px 10px 5px;
+}
+
+.smaller-keyboard {
+  margin: 0px 0px 28.5px 15px;
+  height: 20px;
+}
+
+.smaller-keyboard > .big {
+  width: 20px;
+}
+
+.smaller-keyboard > .small {
+  width: 15px;
+  margin-top: 7px;
+}
+
+.smaller-keyboard > .txt {
+  margin-left: 15px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+/* turn into an id*/
+
+.num-pad {
+  margin: auto;
+}
+
+.keypad-button {
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+}
+
+.txt {
+  text-align: center;
+  margin-top: 5px;
+  font-family: 'Roboto Medium';
+  line-height: px;
+  color: #333;
+}
+
+.big {
+  font-size: 30px;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.active {
+  color: #3498db;
+}
+
+#button_menu_panel {
+  margin-top: 70px;
+}
+
+.button_menu {
+  background: 0 0;
+  border: none;
+  color: #000;
+  padding: 0px 20px;
+  height: 40px;
+}
+
+.button_menu_selected {
+  background-color: #b3ffff;
+  border: none;
+  color: #000;
+  padding: 0px 20px;
+  height: 40px;
+}
+
+/*
+ * Synchronized styles for the transcript box
+ */
+
+.transcription_on {
+  background-color: #32CD32;
+  display: block;
+}
+
+.transcription_off {
+  background-color: #ff1a1a;
+}
+
+.transcript-box_big {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 5px;
+  text-align: left;
+  overflow-y: scroll;
+  height: 420px;
+}
+
+.transcript-box_small {
+  height: 225px;
+}
+
+.message-whitespace {
+  width: 100%;
+  padding-top: 20px;
+}
+
+.message-text {
+  border-radius: 5px;
+  display: inline-block;
+  padding: 10px 18px;
+  position: relative;
+  vertical-align: top;
+  color: black;
+  width: 90%;
+}
+
+.message-text::before {
+  content: "\00a0";
+  display: block;
+  height: 16px;
+  position: absolute;
+  transform: rotate(29deg) skew(-35deg);
+  -moz-transform: rotate(29deg) skew(-35deg);
+  -ms-transform: rotate(29deg) skew(-35deg);
+  -o-transform: rotate(29deg) skew(-35deg);
+  -webkit-transform: rotate(29deg) skew(-35deg);
+  width: 5%;
+}
+
+.message-text-me {
+  border-radius: 5px;
+  display: inline-block;
+  padding: 10px 18px;
+  position: relative;
+  vertical-align: top;
+  color: black;
+  width: 90%;
+}
+
+.message-text-me::after {
+  content: "\00a0";
+  display: block;
+  height: 25px;
+  top: 10px;
+  left: 94%;
+  position: absolute;
+  transform: rotate(29deg) skew(-35deg);
+  -moz-transform: rotate(-29deg) skew(35deg);
+  -ms-transform: rotate(-29deg) skew(35deg);
+  -o-transform: rotate(-29deg) skew(35deg);
+  -webkit-transform: rotate(-29deg) skew(35deg);
+  width: 5%;
+  background-color: #008ae6;
+}
+
+.message-final {
+  background-color: #b3ffff;
+}
+
+.message-final::before {
+  background-color: #b3ffff;
+  left: -3px;
+}
+
+.message-interim {
+  background-color: #b3ffff;
+}
+
+.message-interim::before {
+  background-color: #b3ffff;
+  left: -3px;
+}
+
+.you {
+  float: left;
+  margin: 5px 45px 5px 25px;
+}
+
+.me {
+  background-color: #008ae6;
+  float: right;
+  margin: 5px 20px 5px 45px;
+}
+
+.me::before {
+  background-color: #008ae6;
+  right: -9px;
+}
+
+div#call-controls input {
+  font-family: "Roboto Medium";
+  font-style: oblique;
+  width: 100%;
+  height: 2em;
+  padding: .5em;
+  display: block;
+  font-size: 22px;
+}
+
+div#call-controls button#button-hangup {
+  display: none;
+}
+
+.button-icon {
+  width: 40px;
+}
+
+#button-call {
+  border-radius: 50%;
+  height: 50px;
+  background-color: #32CD32;
+  border: none;
+  margin-top: 10px;
+}
+
+.bottomspace {
+  margin-bottom: 10px;
+}
+
+.input-group {
+  margin-top: 20px;
+}
+
+.hangup-state {
+  background-color: #ff1a1a !important;
+  -webkit-transform: rotate(138deg);
+  transform: rotate(138deg);
+}
+
+#progress-message {
+  text-align: center;
+  font-size: 25px;
+  font-family: "Roboto Medium";
+  font-style: oblique;
+}
+.form-login {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+
+.form-login .form-login-heading {
+  margin-bottom: 10px;
+}
+
+.form-login .form-control {
+  position: relative;
+  font-size: 16px;
+  height: auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.form-login .form-control:focus {
+  z-index: 2;
+}
+
+.form-login input[type="text"] {
+  margin-bottom: -1px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.form-login input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.account-wall {
+  margin-top: 20px;
+  padding: 40px 0px 20px 0px;
+  background-color: #f7f7f7;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+}
+
+.login-title {
+  color: #555;
+  font-size: 18px;
+  font-weight: 400;
+  display: block;
+}
+
+.message {
+  margin: .5em 0;
+  display: block;
+  color: #dd4b39;
+  line-height: 17px;
+}
+
+.dvc-img {
+  width: 290px;
+  margin: 0 auto 10px;
+  display: block;
+  border-radius: 25px;
+}
+
+.need-help {
+  margin-top: 10px;
+}
+.container-fluid {
+  font-family: "Roboto Medium";
+}
+
+.app-body {
+  background-color: #FFFFFF;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  background-size: 100%;
+}
+
+.bg-grey {
+  background-color: #f6f6f6;
+}
+
+.navbar {
+  margin-bottom: 0;
+  background-color: #303F9F;
+  z-index: 9999;
+  border: 0;
+  font-size: 20px;
+  font-family: "Roboto Medium";
+  line-height: 1.42857143;
+  letter-spacing: 4px;
+  border-radius: 0;
+  display: inline-block;
+}
+
+.navbar li a,
+.navbar .navbar-brand,
+.navbar header {
+  color: #fff !important;
+}
+
+.navbar-nav li a:hover,
+.navbar-nav li.active a {
+  color: #fff !important;
+  background-color: #303F9F !important;
+}
+
+.navbar-default .navbar-toggle {
+  border-color: transparent;
+  color: #fff !important;
+}
+
+.navbar-brand {
+  font-size: 20px;
+}
+
+#settingButtonImg {
+  width: 35px;
+  margin-top: -7px;
+}
+
+/************************************/
+
+#client-name {
+  text-align: left;
+  margin-bottom: 1em;
+  font-family: "Roboto Medium";
+  font-size: 1.25em;
+  color: #777776;
+}
+
+button {
+  height: 2.5em;
+  font-family: "Roboto Medium";
+  font-size: .8em;
+  font-weight: lighter;
+  outline: 0;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+button:active {
+  position: relative;
+  top: 1px;
+}
+
+/****************************************/
+
+/* Style the tab */
+
+div.tab {
+  text-align: center;
+  padding: 20px 0px 10px 0px;
+  overflow: hidden;
+  background-color: #3F51B5;
+}
+
+/* Style the buttons inside the tab */
+
+div.tab button {
+  margin-top: 40px;
+  background-color: #3F51B5;
+  color: #FFFFFF;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+
+div.tab button:hover {
+  background-color: #4d5db5;
+}
+
+/* Create an active/current tablink class */
+
+div.tab button.active {
+  background-color: #4d5db5;
+}
+
+.callButtonNav {
+  float: right;
+  border-radius: 50%;
+  height: 50px;
+  background-color: #FF6347;
+  border: none;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+}
+
+.callButtonImg {
+  width: 40px;
+}
+
+.tablinks {
+  font-size: 16px;
+  font-family: "Roboto Medium";
+}
+
+.body-size-font {
+  font-size: 16px;
+  font-family: "Roboto Regular";
+}
+
+.button-size-font {
+  font-size: 14px;
+  font-family: "Roboto Medium";
+}
+
+.header-size-font {
+  font-size: 20px;
+  font-family: "Roboto Regular";
+}
+
+.header-spacing {
+  text-align: center;
+  margin: 10px;
+}
+
+.form-label {
+  display: block;
+  margin: 5px;
+}
+
+.form-label > span {
+  display: inline-block;
+}
+
+.form-label > input[type=text] {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.popup {
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  /* Stay in place */
+  z-index: 1;
+  /* Sit on top */
+  padding-top: 100px;
+  /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background-color: #000000;
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
+}
+
+.popup-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+a:link {
+  color: #000;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #000;
+}
+
+a:hover {
+  color: #33F;
+}
+
+.button {
+  background: -webkit-linear-gradient(top, #008dfd 0, #0370ea 100%);
+  border: 1px solid #076bd2;
+  border-radius: 3px;
+  color: #fff;
+  display: none;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1.3;
+  padding: 8px 25px;
+  text-align: center;
+  text-shadow: 1px 1px 1px #076bd2;
+  letter-spacing: normal;
+  font-family: "Roboto Medium";
+}
+
+.center {
+  text-align: center;
+}
+
+.final {
+  color: black;
+  padding-right: 3px;
+}
+
+.interim {
+  color: gray;
+}
+
+.info {
+  font-size: 14px;
+  text-align: center;
+  color: #777;
+  display: none;
+}
+
+.sidebyside {
+  display: inline-block;
+  width: 45%;
+  min-height: 40px;
+  text-align: left;
+  vertical-align: top;
+}
+
+#headline {
+  font-size: 40px;
+  font-weight: 300;
+}
+
+#duplicate_text {
+  font-size: 20px;
+  font-weight: 300;
+}
+
+#info {
+  font-size: 20px;
+  text-align: center;
+  color: #777;
+  visibility: hidden;
+}
+
+#power_by {
+  font-size: 10px;
+  text-align: center;
+}
+
+#results {
+  font-size: 14px;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  padding: 15px;
+  text-align: left;
+  min-height: 150px;
+}
+
+#start_button {
+  border: 0;
+  background-color: transparent;
+  padding: 0;
+}
+
+div.errmsg {
+  display: inline;
+  font-size: 14px;
+  font-weight: bold;
+  color: red;
+}

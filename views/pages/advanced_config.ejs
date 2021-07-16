@@ -1,0 +1,603 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <% include ..//partials/head %>
+</head>
+
+
+
+<body  class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+  <div class="wrapper">
+
+    <!-- Header -->
+    <% include ..//partials/header %>
+
+    <!-- Left side column. contains the logo and sidebar -->
+    <% include ..//partials/sidebar %>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+      <!-- Content Header (Page header) -->
+      <section class="content-header">
+          <div class="container-fluid">
+            <div class="row mb-2">
+              <div class="col-sm-6">
+                <h1>Configurations</h1>
+              </div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                  <li class="breadcrumb-item"><i class="fa fa-gears"></i>&nbsp;Settings</li>
+                  <li class="breadcrumb-item active">Configurations</li>
+                </ol>
+              </div>
+            </div>
+          </div><!-- /.container-fluid -->
+        </section>
+
+      <!-- Main content -->
+      <section class="content">
+        <div class="card">
+            <div class="card-header with-border">
+                <div class="row"><h3 class="card-title font-weight-bold">Extension</h3></div>
+                    <div class="row">
+                        <div class="col-md-auto">
+                            <select class="form-control" id="curExtension" onchange="testThisFunc()">
+                                <% extensions.forEach(function(s) {  %>
+                                    <!-- <tr id="scenario_<%= s.extension %>"> -->
+                                        <option>
+                                            <%= s.extension %>
+                                        </option>
+                                    <!-- </tr> -->
+                                <% }) %>
+                            </select>
+                        </div>
+                </div>
+            </div>
+            <div class="card-header with-border">
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Speech to Text</h3>
+                </div>
+                <div class="row">
+                    <div class="w-25">
+                        <h6 class="col-md-auto">Engine</h6>
+                        <div class="col-md-auto">
+                        <select class="form-control" id="stt_engine">
+                            <option value='AZURE' selected="selected">A - Microsoft Azure</option>
+                            <option value='GOOGLE'>G - Google</option>
+                            <option value='WATSON'>W - IBM Watson</option>
+                            <option value='AMAZON'>AWS - Amazon</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <h6 class="col-md-auto">Callee Language</h6>
+                        <div class="col-md-auto">
+                            <select class="form-control" id="source_language">
+                            <option value='en' selected="selected">English</option>
+                            <option value='es'>Spanish</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="stt_show_final_caption">
+                            <label class="form-check-label" for="stt_show_final_caption">
+                            Show Finalized Captions only
+                            </label>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <h6 class="col-md-auto" id="delayVar">0s delay</h6>
+                        <div class="slidecontainer">
+                            <!-- <input type="range" min="1" max="100" value="0" class="slider" id="delay"> -->
+                            <input type="range" min="0" max="100" step="1" value="0" id="delay">
+                        </div>
+                    </div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px" >Translation</h3>
+                </div>
+                <div class="row">
+                    <div class="w-25">
+                        <h6 class="col-md-auto">Engine</h6>
+                        <div class="col-md-auto">
+                        <select class="form-control" id="translation_engine">
+                            <option value='AZURE' selected="selected">A - Microsoft Azure</option>
+                            <option value='GOOGLE'>G - Google</option>
+                            <option value='WATSON'>W - IBM Watson</option>
+                            <option value='AMAZON'>AWS - Amazon</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <h6 class="col-md-auto">Caller Language</h6>
+                        <div class="col-md-auto">
+                            <select class="form-control" id="target_language">
+                            <option value='en' selected="selected">English</option>
+                            <option value='es'>Spanish</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Text to Speech</h3>
+                </div>
+                <div class="row">
+                    <div class="w-25">
+                        <h6 class="col-md-auto">Engine</h6>
+                        <div class="col-md-auto">
+                            <select class="form-control" id="tts_engine">
+                                <option value='AZURE' selected="selected">A - Microsoft Azure</option>
+                                <option value='GOOGLE'>G - Google</option>
+                                <option value='WATSON'>W - IBM Watson</option>
+                                <option value='AMAZON'>AWS - Amazon</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="tts_enabled">
+                            <label class="form-check-label" for="tts_enabled">
+                            TTS Enabled
+                            </label>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="tts_translate">
+                            <label class="form-check-label" for="tts_translate">
+                            Translate TTS
+                            </label>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <h6 class="col-md-auto">Voice</h6>
+                        <div class="col-md-auto">
+                            <select class="form-control" id="tts_voice">
+                                <option value='Male' selected="selected">Male</option>
+                                <option value='Female'>Female</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Braille Device</h3>
+                </div>
+                <div class="row">
+                    <div class = "w-25">
+                        <h6 class="col-md-auto">Aria Region</h6>
+                        <div class="col-md-auto">
+                        <select class="form-control" id="ARIA_settings">
+                            <option value='final' selected="selected">Final</option>
+                            <option value='continuous'>Continuous</option>
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Confidence</h3>
+                </div>
+                <div class="row">
+                    <div class = "w-25">
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_show_word">
+                            <label class="form-check-label" for="confidence_show_word">
+                            Show Word Confidence
+                            </label>
+                        </div>
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_show_phrase">
+                            <label class="form-check-label" for="confidence_show_phrase">
+                            Show Phrase Confidence
+                            </label>
+                        </div>
+                    </div>
+                    <div class = "w-25">
+                        <div class="row">
+                            <div class="form-group row">
+                                <label for="mediumConfidence" class="col-sm-3 col-form-label col-form-label-sm">less
+                                    than</label>
+                                <div class="col-sm-3">
+                                    <input type="number" class="form-control form-control-sm" id="confidence_upper_lim"
+                                        placeholder="%" value='75'>
+                                </div>
+                                <label for="mediumConfidence" style="text-align: center" class="col-sm-3 col-form-label col-form-label-sm"> % are </label>
+                                <div class="col-sm-3">
+                                    <select class="form-control form-control-sm" id="confidence_upper_color">
+                                        <option value="none">None</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="green">Green</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="red">Red</option>
+                                        <option value="yellow" selected="selected">Yellow</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group row">
+                                <label for="mediumConfidence" class="col-sm-3 col-form-label col-form-label-sm">less
+                                    than</label>
+                                <div class="col-sm-3">
+                                    <input type="number" class="form-control form-control-sm" id="confidence_lower_lim"
+                                        placeholder="%" value='75'>
+                                </div>
+                                <label for="mediumConfidence" style="text-align: center" class="col-sm-3 col-form-label col-form-label-sm"> % are </label>
+                                <div class="col-sm-3">
+                                    <select class="form-control form-control-sm" id="confidence_lower_color">
+                                        <option value="none">None</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="green">Green</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="red">Red</option>
+                                        <option value="yellow" selected="selected">Yellow</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_bold">
+                            <label class="form-check-label" for="confidence_bold">
+                            Bold
+                            </label>
+                        </div>
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_italicize">
+                            <label class="form-check-label" for="confidence_italicize">
+                            Italicize
+                            </label>
+                        </div>
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_underline">
+                            <label class="form-check-label" for="confidence_underline">
+                            Underline
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">IP Relay Testing</h3>
+                </div>
+
+                <div class="row">
+                    <div class = "w-25">
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="iprelay">
+                            <label class="form-check-label" for="iprelay">
+                            enabled
+                            </label>
+                        </div>
+                        <div class="col-md-auto">
+                            <select class="form-control" id="iprelay_scenario">
+                                <% iprelay.forEach(function(s) {  %>
+                                    <!-- <tr id="scenario_<%= s.extension %>"> -->
+                                        <option>
+                                            <%= s.name %>
+                                        </option>
+                                    <!-- </tr> -->
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-header">
+            <!-- /.box-body -->
+            <div class="card-footer">
+                <button type="button" class="btn btn-primary" id="save_btn">save</button>
+                <button type="button" class="btn btn-primary" id="add_extension_btn" onclick='addExtension()'>Add
+                    Extension</button>
+                <button type="button" class="btn btn-danger" id='deleteOption'
+                  onclick='deleteExtension()'>Delete</button>
+            </div>
+        </div>
+            <!-- /.box -->
+      </section>
+
+      <!-- The actual snackbar -->
+      <div id="snackbar">Saved</div>
+
+      <!-- Modal -->
+      <div class="modal fade" id="configModal" tabindex="-1" role="dialog" aria-labelledby="configExtension">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="configModalLabel">Configure Extension Basics</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form class="form-horizontal" id="AddModifyExtensionForm">
+              <div class="modal-body">
+                <div class="form-group row" id="form_extension">
+                  <label for="inputExtension" class="col-sm-3 control-label">Extension</label>
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="inputExtension"
+                      placeholder="Enter Phone Extension ex. 5001" minlength="4" maxlength="4" required>
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Device Name</label>
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="inputDeviceName"
+                      placeholder="Enter a Device Name ex. Phone 1" maxlength="45" required>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-3 control-label">STT Engine</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="configEngine">
+                      <option value='AZURE' selected="selected">A - Microsoft Azure</option>
+                      <option value='GOOGLE'>G - Google</option>
+                      <option value='WATSON'>W - IBM Watson</option>
+                      <option value='AMAZON'>AWS - Amazon</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-3 control-label">Translation Engine</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="translationEngine">
+                      <option value='NONE' selected="selected">N - No Translation</option>
+                      <option value='GOOGLE'>G - Google</option>
+                      <option value='WATSON'>W - IBM Watson</option>
+                      <option value='AZURE'>M -  Azure</option>
+                      <option value='AMAZON'>AWS - Amazon</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-3 control-label">Callee Language</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="calleeLanguage">
+                      <option value='en' selected="selected">English</option>
+                      <option value='es'>Spanish</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-3 control-label">Caller Language</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="callerLanguage">
+                      <option value='en' selected="selected">English</option>
+                      <option value='es'>Spanish</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-3 control-label">ARIA Setting</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="ariaSettings">
+                      <option value='None' selected="selected">None</option>
+                      <option value='final'>Final</option>
+                      <option value='continuous'>Continuous</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputFirstname" class="col-sm-3 control-label">Delay</label>
+                  <div class="col-sm-9">
+                    <input id="delaySlider" class="slider form-control" data-slider-id='red' type="text"
+                      data-slider-min="0" data-slider-max="25" data-slider-step="1" data-slider-value="0" />
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id='saveExtension'>Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id='deleteOption'
+                  onclick='deleteExtension()'>Delete</button>
+              </div>
+            </form>
+          </div>
+      </div>
+      </div>
+      <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer">
+      <% include ..//partials/footer %>
+    </footer>
+  </div>
+  <!-- ./wrapper -->
+
+
+  <!-- Socket.io -->
+  <script src='/socket.io/socket.io.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+  <script>var device_setting = "<%= device_setting %>";</script>
+  <script type="text/javascript">
+
+    var socket = io('/admin', {
+            path:'/socket.io'
+    });
+
+    $('#delaySlider').bootstrapSlider();
+
+    var device_setting = device_setting.replace(/&#34;/g,'"');
+    device_setting = JSON.parse(device_setting)
+
+    console.log("device_setting", device_setting)
+
+    $(document).ready(function () {
+        $('#settings_advanced_controls_treeview').addClass('active');
+        set_setting(device_setting);
+    });
+    socket.on('connect', function (data) {
+      socket.emit('get-ac-configs');
+
+    }).on('load-ac-configs', function (data) {
+      $('#azure_key').val(data.key);
+      $('#azure_url').val(data.url);
+      $('#azure_location').val(data.location);
+    });
+
+    function load_config(ext) {
+            $.get("./loadACConfig", {
+                "extension": ext
+            },
+            function (data, status) {
+                console.log("here", data);
+                set_setting(data);
+            });
+    }
+
+    function save_config(data) {
+            $.get("./saveACConfig", {
+                "data": data
+            },
+            function (data, status) {
+                console.log("config saved");
+                $('#snackbar').html("Saved");
+                $('#snackbar').addClass("show");
+                setTimeout(function () {
+                    $('#snackbar').removeClass("show");
+                }, 3000)
+            });
+    }
+
+    function testThisFunc(){
+        console.log("$('#curExtension').val(); ", $('#curExtension').val());
+        var data = {};
+        data.extension = $('#curExtension').val();
+        load_config(data.extension)
+    }
+
+    $('#save_btn').on('click', function (e) {
+      var data = {};
+      data.extension = $('#curExtension').val();
+      data.stt_engine = $('#stt_engine').val();
+      data.source_language = $('#source_language').val();
+      data.stt_show_final_caption = $('#stt_show_final_caption').prop('checked');
+      data.delay = $('#delay').val();
+
+      data.translation_engine = $('#translation_engine').val();
+      data.target_language = $('#target_language').val();
+
+      data.tts_engine = $('#tts_engine').val();
+      data.tts_translate = $('#tts_translate').prop('checked');
+      data.tts_voice = $('#tts_voice').val();
+      data.tts_enabled = $('#tts_enabled').prop('checked');
+      data.ARIA_settings = $('#ARIA_settings').val();
+
+      data.confidence_show_word = $('#confidence_show_word').prop('checked');
+      data.confidence_show_phrase = $('#confidence_show_phrase').prop('checked');
+      data.confidence_upper_lim = $('#confidence_upper_lim').val();
+      data.confidence_lower_lim = $('#confidence_lower_lim').val();
+      data.confidence_upper_color = $('#confidence_upper_color').val();
+      data.confidence_lower_color = $('#confidence_lower_color').val();
+      data.confidence_bold = $('#confidence_bold').prop('checked');
+      data.confidence_italicize = $('#confidence_italicize').prop('checked');
+      data.confidence_underline = $('#confidence_underline').prop('checked');
+
+      data.iprelay = $('#iprelay').prop('checked');
+      data.iprelay_scenario = $('#iprelay_scenario').val();
+      save_config(data)
+    });
+
+    var slider = document.getElementById("delay");
+    var output = document.getElementById("delayVar");
+    output.innerHTML = slider.value; // Display the default slider value
+
+    // Update the current slider value (each time you drag the slider handle)
+    slider.oninput = function() {
+    output.innerHTML = this.value + "s delay";
+    }
+
+    function set_setting(data){
+        $('#curExtension').val(data.extension)
+        $('#stt_engine').val(data.stt_engine);
+        $('#source_language').val(data.source_language);
+        $('#stt_show_final_caption').prop('checked', data.stt_show_final_caption);
+        $('#delayVar').text(data.delay + "s delay")
+        $('#delay').val(data.delay);
+
+        $('#translation_engine').val(data.translation_engine);
+        $('#target_language').val(data.target_language);
+
+        $('#tts_engine').val(data.tts_engine);
+        $('#tts_translate').prop('checked', data.tts_translate);
+        $('#tts_voice').val(data.tts_voice);
+        $('#tts_enabled').prop('checked', data.tts_enabled);
+
+        $('#ARIA_settings').val(data.ARIA_settings);
+
+        $('#confidence_show_word').prop('checked', data.confidence_show_word);
+        $('#confidence_show_phrase').prop('checked', data.confidence_show_phrase);
+        $('#confidence_upper_lim').val(data.confidence_upper_lim);
+        $('#confidence_lower_lim').val(data.confidence_lower_lim);
+        $('#confidence_upper_color').val(data.confidence_upper_color);
+        $('#confidence_lower_color').val(data.confidence_lower_color);
+        $('#confidence_bold').prop('checked', data.confidence_bold)
+        $('#confidence_italicize').prop('checked', data.confidence_italicize);
+        $('#confidence_underline').prop('checked', data.confidence_underline);
+
+        $('#iprelay').prop('checked', data.iprelay);
+        $('#iprelay_scenario').val(data.iprelay_scenario);
+    }
+
+    function addExtension() {
+      $("#addExtensionForm").trigger("reset");
+      $('#configModal').modal();
+    }
+
+    function deleteExtension() {
+      $.post("./DeleteConfig", {
+        "extension": $('#curExtension').val()
+      },
+        function (data, status) {
+          console.log("Deleted!!!!")
+          location.reload();
+        });
+    }
+
+    //$("#AddModifyExtensionForm").submit(function (event) {
+    $("#saveExtension").on("click", function () {
+      //event.preventDefault();
+      console.log("hererere")
+      $.post("./UpdateConfig", {
+        "extension": $('#inputExtension').val(),
+        "name": $('#inputDeviceName').val(),
+        "stt_engine": $('#configEngine').val(),
+        "translation_engine": $('#translationEngine').val(),
+        "source_language": $('#calleeLanguage').val(),
+        "target_language": $('#callerLanguage').val(),
+        "aria_settings": $('#ariaSettings').val(),
+        "delay": $('#delaySlider').bootstrapSlider('getValue')
+      },
+        function (data, status) {
+          console.log("Saved!!!!")
+          location.reload();
+        });
+    });
+
+  </script>
+</body>
+
+</html>

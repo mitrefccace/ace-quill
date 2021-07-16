@@ -1,0 +1,5 @@
+{
+  "key": "<key>",
+  "url": "https://<location>.api.cognitive.microsoft.com/sts/v1.0/issuetoken",
+  "location": "<locaton>"
+}

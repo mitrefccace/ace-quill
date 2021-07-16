@@ -1,0 +1,481 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Scenarios</h1>
+                        </div>
+
+
+
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-gears"></i>&nbsp;Settings</li>
+                                <li class="breadcrumb-item active">Manage Scenarios</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Scenarios</h3>
+                            </div>
+                            <!-- /.box-header -->
+                            <div id="scenariotablediv" class="card-body table-responsive">
+                                <table id="scenariotable" class="table table-bordered table-hover" cellspacing="0"
+                                    width="100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text">ID</th>
+                                            <th class="text">Scenario Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% scenarios.forEach(function(s) {  %>
+                                        <tr id="scenario_<%= s.id %>">
+                                            <td>
+                                                <%= s.id %>
+                                            </td>
+                                            <td>
+                                                <%= s.scenario_name %>
+                                            </td>
+                                        </tr>
+
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.box-body -->
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="add_scenario_btn"
+                                    onclick='addScenarioModal()'>Add New Scenario</button>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Details</h3>
+                            </div>
+                            <!-- /.box-header -->
+                            <div id="scenariodetailsdiv" class="card-body">
+                                <form role="form" id="scenarioDetailsForm">
+                                    <div class="form-group">
+
+                                        <input id="scenario_id" type="hidden" />
+                                        <label for="inputWatsonAPIKey">Audio File
+                                            <small class="">(<a href="#" id="upload_link">Upload
+                                                    Wav</a>)</small></label>
+                                        <input id="scenarioFile" type="file" accept="audio/*" hidden />
+                                        <div id="audioFilename" hidden></div>
+                                        <audio id="player" controls="controls" style="width: 100%;" hidden>
+                                            <source id="wav_src" path="" src="" type="audio/wav" /> Your browser does not
+                                            support audio.
+                                        </audio>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputWatsonURL">Scenario Text</label>
+                                        <textarea class="form-control" rows="20" id="scenario_details_text"></textarea>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- /.box-body -->
+                            <div class="card-footer">
+
+                                <button type="button" class="btn btn-success" id="test_scenario_btn"
+                                    onclick='testScenarioModal()'>Test</button>
+                                <button type="button" class="btn btn-primary" id="save_scenario_btn"
+                                    onclick='updateScenario()'>Save</button>
+                                <button type="button" class="btn btn-danger" id="delete_scenario_btn"
+                                    onclick='deleteScenario()'>Delete</button>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </div>
+                </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- modals -->
+
+    <div class="modal fade" id="addScenarioModal" tabindex="-1" role="dialog" aria-labelledby="addScenarioModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Add new scenario</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="addScenarioForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="inputScenarioName" class="col-sm-2 control-label">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputScenarioName"
+                                    placeholder="Scenario Name" data-maxlength="100" required data-validation="length">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id='addScenario'>Add Scenario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="modal fade" id="testScenarioModal" tabindex="-1" role="dialog" aria-labelledby="testScenarioModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="testScenarioModalLabel">Test</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th style="width: 100px">Engine</th>
+                                <th style="width: 40px" title="Word Error Rate">WER</th>
+                                <th style="width: 40px" title="Match Error Rate">MER</th>
+                                <th style="width: 40px" title="Word Information Loss">WIL</th>
+                            </tr>
+                            <tr class="text-gray">
+                                <td>Amazon</td>
+                                <td id="amazon_wer">N/A</td>
+                                <td id="amazon_mer">N/A</td>
+                                <td id="amazon_wil">N/A</td>
+                            </tr>
+                            <tr>
+                                <td>Azure</td>
+                                <td id="azure_wer"></td>
+                                <td id="azure_mer"></td>
+                                <td id="azure_wil"></td>
+                            </tr>
+                            <tr>
+                                <td>Google</td>
+                                <td id="google_wer"></td>
+                                <td id="google_mer"></td>
+                                <td id="google_wil"></td>
+                            </tr>
+                            <tr>
+                                <td>Watson</td>
+                                <td id="watson_wer"></td>
+                                <td id="watson_mer"></td>
+                                <td id="watson_wil"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <a href="https://www.researchgate.net/publication/221478089_From_WER_and_RIL_to_MER_and_WIL_improved_evaluation_measures_for_connected_speech_recognition"
+                     target="_blank">Information on Metrics</a>
+
+
+                </div>
+                <div class="modal-footer">
+                    <div class="mr-auto" id="testStatusText"></div>
+
+                    <button type="button" class="btn btn-primary" id='StartTestBtn' onclick='testScenarios()'>Start
+                        Test</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src='/socket.io/socket.io.js'></script>
+    <script type="text/javascript">
+        var searchParams = new URLSearchParams(window.location.search)
+
+        $(document).ready(function () {
+            $('#settings_treeview').addClass('active');
+            $('#settings_scenario_treeview').addClass('active');
+
+            var table = $('#scenariotable').DataTable({
+                "searching": false,
+                "paging": false,
+                "lengthChange": false,
+                "order": [],
+                "columnDefs": [{
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                }],
+                "columns": [{
+                    "data": "id"
+                },
+                {
+                    "data": "scenario_name"
+                }]
+            });
+
+            $('#scenariotable tbody').on('click', 'tr', function () {
+                var data = table.row(this).data();
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+                getScenarioDetails(data.id)
+            });
+
+            if (searchParams.has("selected")) {
+                var selectThisID = searchParams.get("selected");
+                var foundRow = false;
+                table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                    if (this.data().id == selectThisID) {
+                        foundRow = true;
+                        $("#scenario_" + selectThisID).addClass("selected")
+                        getScenarioDetails(selectThisID)
+                    }
+                });
+                if (!foundRow) {
+                    $('#scenariotable tbody :eq(0)').click()
+                }
+            } else {
+                $('#scenariotable tbody :eq(0)').click()
+            }
+        });
+
+        function addScenarioModal() {
+            $("#addScenarioForm").trigger("reset");
+            $('#addScenarioModal').modal();
+        }
+
+        $("#upload_link").on('click', function (e) {
+            e.preventDefault();
+            $("#scenarioFile:hidden").trigger('click');
+        });
+
+
+
+        $("#scenarioFile").change(function () {
+            var filename = ($("#scenarioFile").val()).split(/(\\|\/)/g).pop();
+            $('#audioFilename').removeAttr("hidden");
+            $('#audioFilename').html(filename);
+
+        });
+
+        function testScenarioModal() {
+            if($('#wav_src').attr("path") == 'null/null'){
+                $('#StartTestBtn').prop("disabled", true);
+                $('#testStatusText').html("missing audio file");
+            }else{
+                $('#testStatusText').html("");
+                $('#StartTestBtn').prop("disabled", false);
+            }
+            clearAccTests();
+            $('#testScenarioModal').modal();
+        }
+
+        var socket = io('/admin', {
+            path:'/socket.io'
+        });
+
+        function testScenarios() {
+            data={
+                text: $('#scenario_details_text').val(),
+                audioPath:$('#wav_src').attr("path")
+            }
+            socket.emit('test-scenario-accuracy', data);
+            $('#testStatusText').html("Tests inprogress");
+            $('#StartTestBtn').prop("disabled", true);
+            clearAccTests();
+        }
+        socket.on('test-scenario-accuracy-results', function (data) {
+            switch (data.engine) {
+                case 'ground_truth':
+                    // $('#ground_truth').html(data.translation);
+                    break;
+                case 'azure':
+                    // $('#azure_transcription').html(data.translation);
+                    $('#azure_wer').html(data.finding[0]);
+                    $('#azure_mer').html(data.finding[1]);
+                    $('#azure_wil').html(data.finding[2]);
+                    break;
+                case 'google':
+                    // $('#google_transcription').html(data.translation);
+                    $('#google_wer').html(data.finding[0]);
+                    $('#google_mer').html(data.finding[1]);
+                    $('#google_wil').html(data.finding[2]);
+                    break;
+                case 'watson':
+                    // $('#watson_transcription').html(data.translation);
+                    $('#watson_wer').html(data.finding[0]);
+                    $('#watson_mer').html(data.finding[1]);
+                    $('#watson_wil').html(data.finding[2]);
+                    break;
+            }
+            if ($('#azure_wer').html() != '&nbsp;' && $('#google_wer').html() != '&nbsp;' && $('#watson_wer').html() != '&nbsp;'){
+                $('#StartTestBtn').prop("disabled", false);
+                $('#testStatusText').html("Tests ended");
+            }
+        });
+        $('#test_accuracy_btn').on('click', function (e) {
+            e.preventDefault();
+            socket.emit('test-scenario-accuracy', {});
+        });
+
+        function clearAccTests() {
+            $('#azure_wer').html('&nbsp;');
+            $('#azure_mer').html('&nbsp;');
+            $('#azure_wil').html('&nbsp;');
+            $('#google_wer').html('&nbsp;');
+            $('#google_mer').html('&nbsp;');
+            $('#google_wil').html('&nbsp;');
+            $('#watson_wer').html('&nbsp;');
+            $('#watson_mer').html('&nbsp;');
+            $('#watson_wil').html('&nbsp;');
+        }
+
+        function getScenarioDetails(id) {
+            $.get("./ScenarioDetails", {
+                "id": id
+            },
+                function (data, status) {
+                    if (data.status == "Success") {
+                        $('#scenario_id').val(data.id)
+                        $('#scenario_details_text').val(data.sText)
+                        $('#testScenarioModalLabel').html(data.sName)
+                        $("#wav_src").attr("src", './getScenarioAudioFile?id=' + data.id);
+                        $("#wav_src").attr("path", data.path);
+                        if (data.hasAudioFile) {
+                            var audio = $("#player");
+                            audio[0].pause();
+                            audio[0].load();
+                            $('#player').removeAttr("hidden");
+                        }else{
+                            $('#player').attr("hidden", true);
+                        }
+                    } else {
+                        console.log("Something failed")
+                    }
+                });
+        }
+
+        $("#addScenarioForm").submit(function (event) {
+            event.preventDefault();
+            $.post("./addScenario", {
+                "name": $('#inputScenarioName').val(),
+            },
+                function (data, status) {
+                    if (data.status == "Success") {
+                        console.log("Saved!!!!")
+                        window.location.href = window.location.href.replace(/[\?#].*|$/, "?selected=" + data.id);
+                    } else {
+                        console.log("Something failed")
+                    }
+                });
+
+        });
+
+    function deleteScenario(){
+
+            $.ajax({
+                url: './deleteScenario',
+                data: {scenarioId: $('#scenario_id').val()},//formData,
+                //contentType: false,
+                //processData: false,
+                type: 'POST',
+                success: function (data) {
+                    // your callback here
+                    console.log('success delete')
+            location.reload()
+                },
+                error: function (error) {
+                    // handle error
+                    console.log('error delete')
+                }
+            });
+    }
+
+        function updateScenario() {
+            var formData = new FormData();
+            formData.append('scenarioFile', $("#scenarioFile")[0].files[0]);
+            formData.append('scenarioId', $('#scenario_id').val());
+            formData.append('scenarioText', $('#scenario_details_text').val());
+
+            console.log("formdata ", formData)
+            console.log($("#scenarioFile")[0].files[0])
+
+            $.ajax({
+                url: './updateScenario',
+                data: formData,
+                contentType: false,
+                processData: false,
+                type: 'POST',
+                success: function (data) {
+                    // your callback here
+                    console.log('success upload')
+
+                },
+                error: function (error) {
+                    // handle error
+                    console.log('error upload')
+                }
+            });
+
+        }
+
+
+    </script>
+</body>
+
+</html>
+
+

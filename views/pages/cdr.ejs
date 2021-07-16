@@ -1,0 +1,299 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<% include ..//partials/head %>
+</head>
+
+<body  class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+	<div class="wrapper">
+
+		<!-- Header -->
+		<% include ..//partials/header %>
+
+		<!-- Left side column. contains the logo and sidebar -->
+			<% include ..//partials/sidebar %>
+		<div class="content-wrapper">
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+				<div class="container-fluid">
+				  <div class="row mb-2">
+					<div class="col-sm-6">
+					  <h1>CDR</h1>
+					</div>
+					<div class="col-sm-6">
+					  <ol class="breadcrumb float-sm-right">
+						<li class="breadcrumb-item"><i class="fa fa-bar-chart"></i>&nbsp;Reports</li>
+						<li class="breadcrumb-item active">CDR</li>
+					  </ol>
+					</div>
+				  </div>
+				</div><!-- /.container-fluid -->
+			  </section>
+
+<!--
+			<section class="content-header">
+				<h1>CDR</h1>
+
+				<ol class="breadcrumb float-sm-right">
+					<li class="breadcrumb-item"><i class="fa fa-bar-chart"></i>&nbsp;Reports</li>
+					<li class="breadcrumb-item active">CDR</li>
+				  </ol>
+
+
+				<div id="reportrange" class="dropdown-menu-left">
+					<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+					<span></span> <b class="caret"></b>
+				</div>
+			-->
+
+
+<!--
+				<ol class="breadcrumb">
+					<li><a href="./"><i class="fa fa-bar-chart"></i> Reports</a></li>
+					<li class="active">CDR</li>
+				</ol>
+			-->
+			</section>
+
+			<!-- Main content -->
+			<section class="content">
+				<!-- CDR Table -->
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="card">
+							<div class="card-header with-border">
+								<h3 class="card-title">Call Detail Records</h3>
+
+								<div class="box-tools pull-right">
+									<button class="btn btn-box-tool" id="toggle"><i class="fa fa-toggle-off"></i></button>
+									<button class="btn btn-box-tool" id="cdrdownloadbtn"><i class="fa fa-download"></i></button>
+								</div>
+
+							</div>
+							<!-- /.box-header -->
+							<div id="cdrtablediv" class="box-body table-responsive" style="overflow-x: scroll">
+								<table id="cdrtable" class="table table-bordered table-hover" cellspacing="0" width="100%">
+									<thead>
+										<tr>
+											<th class="text-center">Call Date</th>
+											<th class="text-center">Caller ID Text</th>
+											<th class="text-center">Source</th>
+											<th class="text-center">Destination</th>
+											<th class="text-center">Destination Context</th>
+											<th class="text-center">Channel</th>
+											<th class="text-center">Destination Channel</th>
+											<th class="text-center">Last Application</th>
+											<th class="text-center">Last Data</th>
+											<th class="text-center">Duration Seconds</th>
+											<th class="text-center">Billable Seconds</th>
+											<th class="text-center">Disposition</th>
+											<th class="text-center">AMA Flags</th>
+											<th class="text-center">Account Code</th>
+											<th class="text-center">User Field</th>
+											<th class="text-center">Unique ID</th>
+											<th class="text-center">Linked ID</th>
+											<th class="text-center">Sequence</th>
+											<th class="text-center">Peer Account</th>
+										</tr>
+									</thead>
+								</table>
+							</div>
+							<!-- /.box-body -->
+						</div>
+						<!-- /.box -->
+					</div>
+				</div>
+				<!-- ./CDR Table -->
+				<div id="csv"></div>
+			</section>
+			<!-- /.content -->
+		</div>
+		<!-- /.content - wrapper -->
+
+		<footer class="main-footer">
+			<% include ..//partials/footer %>
+		</footer>
+	</div>
+	<!-- ./wrapper -->
+
+
+	<script type="text/javascript">
+		var toggle = true; // toggle boolean for CDR table
+		function getTableData(start, end) {
+			$.ajax({
+				url: "./getAllCDRRecs",
+				data: {
+					"start": start,
+					"end": end
+				},
+				success: function (data) {
+					if (data.message === "Success") {
+						$('#cdrtable').dataTable().fnClearTable();
+						$('#cdrtable').dataTable().fnAddData(data.data);
+						$('#cdrtable').resize();
+					} else {
+						$(".dataTables_empty").css("color", "red").html("No call records.");
+					}
+				}
+			});
+		}
+
+		// initialize the datatable
+		var datatable = $('#cdrtable').DataTable({
+			"order": [
+				[0, "desc"]
+			],
+			"columns": [{
+					"data": "calldate",
+					"render": function (value) {
+						return moment(value).local().format('YYYY/MM/DD hh:mm:ss a');
+					}
+				},
+				{
+					"data": "clid"
+				},
+				{
+					"data": "src"
+				},
+				{
+					"data": "dst"
+				},
+				{
+					"data": "dcontext"
+				},
+				{
+					"data": "channel"
+				},
+				{
+					"data": "dstchannel"
+				},
+				{
+					"data": "lastapp"
+				},
+				{
+					"data": "lastdata"
+				},
+				{
+					"data": "duration"
+				},
+				{
+					"data": "billsec"
+				},
+				{
+					"data": "disposition"
+				},
+				{
+					"data": "amaflags"
+				},
+				{
+					"data": "accountcode"
+				},
+				{
+					"data": "userfield"
+				},
+				{
+					"data": "uniqueid"
+				},
+				{
+					"data": "linkedid"
+				},
+				{
+					"data": "sequence"
+				},
+				{
+					"data": "peeraccount"
+				}
+			]
+		});
+
+		//Toggles the table to display or hide extra columns
+		function toggleTable() {
+			toggle = !toggle;
+			if (toggle) {
+				$('#toggle').html('<i class="fa fa-toggle-on"></i>');
+			} else {
+				$('#toggle').html('<i class="fa fa-toggle-off"></i>');
+			}
+			datatable.column(1).visible(toggle);
+			datatable.column(6).visible(toggle);
+			datatable.column(11).visible(toggle);
+			datatable.column(12).visible(toggle);
+			datatable.column(13).visible(toggle);
+			datatable.column(14).visible(toggle);
+			datatable.column(15).visible(toggle);
+			datatable.column(16).visible(toggle);
+			datatable.column(17).visible(toggle);
+			datatable.column(18).visible(toggle);
+		}
+
+		$(document).ready(function () {
+			$('#reports_cdr_treeview').addClass('active');
+
+			toggleTable(); // hide extra columns on initial load
+			getTableData();
+			//click event for the toggle button on the CDR table
+			$('#toggle').on('click', function (e) {
+				e.preventDefault();
+				toggleTable();
+			});
+
+
+			//click event for downloading CSV file
+			$('#cdrdownloadbtn').click(function () {
+				location.href = './getAllCDRRecs?download=true';
+			});
+
+			// sets the Date Range picker start and end date
+			var start = moment("2017-05-01");
+			var end = moment(); //today
+
+			// Call back funtion for setting report range <div> value
+			function cb(start, end) {
+				$('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+			}
+
+			// controls for the date range picker
+			$('#reportrange').daterangepicker({
+				startDate: start,
+				endDate: end,
+				ranges: {
+					'Today': [moment(), moment()],
+					'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+					'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+					'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+					'This Month': [moment().startOf('month'), moment().endOf('month')],
+					'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+					'All Time': [start, end]
+				}
+			}, cb);
+
+			// sets initial value for report range <div>
+			cb(start, end);
+
+			// Click event for new date range selected
+			$('#reportrange').on('apply.daterangepicker', function (evt, picker) {
+				var startdate = moment(picker.startDate.format('YYYY-MM-DD')).format();
+				var enddate = moment(picker.endDate.format('YYYY-MM-DD')).add('days', 1).format();
+				getTableData(startdate, enddate);
+			});
+		});
+	</script>
+</body>
+
+</html>

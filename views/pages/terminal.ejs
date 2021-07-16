@@ -1,0 +1,882 @@
+<html>
+
+<head>
+    <title>ACE Quill Terminal</title>
+    <link type="text/css" rel="stylesheet" href="/stylesheets/terminal.css">
+    <link type="text/css" rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="/assets/css/adminlte.min.css">
+
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+    <script src='/assets/js/jquery.min.js'></script>
+    <script src='/assets/js/bootstrap.js'></script>
+    <script src='/assets/js/adminlte.min.js'></script>
+
+    <script src='/assets/js/jssip.min.js'></script>
+</head>
+
+<body class="hold-transition">
+    <!-- Site wrapper -->
+    <div class="wrapper">
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light" aria-hidden="true">
+            <div class="col-2 offset-4" style="white-space:nowrap;" aria-hidden="true">
+                <span id='extensionInfo'><i class="fa fa-circle text-gray"></i> No Registered Extension</span>
+            </div>
+            <ul class="navbar-nav ml-auto" aria-hidden="true">
+                <li class="nav-item " aria-hidden="true">
+                    <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" aria-hidden="true">
+                        <i class="fa fa-gears"></i></a>
+                </li>
+            </ul>
+        </nav>
+        <aside class="main-sidebar sidebar-dark-primary elevation-4" aria-hidden="false">
+            <div class="sidebar" aria-hidden="false">
+                <div class="dialpadcontainer">
+                    <input type="text" id="output" maxlength="11" size="11" style="width: 200px;"/>
+                    <br /><br />
+                    <div class="row">
+                        <div id="one">
+                    	    <button class="digit" type="button">1</button>
+			            </div>
+                        <div id="two">
+			                <button class="digit" type="button">2</button>
+                                <div class="sub">ABC</div>
+                        </div>
+                        <div id="three">
+			                <button class="digit" type="button">3</button>
+                                <div class="sub">DEF</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div id="four">
+                            <button class="digit" type="button">4</button>
+			                    <div class="sub">GHI</div>
+                        </div>
+                        <div id="five">
+                            <button class="digit" type="button">5</button>
+                                <div class="sub">JKL</div>
+                        </div>
+                        <div id="six">
+                            <button class="digit" type="button">6</button>
+                                <div class="sub">MNO</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div id="seven">
+                            <button class="digit" type="button">7</button>
+                            <div class="sub">PQRS</div>
+                        </div>
+                        <div id="eight">
+                            <button class="digit" type="button">8</button>
+			    <div class="sub">TUV</div>
+                        </div>
+                        <div id="nine">
+                            <button class="digit" type="button">9</button>
+                            <div class="sub">WXYZ</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div>
+                            <button class="digit" type="button">*</button>
+                        </div>
+                        <div>
+                            <button class="digit" type="button">0</button>
+                        </div>
+                        <div>
+                            <button class="digit" type="button">#</button>
+                        </div>
+                    </div>
+                    <div class="botrow">
+                        <div>
+				            <button id="call_btn" class="fa fa-phone" aria-hidden="false"></button>
+			            </div>
+			            <div>
+                            <button id="back_btn" class="fa fa-long-arrow-left dig" aria-hidden="false"></button>
+			            </div>
+                    </div>
+                </div>
+                 <!-- call history and favorites -->
+                 <div class="nav-tabs-custom card">
+                    <ul class="nav nav-tabs  mb-3">
+                        <li class="nav-item"><a href="#tab_history" data-toggle="pill" aria-expanded="false" role="tab"
+                                class="nav-link active"><i class="fa fa-history"></i>&nbsp;History</a>
+                        </li>
+                        <li class="nav-item"><a href="#tab_contacts" data-toggle="pill" aria-expanded="false" role="tab"
+                                class="nav-link"><i class="fa fa-address-book"></i>&nbsp;Contacts</a></li>
+                    </ul>
+                    <div class="tab-content ">
+                        <div class="tab-pane active" id="tab_history">
+                            <div class="col-12"></div>
+                                <ul id="call_history" style="padding-left: 0.5em; padding-right: 0.5em;" 
+                                >
+                                </ul>
+                            </div>
+                            <div class="tab-pane" id="tab_contacts">
+                                <div class="col-12"></div>
+                                    <ul id="contacts" style="padding-left: 0.5em; padding-right: 0.5em;" >
+                                    </ul>
+                            </div>
+                        </div>
+                   
+                </div>
+            </div>
+        </aside>
+        <div class='content-wrapper'>
+<pre id="terminal">
+<output id="history" aria-hidden="true" aria-live="off">
+Welcome to the ACE Quill terminal.
+</output>
+<output id="transcripts" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
+<output id="app-output" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
+    </pre>
+            <!-- Footer -->
+            <footer class="page-footer font-small special-color-dark" id="ttsFooter" hidden>
+                <!-- Footer Elements -->
+                <!--Grid row-->
+                <div class="row">
+                    <!--Grid column-->
+                    <div class="col-12">
+                        <form class="input-group" id="ttsForm">
+                            <input type="text" class="form-control form-control-lg" placeholder="Teletype" id='ttsText'>
+                            <div class="input-group-append">
+                                <button class="btn btn-lg btn-info" type="submit" id='ttsBtn'>Say it</button>
+                            </div>
+                        </form>
+
+                    </div>
+                    <!--Grid column-->
+                </div>
+                <!--Grid row-->
+            </footer>
+            <!-- Footer -->
+        </div>
+        <audio id='remoteView' hidden></audio>
+        <audio id='selfView' hidden></audio>
+        <aside class="control-sidebar control-sidebar-dark" aria-hidden="true">
+            <div class="sidebar-form">
+                <form role="form">
+                    <div class="form-group">
+                        <label>Extension</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Extension"
+                            id="sipExtension">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control form-control-sm" placeholder="Password"
+                            id="sipPassword">
+                    </div>
+                    <div class="form-group">
+                        <label>Server</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="servername:port"
+                            id="sipServer">
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="button" class="btn btn-success btn-sm" id='registerBtn'>Register</button>
+                        <button type="button" class="btn btn-danger btn-sm" id='logoutBtn'>Log Out</button>
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="button" class="btn btn-default btn-sm" id='clearBtn'>Clear Terminal</button>
+                    </div>
+                    <!--div class="form-group text-center">
+                        <a href='#' onclick="fixCert()">If registration fails click here, accept the certificate.</a>
+                    </div-->
+                    <!--div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="ttsEnabledCheckbox">
+                        <label class="form-check-label" for="ttsEnabledCheckbox">Text-to-Speech</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="phraseConfidenceCheckbox">
+                        <label class="form-check-label" for="phraseConfidenceCheckbox">Show Phrase Confidence</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="wordConfidenceCheckbox">
+                        <label class="form-check-label" for="wordConfidenceCheckbox">Show Word Confidence</label>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <label>Confidence Settings</label>
+                    </div>
+                    <div class="form-group row">
+                        <label for="mediumConfidence" class="col-sm-4 col-form-label col-form-label-sm">less
+                            than</label>
+                        <div class="col-sm-3">
+                            <input type="number" class="form-control form-control-sm" id="mediumConfidencePercent"
+                                placeholder="%" value='75'>
+                        </div>
+                        <div class="col-sm-5">
+                            <select class="form-control form-control-sm" id="mediumConfidenceColor">
+                                <option value="none">None</option>
+                                <option value="blue">Blue</option>
+                                <option value="green">Green</option>
+                                <option value="orange">Orange</option>
+                                <option value="red">Red</option>
+                                <option value="yellow" selected>Yellow</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="mediumConfidence" class="col-sm-4 col-form-label col-form-label-sm">less
+                            than</label>
+                        <div class="col-sm-3">
+                            <input type="number" class="form-control form-control-sm" id="lowConfidencePercent"
+                                placeholder="%" value='50'>
+                        </div>
+                        <div class="col-sm-5">
+                            <select class="form-control form-control-sm" id="lowConfidenceColor">
+                                <option value="none">None</option>
+                                <option value="blue">Blue</option>
+                                <option value="green">Green</option>
+                                <option value="orange">Orange</option>
+                                <option value="red" selected>Red</option>
+                                <option value="yellow">Yellow</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-4">
+                            <input type="checkbox" class="form-check-input" id="wordConfidenceBoldCheckbox">
+                            <label class="form-check-label" for="wordConfidenceBoldCheckbox">Bold</label>
+                        </div>
+                        <div class="col-sm-3">
+                            <input type="checkbox" class="form-check-input" id="wordConfidenceItalicCheckbox">
+                            <label class="form-check-label" for="wordConfidenceItalicCheckbox">Italic</label>
+                        </div>
+                        <div class="col-sm-3">
+                            <input type="checkbox" class="form-check-input" id="wordConfidenceUnderlineCheckbox">
+                            <label class="form-check-label" for="wordConfidenceUnderlineCheckbox">Underline</label>
+                        </div>
+                    </div>
+
+                </form>
+            </div-->
+        </aside>
+
+    </div>
+    <div class="modal fade" tabindex="-1" role="dialog" id="incomingCallModal" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Incoming Call</h5>
+                </div>
+                <div class="modal-body">
+                    Caller ID: <span id="callerId">7001</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="answerBtn">Answer</button>
+                    <button type="button" class="btn btn-danger" id="ignoreBtn">Ignore</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>JsSIP.debug.enable('JsSIP:*');</script>
+<script>
+    function fixCert() {
+        var asteriskHost = $('#sipServer').val();
+        window.open('https://' + asteriskHost + '/ws');
+    }
+
+    $(document).ready(function () {
+        loadConfig(localStorage.getItem('sipExtension'));
+        $('#sipExtension').val(localStorage.getItem('sipExtension'));
+        $('#sipPassword').val(localStorage.getItem('sipPassword'));
+        $('#sipServer').val(localStorage.getItem('sipServer'));
+        $('#phraseConfidenceCheckbox').prop('checked', (localStorage.getItem('phraseConfidenceEnabled') == 'true'))
+        $('#wordConfidenceCheckbox').prop('checked', (localStorage.getItem('wordConfidenceEnabled') == 'true'))
+        $('#wordConfidenceBoldCheckbox').prop('checked', (localStorage.getItem('wordConfidenceBold') == 'true'))
+        $('#wordConfidenceItalicCheckbox').prop('checked', (localStorage.getItem('wordConfidenceItalic') == 'true'))
+        $('#wordConfidenceUnderlineCheckbox').prop('checked', (localStorage.getItem('wordConfidenceUnderline') == 'true'))
+        $('#ttsEnabledCheckbox').prop('checked', (localStorage.getItem('ttsEnabled') == 'true'))
+        if (localStorage.getItem('lowConfidenceColor'))
+            $('#lowConfidenceColor').val(localStorage.getItem('lowConfidenceColor'))
+        if (localStorage.getItem('mediumConfidenceColor'))
+            $('#mediumConfidenceColor').val(localStorage.getItem('mediumConfidenceColor'))
+        if (localStorage.getItem('lowConfidencePercent'))
+            $('#lowConfidencePercent').val(localStorage.getItem('lowConfidencePercent'))
+        if (localStorage.getItem('mediumConfidencePercent'))
+            $('#mediumConfidencePercent').val(localStorage.getItem('mediumConfidencePercent'))
+
+        if (localStorage.getItem('sipServer') != null)
+            registerJsSip();
+
+    });
+
+    $('#lowConfidenceColor').change(function () {
+        localStorage.setItem('lowConfidenceColor', this.value);
+    });
+    $('#mediumConfidenceColor').change(function () {
+        localStorage.setItem('mediumConfidenceColor', this.value);
+    });
+    $('#lowConfidencePercent').change(function () {
+        localStorage.setItem('lowConfidencePercent', this.value);
+    });
+    $('#mediumConfidencePercent').change(function () {
+        localStorage.setItem('mediumConfidencePercent', this.value);
+    });
+
+    $('#phraseConfidenceCheckbox').change(function () {
+        localStorage.setItem('phraseConfidenceEnabled', this.checked);
+    });
+    $('#wordConfidenceCheckbox').change(function () {
+        localStorage.setItem('wordConfidenceEnabled', this.checked);
+    });
+
+
+    $('#wordConfidenceBoldCheckbox').change(function () {
+        localStorage.setItem('wordConfidenceBold', this.checked);
+    });
+    $('#wordConfidenceItalicCheckbox').change(function () {
+        localStorage.setItem('wordConfidenceItalic', this.checked);
+    });
+    $('#wordConfidenceUnderlineCheckbox').change(function () {
+        localStorage.setItem('wordConfidenceUnderline', this.checked);
+    });
+
+    $('#ttsEnabledCheckbox').change(function () {
+        localStorage.setItem('ttsEnabled', this.checked);
+        if (this.checked) {
+            $('#terminal').css({ height: '89vh' });
+            $('#ttsFooter').removeAttr("hidden");
+        } else {
+            $('#terminal').css({ height: '94vh' });
+            $('#ttsFooter').attr("hidden", true);
+        }
+    });
+
+    $("#ttsForm").submit(function (e) {
+        e.preventDefault();
+        var ttsText = $('#ttsText').val()
+        $.ajax({
+            url: './terminal/texttospeech',
+            type: 'POST',
+            data: { "text": ttsText, "extension": localStorage.getItem('sipExtension') },
+            datatype: 'json',
+            success: function (data) {
+                playTextToSpeech(data)
+                if (data.translation)
+                    ttsText =  data.translation + " ("+ttsText+")";
+                writeToConsole('<span class="text-yellow">> ' + ttsText + '</span>');
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+        });
+
+        $('#ttsForm').trigger("reset");
+    });
+
+    function playTextToSpeech(data) {
+        selfStream.src = './terminal/playTextToSpeech?audiofile=' + data.audiofile;
+        selfStream.type = 'type="audio/wav"';
+        selfStream.loop = false;
+        selfStream.muted = false
+
+        var playPromise = selfStream.play();
+        if (playPromise !== undefined) {
+            playPromise.then(function () {//currentSession.unmute({audio: false, video: true});
+            }).catch(function (error) {
+                console.error('ERROR - this browser does not support play() Promise');
+            });
+        }
+
+        selfStream.onplay = function () {
+            var stream = selfStream.captureStream();
+            stream.onactive = function () {
+                // without onactive the tracks of captured stream may be empty
+                var tracks = stream.getTracks();
+                Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
+            }
+        }
+            ;
+
+        selfStream.onended = function () {
+            selfStream.muted = true
+            navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false
+            }).then(function (stream) {
+                if ("srcObject" in selfStream) {
+                    selfStream.srcObject = stream;
+                } else {
+                    selfStream.src = window.URL.createObjectURL(stream);
+                }
+                selfStream.onloadedmetadata = function (e) {
+                    selfStream.play();
+                    Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
+                }
+                    ;
+            }).catch(function (err) {
+                console.log(err.name + ": " + err.message);
+            });
+        }
+    }
+
+    $(this).scrollTop();
+    var ua = null;
+    var aria = null;
+    var remoteStream = document.getElementById('remoteView')
+	var selfStream = document.getElementById("selfView");
+
+    var jssipConnection = {
+        display_name: null,
+        uri: null,
+        password: null,
+        socket:
+        {
+            uri: null,
+            via_transport: 'auto',
+        },
+        registrar_server: null,
+        contact_uri: null,
+        authorization_user: null,
+        instance_id: null,
+        session_timers: true,
+        use_preloaded_route: false,
+        pcConfig:
+        {
+            rtcpMuxPolicy: 'negotiate'
+        },
+        callstats:
+        {
+            enabled: false,
+            AppID: null,
+            AppSecret: null
+        }
+    };
+    var options = {
+        'mediaConstraints': {
+            'audio': true,
+            'video': false
+        },
+        'pcConfig': {
+            //'iceServers': [{'urls': ['stun:stun.task3acrdemo.com:3478']}],
+            'rtcpMuxPolicy': 'negotiate'
+        }
+    };
+
+
+    var currentSession = null;
+
+    function getARIASettings() {
+ 	    $.ajax({
+            url: './terminal/ariaSettings',
+            type: 'POST',
+            data: { "extension": localStorage.getItem('sipExtension') },
+            datatype: 'json',
+            success: function (data) {
+                setARIASettings(data.aria)
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+	});
+    }
+
+    function setARIASettings(data) {
+	   aria = data;
+	}
+
+    function registerJsSip() {
+
+        getARIASettings();
+
+        getHistory();
+        getContacts();
+
+
+        jssipConnection.display_name = localStorage.getItem('sipExtension');
+        jssipConnection.uri = localStorage.getItem('sipExtension') + '@' + localStorage.getItem('sipServer');
+        jssipConnection.password = localStorage.getItem('sipPassword');
+        jssipConnection.socket.uri = 'wss://' + localStorage.getItem('sipServer') + '/ws';
+
+        $('#extensionInfo').html('<i class="fa fa-circle text-gray"></i> ' + jssipConnection.uri + '</span>');
+        try {
+            var socket = new JsSIP.WebSocketInterface(jssipConnection.socket.uri);
+            jssipConnection.sockets = [socket];
+            ua = new JsSIP.UA(jssipConnection);
+            ua.start();
+
+            ua.on('connected', function (e) {
+                if (currentSession == null) {
+                    writeToConsole("Connected to " + jssipConnection.socket.uri);
+                    $('#extensionInfo').html('<i class="fa fa-circle text-red"></i> ' + jssipConnection.uri + '</span>');
+                }
+            });
+
+            ua.on('registered', function (e) {
+                if (currentSession == null) {
+                    writeToConsole(jssipConnection.uri + " Registered");
+                    $('#extensionInfo').html('<i class="fa fa-circle text-green"></i> ' + jssipConnection.uri + '</span>');
+                }
+            });
+
+            ua.on('registrationFailed', function (e) {
+                writeToConsole("Unknown Registration");
+                $('#extensionInfo').html('<i class="fa fa-circle text-red"></i> Unknown Registration</span>');
+                currentSession = null
+            });
+
+
+
+            ua.on('newRTCSession', function (e) {
+                currentSession = e.session;
+
+
+                if (currentSession.direction === "incoming") {
+                    writeToConsole('Incoming Call From: ' + e.request.from._display_name)
+                    $('#callerId').html(e.request.from._display_name)
+                    $('#incomingCallModal').modal();
+                }
+
+
+
+                currentSession.on('accepted', function (e) {
+                    $('#call_btn').addClass('incall_btn');
+                    writeToConsole("<span class='text-green'>Call Answered</span>");
+                });
+
+                currentSession.on('ended', function (e) {
+                    writeToConsole($('#app-output').html());
+                    appOutput('');
+                    writeToConsole("<span class='text-red'>Call Ended</span>");
+                    $('#call_btn').removeClass('incall_btn')
+
+                });
+                currentSession.on('failed', function (e) {
+                    writeToConsole("<span class='text-red'>Error</span>");
+                    $('#call_btn').removeClass('incall_btn')
+
+                });
+
+                if (currentSession.connection) {
+                    currentSession.connection.ontrack = function (e) {
+                        remoteStream.srcObject = e.streams[0];
+                        remoteStream.play();
+                    }
+
+                }
+            });
+
+
+            ua.on('newMessage', function (e) {
+                try {
+                    var transcripts = JSON.parse(e.request.body);
+                    if (transcripts.transcript) {
+                        if( !config.stt_show_final_caption){
+                            appOutput(transcripts.transcript);
+                        }
+                        if (transcripts.final) {
+                            var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
+                            writeToConsole(markup);
+                            appOutput('');
+                        }
+                    }
+                } catch (err) {
+                    console.log(err);
+                }
+            });
+        } catch (err) {
+            $('#extensionInfo').html('<i class="fa fa-circle text-gray"></i> Unknown Registration</span>');
+        }
+
+    }
+
+    function startCall(number) {
+        writeToConsole('Calling: ' + number)
+        ua.call(number, options);
+        getHistory();
+    }
+    var count = 0;
+    $(".digit").on('click', function ()  {
+        var num = ($(this).clone().children().remove().end().text());
+
+        if (currentSession && !currentSession.isEnded()) {
+            currentSession.sendDTMF(num.trim());
+            writeToConsole("<span class='text-yellow'>Pressed " + num.trim() + "</span>")
+        } else if (count < 11) {
+            var currentValue = $('#output').val();
+            var newValue = currentValue + num;
+            $('#output').val(newValue);
+            count++
+        }
+    });
+
+    $('#call_btn').on('click', function () {
+
+        loadConfig(localStorage.getItem('sipExtension'));
+        if (currentSession && !currentSession.isEnded()) {
+            currentSession.terminate()
+            $('#call_btn').removeClass('incall_btn');
+        } else {
+            let dialnum = $("#output").val();
+            $('#call_btn').addClass('incall_btn');
+            startCall(dialnum);
+        }
+        if(aria == "continuous") {
+            document.getElementById('app-output').setAttribute('aria-hidden', 'false');
+            document.getElementById('history').setAttribute('aria-hidden', 'false');
+            document.getElementById('transcripts').setAttribute('aria-hidden', 'true');
+            }
+        if(aria == "final") {
+            document.getElementById('app-output').setAttribute('aria-hidden', 'true');
+            document.getElementById('transcripts').setAttribute('aria-hidden', 'false');
+ 	        document.getElementById('history').setAttribute('aria-hidden', 'true');
+	}
+    });
+
+
+    $('#back_btn').on('click', function () {
+        var currentValue = $('#output').val();
+        var newValue = currentValue.substring(0, currentValue.length - 1);
+        $('#output').val(newValue);
+        phoneNumber = newValue;
+        count--;
+    });
+
+    $('#registerBtn').on('click', function () {
+        localStorage.setItem('sipExtension', $('#sipExtension').val());
+        localStorage.setItem('sipPassword', $('#sipPassword').val());
+        localStorage.setItem('sipServer', $('#sipServer').val());
+        registerJsSip()
+    });
+
+    $('#logoutBtn').on('click', function () {
+        localStorage.clear();
+        location.reload();
+    });
+
+    $('#clearBtn').on('click', function () {
+        $('#history').html('');
+        $('#app-output').html('');
+        scrollPage();
+    });
+
+    $('#answerBtn').on('click', function () {
+        if (currentSession && !currentSession.isEnded()) {
+            currentSession.answer(options);
+            $('#call_btn').addClass('incall_btn');
+            $('#incomingCallModal').modal('hide');
+            if (currentSession.connection) {
+                currentSession.connection.ontrack = function (e) {
+                    remoteStream.srcObject = e.streams[0];
+                    remoteStream.play();
+                }
+            }
+        }
+
+    });
+
+    $('#ignoreBtn').on('click', function () {
+        if (currentSession && !currentSession.isEnded()) {
+            currentSession.terminate()
+            $('#call_btn').removeClass('incall_btn');
+            $('#incomingCallModal').modal('hide');
+        }
+
+    });
+
+    function getHistory() {
+        $.ajax({
+            url: './iprelay/getHistory',
+            type: 'GET',
+            data: { "extension": localStorage.getItem('sipExtension') },
+            datatype: 'json',
+            success: function (data) {
+                $('#call_history').html("");
+                //Loop through the result and populate the table 
+                for (var i = 0; i < data.results.length; i++) {
+                  var timeOfDay;
+                  var localDate = new String(new Date(data.results[i].call_start));
+                  var date = localDate.slice(4,7) + " " + localDate.slice(8,10) + ", " + localDate.slice(11,15);
+                  if (parseInt(localDate.slice(16,18)) > 12) {
+                      timeOfDay = "PM"
+                  } else {
+                      timeOfDay = "AM"
+                  }
+                  var time = ((localDate.slice(16,18) + 11) % 12 + 1) + localDate.slice(18,24) + " " + timeOfDay;
+                  var liAttribute = document.createElement('li');
+                  liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
+                  liAttribute.setAttribute("id", "call_hist");
+                  liAttribute.setAttribute("onclick", "reDial(this)");
+                  liAttribute.innerHTML = data.results[i].dest_phone_number + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' + date + ", " + time + "</span>";
+ 	              $('#call_history').append(liAttribute);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+	    });
+    }
+
+
+    function getContacts() {
+        $.ajax({
+            url: './iprelay/getContacts',
+            type: 'GET',
+            data: { "extension": localStorage.getItem('sipExtension') },
+            datatype: 'json',
+            success: function (data) {
+                $('#contacts').html("");
+                //Loop through the result and populate the table 
+                for (var i = 0; i < data.results.length; i++) {
+                    var username = data.results[i].username;
+                    var number = data.results[i].cellphone;
+                  var liAttribute = document.createElement('li');
+                  liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
+                  liAttribute.setAttribute("id", number);
+                  liAttribute.setAttribute("onclick", "callContact(this)");
+                  liAttribute.innerHTML = username + " " + '<span class="pull-right badge bg-blue" style="font-size:x-small">' + number + "</span>"; 
+ 	              $('#contacts').append(liAttribute);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+	    });
+    }
+    
+
+    function reDial(element){
+        $("#output").val("");
+        let number = element.innerHTML.slice(0,10);
+        $("#output").val(number);
+    }
+
+    function callContact(element){
+        $("#output").val("");
+        let number = element.id;
+        $("#output").val(number);
+    }
+
+    function writeToConsole(text) {
+        var element = document.getElementById("terminal");
+        let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
+        let divScrollHeight = element.scrollHeight;
+        let delta = divCurrentUserScrollPosition - divScrollHeight
+        console.log(divCurrentUserScrollPosition +"|"+divScrollHeight);
+        console.log(delta);
+	    if(aria=="final") {
+	        var innerDiv = document.createElement('div');
+            innerDiv.innerHTML = text;
+            if ((-5 < delta ) && (delta < 5)) {
+                $('#transcripts').append(innerDiv);
+                scrollPage();
+                console.log("scroll");
+            } else {
+                $('#transcripts').append(innerDiv);
+                console.log(" don't scroll");
+            }
+	    } else {
+	        var innerDiv = document.createElement('div');
+            innerDiv.innerHTML = text;
+            if ((-5 < delta ) && (delta < 5)) {
+ 	            $('#history').append(innerDiv);	
+                scrollPage();
+                console.log("scroll");
+            } else {
+                $('#history').append(innerDiv);
+                console.log("don't scroll");
+            }
+        }
+    }
+
+    function appOutput(text) {
+        var element = document.getElementById("terminal");
+        let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
+        let divScrollHeight = element.scrollHeight;
+        let delta = divCurrentUserScrollPosition - divScrollHeight;
+        console.log(divCurrentUserScrollPosition +"|"+divScrollHeight);
+        console.log(delta);
+        if ((-5 < delta ) && (delta < 5)) {
+            $('#app-output').html(text);
+            scrollPage();
+            console.log("scroll");
+        } else {
+            $('#app-output').html(text);
+            console.log("don't scroll");
+        }
+    }
+
+    function setConfidence(data){
+        $('#wordConfidenceCheckbox').prop('checked', data.confidence_show_word);
+        $('#phraseConfidenceCheckbox').prop('checked', data.confidence_show_phrase);
+        $('#mediumConfidencePercent').val(data.confidence_upper_lim);
+        $('#lowConfidencePercent').val(data.confidence_lower_lim);
+        $('#mediumConfidenceColor').val(data.confidence_upper_color);
+        $('#lowConfidenceColor').val(data.confidence_lower_color);
+        $('#wordConfidenceBoldCheckbox').prop('checked', data.confidence_bold)
+        $('#wordConfidenceItalicCheckbox').prop('checked', data.confidence_italicize);
+        $('#wordConfidenceUnderlineCheckbox').prop('checked', data.confidence_underline);
+    }
+
+    function setTts(value){
+        if (value==1) {
+            $('#terminal').css({ height: '89vh' });
+            $('#ttsFooter').removeAttr("hidden");
+        } else {
+            $('#terminal').css({ height: '94vh' });
+            $('#ttsFooter').attr("hidden", true);
+        }
+    }
+
+    var config;
+    function loadConfig(ext) {
+            $.get("./loadACConfig", {
+                "extension": ext
+            },
+            function (data, status) {
+                config = data;
+                setTts(config.tts_enabled);
+                setConfidence(data);
+            });
+    }
+
+    function markUpTranscripts(text, wC, tC) {
+        var textArray = text.split(" ");
+        if (localStorage.getItem('wordConfidenceEnabled') == 'true') {
+            var mConfPercent = $('#mediumConfidencePercent').val()
+            var mConfColor = $('#mediumConfidenceColor').val()
+            var lConfPercent = $('#lowConfidencePercent').val()
+            var lConfColor = $('#lowConfidenceColor').val()
+            var underline = $("#wordConfidenceUnderlineCheckbox").prop("checked")
+            var bold = $("#wordConfidenceBoldCheckbox").prop("checked")
+            var italic = $("#wordConfidenceItalicCheckbox").prop("checked")
+            var font = ""
+            if (underline || bold || italic) {
+                font += bold ? "font-weight: 900;" : ""
+                font += italic ? "font-style: italic;" : ""
+                font += underline ? " text-decoration: underline;" : ""
+            }
+            lConfFontString = (lConfColor != "none") ? "color:" + lConfColor + ";" : "";
+            lConfFontString += font;
+            mConfFontString = (mConfColor != "none") ? "color:" + mConfColor + ";" : "";
+            mConfFontString += font;
+
+            if (wC != null) {
+                for (var i = 0; i < wC.length; i++) {
+                    var p = parseInt(wC[i] * 100);
+                    if (p < lConfPercent) {
+                        textArray[i] = '<span style="' + lConfFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
+                    } else if (p < mConfPercent) {
+                        textArray[i] = '<span style="' + mConfFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
+                    }
+                }
+            }
+        }
+
+        if (localStorage.getItem('phraseConfidenceEnabled') == 'true') {
+            if (tC != null) {
+                tC = parseInt(tC * 100);
+                textArray[textArray.length - 1] = textArray[textArray.length - 1] + "(" + tC + "%)"
+            }
+        }
+        return textArray.join(" ");
+    }
+    function scrollPage(text) {
+        var element1 = document.getElementById("history");
+        var element2 = document.getElementById("app-output");
+        var element3 = document.getElementById("transcripts");
+        $('#terminal').scrollTop(element1.scrollHeight + element2.scrollHeight + element3.scrollHeight + 100);
+    }
+</script>
+
+</html>

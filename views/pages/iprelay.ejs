@@ -1,0 +1,552 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Iprelay</h1>
+                        </div>
+
+
+
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-gears"></i>&nbsp;Settings</li>
+                                <li class="breadcrumb-item active">Manage Iprelay</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Iprelay</h3>
+                            </div>
+                            <!-- /.box-header -->
+                            <div id="scenariotablediv" class="card-body table-responsive">
+                                <!-- <input id="scenario_id" type="hidden" /> -->
+                                <table id="scenariotable" class="table table-bordered" cellspacing="0"
+                                    width="100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text">ID</th>
+                                            <th class="text">Scenario Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% scenarios.forEach(function(s) {  %>
+                                        <tr id="scenario_<%= s.id %>">
+                                            <td>
+                                                <%= s.id %>
+                                            </td>
+                                            <td>
+                                                <%= s.name %>
+                                            </td>
+                                        </tr>
+
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.box-body -->
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="add_scenario_btn"
+                                    onclick='addScenarioModal()'>Add New Scenario</button>
+                                <button type="button" class="btn btn-danger" id="add_scenario_btn"
+                                    onclick='deleteScenario()'>Delete Scenario</button>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    onclick='renameScenarioModal()'>Rename Scenario</button>
+                                <button type="button" class="btn btn-secondary"
+                                    onclick='cloneScenario()'>Clone Scenario</button>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Details</h3>
+                            </div>
+                            <!-- /.box-header -->
+                            <div id="scenariodetailsdiv" class="card-body">
+                                <div class="container">
+                                    <div class="row">
+                                      <div class="col-lg-12">
+                                          <table class="table table-hover" id="myTable">
+                                            <thead>
+                                              <tr>
+                                                <th scope="col">#</th>
+                                                <th scope="col">Text</th>
+                                                <th scope="col">Raw</th>
+                                                <th scope="col">Audio</th>
+                                                <th scope="col"></th>
+                                                <th scope="col"></th>
+                                                <th scope="col"></th>
+                                              </tr>
+                                            </thead>
+                                            <tbody id="tableRows">
+                                            </tbody>
+                                          </table>
+                                          <td>
+                                              <button type="button" class="btn btn-dark" id="addAceQuillRow"
+                                                >Add AceQuill row</button>
+                                            <button type="button" class="btn btn-dark" id="addDUTRow"
+                                                >Add DUT row</button>
+                                        </td>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="container">
+                                </div>
+                            </div>
+                            <!-- /.box-body -->
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="save_scenario_btn"
+                                    onclick='updateScenario()'>Save</button>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </div>
+                </div>
+            </section>
+            <div id="snackbar">Saved</div>
+            <!-- /.content -->
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+    <div class="modal fade" id="addScenarioModal" tabindex="-1" role="dialog" aria-labelledby="addScenarioModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Add new Iprelay scenario</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="addScenarioForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="inputScenarioName" class="col-sm-2 control-label">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputScenarioName"
+                                    placeholder="Scenario Name" data-maxlength="100" required data-validation="length">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id='addScenario'>Add Scenario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="renameScenarioModal" tabindex="-1" role="dialog" aria-labelledby="renameScenarioModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Rename Iprelay scenario</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="renameScenarioForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="renameScenarioName" class="col-sm-2 control-label">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="renameScenarioName"
+                                    placeholder="Scenario Name" data-maxlength="100" required data-validation="length">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id='addScenario'>rename Scenario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src='/socket.io/socket.io.js'></script>
+    <script type="text/javascript">
+        var searchParams = new URLSearchParams(window.location.search)
+        var selected = "";
+        var selectedName = "";
+        var counter = 1;
+        $(document).ready(function () {
+            $('#settings_treeview').addClass('active');
+            $('#settings_iprelay_treeview').addClass('active');
+
+            var table = $('#scenariotable').DataTable({
+                "searching": false,
+                "paging": false,
+                "lengthChange": false,
+                "order": [],
+                "columnDefs": [{
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                }],
+                "columns": [{
+                    "data": "id"
+                },
+                {
+                    "data": "name"
+                }]
+            });
+            // var table = $('#scenariotable').DataTable()
+
+            $('#scenariotable tbody').on('click', 'tr', function () {
+                // console.log("datatata, ", table)
+                var data = table.row(this).data();
+                // var data = table.rows().data().toArray();
+                // console.log("row datas ",  data)
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+                selectedName = data.name;
+                console.log("sname ", selectedName);
+                getScenarioDetails(data.id)
+            });
+
+            if (searchParams.has("selected")) {
+                // console.log("here 2")
+                var selectThisID = searchParams.get("selected");
+                var foundRow = false;
+                table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                    if (this.data().id == selectThisID) {
+                        foundRow = true;
+                        $("#scenario_" + selectThisID).addClass("selected")
+                        getScenarioDetails(selectThisID)
+                    }
+                });
+                if (!foundRow) {
+                    $('#scenariotable tbody :eq(0)').click()
+                }
+            } else {
+                $('#scenariotable tbody :eq(0)').click()
+            }
+
+
+        });
+        //add row
+        var counter = $("#myTable tr").length;
+            $("#addAceQuillRow").on("click", function () {
+                newRow = createRow(counter, "", "", "", 0)
+                $('#myTable tbody').append(newRow);
+                counter++;
+            });
+
+            $("#addDUTRow").on("click", function () {
+                newRow = createRow(counter, "", "", "", 1)
+                $("#myTable tbody").append(newRow);
+                counter++;
+            });
+
+
+
+            $("#myTable tbody").on("click", ".ibtnDel", function (event) {
+                $(this).closest("tr").remove();
+                counter -= 1
+            });
+
+		var fixHelperModified = function(e, tr) {
+		var $originals = tr.children();
+		var $helper = tr.clone();
+		$helper.children().each(function(index) {
+			$(this).width($originals.eq(index).width())
+		});
+		return $helper;
+	    },
+		updateIndex = function(e, ui) {
+			$('td.index', ui.item.parent()).each(function (i) {
+				$(this).html(i+1);
+			});
+			// $('input[type=text]', ui.item.parent()).each(function (i) {
+			// 	$(this).val(i + 1);
+			// });
+		};
+
+        $("#myTable tbody").sortable({
+            helper: fixHelperModified,
+            stop: updateIndex
+        }).disableSelection();
+
+		$("tbody").sortable({
+		distance: 5,
+		delay: 100,
+		opacity: 0.6,
+		cursor: 'move',
+		update: function() {}
+		});
+
+        function addScenarioModal() {
+            $("#addScenarioForm").trigger("reset");
+            $('#addScenarioModal').modal();
+        }
+
+        function renameScenarioModal() {
+            $("#renameScenarioForm").trigger("reset");
+            $('#renameScenarioModal').modal();
+        }
+
+        function cloneScenario() {
+            event.preventDefault();
+            $.post("./cloneScenario", {
+                "id": selected,
+                "name": selectedName,
+            },
+            function (data, status) {
+                if (data.status == "Success") {
+                    console.log("Saved!!!!")
+                    window.location.href = window.location.href.replace(/[\?#].*|$/, "?selected=" + data.id);
+                } else {
+                    console.log("Something failed")
+                }
+            });
+        }
+
+        $("#upload_link").on('click', function (e) {
+            e.preventDefault();
+            $("#scenarioFile:hidden").trigger('click');
+        });
+
+
+
+        $("#scenarioFile").change(function () {
+            var filename = ($("#scenarioFile").val()).split(/(\\|\/)/g).pop();
+            $('#audioFilename').removeAttr("hidden");
+            $('#audioFilename').html(filename);
+
+        });
+
+        var socket = io('/admin', {
+            path:'/socket.io'
+        });
+
+        function getScenarioDetails(id) {
+            console.log("id ", id)
+            selected = id;
+            $.get("./getIPRelayScenario", {
+                "id": id
+            },
+                function (data, status) {
+                    $("#tableRows").empty();
+                    counter = 1;
+                    if (data.length != 0) {
+                        // var counter = 1;
+                        for( var i=0 ; i < data.length; i++){
+                            var row = data[i]
+                            // var newRow = $("<tr>");
+                            var raw = row.rawText== undefined ? '' : row.rawText;
+                            var audioPath = row.audioFilePath == null ? '' : row.audioFilePath;
+
+                            newRow = createRow(counter, row.bubbleText, raw, audioPath, row.isDUT)
+
+                            $("#myTable tbody").append(newRow);
+                            counter++;
+                        }
+                    } else {
+                        console.log("Something failed")
+                    }
+                });
+        }
+
+        function createRow(counter, bubbleText, raw, audioPath, isDUT){
+            var newRow = $("<tr>");
+            var cols = "";
+            cols += '<td class="index">'+counter+'</td>';
+            cols += '<td><input type="text" name="text" class="form-control" value="'+bubbleText+'"/></td>';
+            cols += '<td><input type="text" name="raw" class="form-control" value="'+raw+'"/></td>';
+            if (!isDUT){
+                cols += '<td><input type="text" readonly class="form-control-plaintext" value="'+audioPath.substring(31, audioPath.length)+'"></td>';
+                cols += '<td><input type="text" readonly class="form-control-plaintext" value="'+audioPath+'" hidden></td>';
+                cols += '<td><input id="scenarioFile_'+counter+'" type="file" class="form-control-file" accept="audio/*" /></td>';
+                }
+            else{
+                cols += '<td><input type="text" readonly class="form-control-plaintext" value="DUT"></td>';
+                cols += '<td input type="text" readonly value=""></td>';
+                cols += '<td input type="text" readonly value=""></td>';
+                }
+            cols += '<td><input type="button" class="ibtnDel btn btn-md btn-danger "  value="Delete"></td>';
+
+            newRow.append(cols);
+            newRow.append('</tr>');
+            return newRow
+        }
+
+        $("#addScenarioForm").submit(function (event) {
+            event.preventDefault();
+            $.post("./addIpRelayScenario", {
+                "name": $('#inputScenarioName').val(),
+            },
+                function (data, status) {
+                    if (data.status == "Success") {
+                        console.log("Saved!!!!")
+                        window.location.href = window.location.href.replace(/[\?#].*|$/, "?selected=" + data.id);
+                    } else {
+                        console.log("Something failed")
+                    }
+                });
+        });
+
+        $("#renameScenarioForm").submit(function (event) {
+            event.preventDefault();
+            $.post("./renameScenario", {
+                "id": selected,
+                "name": $('#renameScenarioName').val(),
+            },
+                function (data, status) {
+                    if (data.status == "Success") {
+                        console.log("Saved!!!!")
+                        window.location.href = window.location.href.replace(/[\?#].*|$/, "?selected=" + data.id);
+                    } else {
+                        console.log("Something failed")
+                    }
+                });
+        });
+
+    function deleteScenario(){
+        console.log("$('#scenario_id').val() : ", selected)
+        $.post("./deleteIpRelayScenario", {
+            "sId": selected,
+        },
+        function (data, status) {
+            if (data.status == "Success") {
+                console.log('success delete')
+                location.reload()
+            } else {
+                console.log("error delete")
+            }
+        });
+    }
+
+    function updateScenario() {
+
+        var formData = new FormData();
+        // file = $("#scenarioFile_1")[0].files[0];
+        // console.log(file);
+        // formData.append('id', selected);
+
+        var tableData = []
+        var tbl = document.getElementById("myTable")
+        var files = []
+        for(var i = 1; i<tbl.rows.length; i++){
+            isDUT = 0;
+            audioPath = "";
+            if(tbl.rows[i].cells[3].children[0].value == "DUT"){
+                isDUT = 1;
+                audioPath = tbl.rows[i].cells[3].children[0].value
+            }else{
+                audioPath = tbl.rows[i].cells[4].children[0].value
+            }
+            temp = [selected,
+                    i,
+                    tbl.rows[i].cells[1].children[0].value,
+                    tbl.rows[i].cells[2].children[0].value,
+                    audioPath,
+                    isDUT,
+                    0
+            ]
+            tableData.push(temp)
+            console.log("temp ", temp)
+            prevname = tbl.rows[i].cells[3].children[0].value
+            if (prevname != "DUT"){         // if not dut
+                scenario_id = tbl.rows[i].cells[5].children[0].id
+                console.log("scenario_id" , scenario_id)
+
+
+                console.log("row ", $("#"+scenario_id)[0])
+
+                if ($("#"+scenario_id)[0].files[0] != undefined     // senario exits and updated
+                        && prevname.substring(31, prevname.length) != $("#"+scenario_id)[0].files[0].name){
+                    console.log("previous name ", prevname.substring(31, prevname.length))
+                    console.log("new name ", $("#"+scenario_id)[0].files[0].name)
+                    formData.append('scenarioFile', $("#"+scenario_id)[0].files[0]);
+                    temp[6]=1;
+                }
+            }
+
+        }
+        formData.append('id', selected);
+        formData.append('data', tableData);
+        // formData.append('scenarioFile', files);
+
+        console.log("tableData ", tableData)
+        $.ajax({
+            url: './updateIpRelayScenario',
+            data: formData,
+            contentType: false,
+            processData: false,
+            type: 'POST',
+            success: function (data) {
+                // your callback here
+                console.log('success upload')
+                $('#snackbar').html("Saved")
+                $('#snackbar').addClass("show");
+                setTimeout(function () {
+                    $('#snackbar').removeClass("show");
+                }, 3000)
+
+            },
+            error: function (error) {
+                // handle error
+                console.log('error upload')
+            }
+        });
+    }
+    </script>
+</body>
+
+</html>
+
+

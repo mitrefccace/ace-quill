@@ -1,0 +1,321 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Manage Users</h1>
+                </div>
+
+
+
+                <div class="col-sm-12">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><i class="fa fa-lock"></i>&nbsp;Admin</li>
+                        <li class="breadcrumb-item active">Manage Users</li>
+                    </ol>
+                </div>
+            </div>
+
+<!--
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="./">
+                                <i class="fa fa-lock"></i> Admin</a>
+                        </li>
+                        <li class="active">Manage Users</li>
+                    </ol>
+                -->
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Users</h3>
+                            </div>
+                            <!-- /.box-header -->
+                            <div id="usertablediv" class="card-body table-responsive">
+                                <table id="usertable" class="table table-bordered table-hover" cellspacing="0"
+                                    width="100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text">ID</th>
+                                            <th class="text">First Name</th>
+                                            <th class="text">Last Name</th>
+                                            <th class="text">Username</th>
+                                            <th class="text">Group</th>
+                                            <th class="text">Last Login</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% users.forEach(function(user) {  %>
+                                        <tr value="<%= user.idlogin_credentials %>">
+                                            <td>
+                                                <%= user.idlogin_credentials %>
+                                            </td>
+                                            <td>
+                                                <%= user.first_name %>
+                                            </td>
+                                            <td>
+                                                <%= user.last_name %>
+                                            </td>
+                                            <td>
+                                                <%= user.username %>
+                                            </td>
+                                            <td>
+                                                <%= user.group_name %>
+                                            </td>
+                                            <td>
+                                                <%= user.last_login %>
+                                            </td>
+                                        </tr>
+
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.box-body -->
+                            <div class="box-footer">
+                                <button type="button" class="btn btn-primary" id="add_user_btn"
+                                    onclick='addUserModal()'>Add New User</button>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- modals -->
+
+    <div class="modal fade" id="configModal" tabindex="-1" role="dialog" aria-labelledby="configModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Add new user</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="addUserForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="inputUsername" class="col-sm-2 control-label">Username</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputUsername"
+                                    placeholder="Between 4 and 15 characters" data-minlength="4" data-maxlength="15"
+                                    required data-validation="length" data-validation-length="4-15">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 control-label">Password</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" id="inputPassword" placeholder="Password"
+                                    data-minlength="8" data-maxlength="64" data-validation="custom"
+                                    data-validation-regexp="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,64}$"
+                                    required data-validation-error-msg="You did not enter a password">
+                                <p class="help-block">Password must be 8 to 64 characters and contain at least 1
+                                    uppercase letter, 1 lowercase
+                                    letter, 1 number, and 1 special character.</p>
+
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputFirstname" class="col-sm-2 control-label">First Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputFirstname" data-maxlength="25"
+                                    placeholder="First name" required data-validation="length"
+                                    data-validation-length="max25">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputLastname" class="col-sm-2 control-label">Last Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputLastname" data-maxlength="25"
+                                    placeholder="Last name" required data-validation="length"
+                                    data-validation-length="max25">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="selectGroup" class="col-sm-2 control-label">Group</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" id="selectGroup">
+                                    <% groups.forEach(function(group) {  %>
+                                    <option value='<%= group.idgroups %>'>
+                                        <%= group.group_name %>
+                                    </option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id='loadConfig'>Add User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete <b id="userNameModal">UsersName</b>, do you want to proceed?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick='deleteUser()'>Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% if(groups.length == 0) {  %>
+    <div class="modal show" id="nogroups-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">No Groups Exist</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You must first create groups before you can add users.</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='./groups'">Create
+                        Groups</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+    <script type="text/javascript">
+        var selectedUser = 0;
+        $(document).ready(function () {
+            $('#admin_treeview').addClass('active');
+            $('#admin_users_treeview').addClass('active');
+
+            var table = $('#usertable').DataTable({
+                "order": [],
+                "columnDefs": [{
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                }, {
+                    "targets": [5],
+                    "render": function (data, type, row) {
+                        if (data.length == 0) {
+                            return "Never";
+                        } else {
+                            return data;
+                        }
+                    }
+                }]
+            });
+
+            $('#usertable tbody').on('click', 'tr', function () {
+                var data = table.row(this).data();
+                $("#userNameModal").html(data[1] + " " + data[2]);
+                selectedUser = $(this).attr('value');
+                $('#confirm-delete').modal();
+            });
+
+            $("#addUserForm").submit(function (event) {
+                event.preventDefault();
+                $.post("./addUser", {
+                    "username": $('#inputUsername').val(),
+                    "password": $('#inputPassword').val(),
+                    "firstname": $('#inputFirstname').val(),
+                    "lastname": $('#inputLastname').val(),
+                    "group_id": $('#selectGroup').val()
+                },
+                    function (data, status) {
+                        console.log("Saved!!!!")
+                        location.reload();
+                    });
+
+            });
+        });
+
+        function addUserModal() {
+            $("#addUserForm").trigger("reset");
+            $('#configModal').modal();
+        }
+
+        function deleteUser() {
+            $.post("./DeleteUser", {
+                "id": selectedUser
+            },
+                function (data, status) {
+                    console.log("Deleted!!!!")
+                    location.reload();
+                });
+        }
+
+        $.validate({
+            modules: 'toggleDisabled',
+            disabledFormFilter: 'form.toggle-disabled',
+            showErrorDialogs: false
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+body, html {
+  max-height: 90vh !important;
+}
+
+#terminal {
+  background-color: black;
+  background-image: radial-gradient(rgba(0, 50, 0, 0.75), black 120%);
+  height: 94vh;
+  margin: 0;
+  overflow: auto;
+  padding: 2rem;
+  color: white;
+  font: 1.3rem Inconsolata, monospace;
+  /*text-shadow: 0 0 5px #C8C8C8;*/
+}
+
+#terminal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+  pointer-events: none;
+}
+
+::selection {
+  background: #0080FF;
+  text-shadow: none;
+}
+
+#caller-text {
+  color:white;
+}
+
+#callee-text {
+  color:yellow;
+}
+
+pre {
+  overflow-x: auto;
+  overflow-y: scroll;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.cursor {
+  position: relative;
+}
+
+.cursor i {
+  position: absolute;
+  width: 1px;
+  height: 80%;
+  background-color: gray;
+  left: 5px;
+  top: 10%;
+  animation-name: blink;
+  animation-duration: 800ms;
+  animation-iteration-count: infinite;
+  opacity: 1;
+}
+
+.cursor input:focus+i {
+  display: none;
+}
+
+@keyframes blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.row {
+  margin: 0 auto;
+  /*width: 250px;*/
+  clear: both;
+  text-align: center;
+  font-family: 'Exo';
+}
+
+.digit,
+.dig {
+  float: left;
+  padding: 10px 30px;
+  width: 30px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.digit {
+  border:none;
+  background-color: transparent;
+}
+
+.sub {
+  font-size: 0.6rem;
+  color: grey;
+}
+
+.dialpadcontainer {
+  background-color: white;
+  /*width: 210px;*/
+  padding: 20px;
+  margin: 10px auto;
+  height: 425px;
+  text-align: center;
+}
+
+#output {
+  font-family: "Exo";
+  font-size: 2rem;
+  height: 60px;
+  font-weight: bold;
+  color: #1976d2;
+}
+
+#call_btn{
+  display: inline-block;
+  background-color: #66bb6a;
+  padding: 4px 30px;
+  margin: 10px;
+  color: white;
+  border-radius: 4px;
+  float: left;
+  cursor: pointer;
+}
+
+#call_button{
+  background-color: transparent;
+  border: none;
+}
+
+#back_btn{
+  background-color: transparent;
+  border: none;
+}
+
+.incall_btn{
+  background-color: red !important;
+}
+
+.botrow {
+  margin: 0 auto;
+ /* width: 210px;*/
+  clear: both;
+  text-align: center;
+  font-family: 'Exo';
+}
+
+.digit:active,
+.dig:active {
+  background-color: #e6e6e6;
+}
+
+#call_btn:hover {
+  background-color: #81c784;
+}
+
+.dig {
+  float: left;
+  padding: 10px 20px;
+  margin: 10px;
+  width: 30px;
+  cursor: pointer;
+}

@@ -1,0 +1,226 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Manage Groups</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-lock"></i>&nbsp;Administrator</li>
+                                <li class="breadcrumb-item active">Manage Groups</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Groups</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <div id="grouptablediv" class="card-body table-responsive">
+                                <table id="grouptable" class="table table-bordered table-hover" cellspacing="0"
+                                    width="100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text">ID</th>
+                                            <th class="text">Group Name</th>
+                                            <th class="text">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% groups.forEach(function(group) {  %>
+                                        <tr value="<%= group.idgroups %>">
+                                            <td>
+                                                <%= group.idgroups %>
+                                            </td>
+                                            <td>
+                                                <%= group.group_name %>
+                                            </td>
+                                            <td>
+                                                <%= group.description %>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="add_group_btn"
+                                    onclick='addGroupModal()'>Add New Group</button>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- modals -->
+
+    <div class="modal fade" id="configModal" tabindex="-1" role="dialog" aria-labelledby="configModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Add new group</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="addGroupForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="inputGroupname" class="col-sm-3 control-label">Group name</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="inputGroupname"
+                                    placeholder="Between 1 and 45 characters" data-minlength="1" data-maxlength="45"
+                                    required data-validation="length" data-validation-length="1-45">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputLastname" class="col-sm-3 control-label">Description</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" rows="5" id="inputDescription"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id='addGroupBtn'>Add Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete <b id="groupNameModal">GroupName</b>, do you want to proceed?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick='deleteGroup()'>Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var selectedGroup = 0;
+        $(document).ready(function () {
+            $('#admin_groups_treeview').addClass('active');
+
+            var table = $('#grouptable').DataTable({
+                "order": [],
+                "columnDefs": [{
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                }]
+            });
+
+            $('#grouptable tbody').on('click', 'tr', function () {
+                var data = table.row(this).data();
+                selectedGroup = $(this).attr('value');
+                $("#groupNameModal").html(data[1]);
+                if (selectedGroup)
+                    $('#confirm-delete').modal();
+            });
+
+            $("#addGroupForm").submit(function (event) {
+                event.preventDefault();
+                $.post("./addGroup", {
+                    "groupname": $('#inputGroupname').val(),
+                    "description": $('#inputDescription').val()
+                },
+                    function (data, status) {
+                        console.log("Saved!!!!")
+                        location.reload();
+                    });
+
+            });
+        });
+
+        function addGroupModal() {
+            $("#addGroupForm").trigger("reset");
+            $('#configModal').modal();
+        }
+
+        function deleteGroup() {
+            $.post("./DeleteGroup", {
+                "id": selectedGroup
+            },
+                function (data, status) {
+                    console.log("Deleted!!!!")
+                    location.reload();
+                });
+        }
+
+        $.validate({
+            modules: 'toggleDisabled',
+            disabledFormFilter: 'form.toggle-disabled',
+            showErrorDialogs: false
+        });
+    </script>
+</body>
+
+</html>

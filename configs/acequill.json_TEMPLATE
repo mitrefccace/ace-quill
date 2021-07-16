@@ -1,0 +1,32 @@
+{
+    "cleartext": true,
+    "debuglevel": "ALL",
+    "sttService": "enabled",
+    "port": "<port>",
+    "version": "1.0",
+    "nginxlocation":"<nginx location eg '/location' >",
+    "proxy":"<http://proxy_ip:port>",
+    "ssl" : {
+      "key": "<ssl key filepath>",
+      "cert": "<ssl cert filepath>"
+    },
+    "session": {
+      "name":"<session name>",
+      "secret": "<secret>"
+    },
+    "transcriptFilePath": "<path to store transcripts>",
+    "wavFilePath": "<path to store wav files>",
+    "videoFilePath":"uploads/",
+    "mysql": {
+      "host": "<mysql host>",
+      "user": "<mysql user>",
+      "password": "<mysql password>",
+      "database": "ace_quill"
+},
+    "asterisk": {
+      "port": <asterisk ami port>,
+      "host": "<asterisk ip>",
+      "user": "<ami username>",
+      "password": "<ami password>"
+    }
+}

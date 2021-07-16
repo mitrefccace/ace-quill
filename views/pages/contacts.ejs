@@ -1,0 +1,383 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+  <div class="wrapper">
+
+    <!-- Header -->
+    <% include ..//partials/header %>
+
+    <!-- Left side column. contains the logo and sidebar -->
+
+    <% include ..//partials/sidebar %>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+      <!-- Content Header (Page header) -->
+      <section class="content-header">
+        <div class="container-fluid">
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h1>Contacts</h1>
+            </div>
+            <div class="col-sm-6">
+              <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><i class="fa fa-gears"></i>&nbsp;Settings</li>
+                <li class="breadcrumb-item active">Contacts</li>
+              </ol>
+            </div>
+          </div>
+        </div><!-- /.container-fluid -->
+      </section>
+
+      <!-- Main content -->
+      <section class="content">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card" id="api_post_box">
+              <div class="card-header">
+                <h3 class="card-title">Contacts</h3>
+              </div>
+
+              <div id="contacttablediv" class="card-body table-responsive">
+                <table id="contacttable" class="table table-bordered table-hover" cellspacing="0" width="100%">
+                  <thead>
+                    <tr>
+                      <th class="text">Name</th>
+                      <th class="text">Cell Phone</th>
+                      <th class="text">Work Phone</th>
+                      <th class="text">Home Phone</th>
+                      <th class="text">Fax Phone</th>
+                      <th class="text">Personal Email</th>
+                      <th class="text">Work Email</th>
+                      <th class="text">Favorite</th>
+                      <th class="text">Extension</th>
+                      <th class="text" style="display:none;">ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% contact.forEach(function(config) {  %>
+                    <tr value="<%= config.username %>">
+                      <td>
+                        <%= config.username %>
+                      </td>
+                      <td>
+                        <%= config.cellphone %>
+                      </td>
+                      <td>
+                        <%= config.workphone %>
+                      </td>
+                      <td>
+                        <%= config.homephone %>
+                      </td>
+                      <td>
+                        <%= config.faxphone %>
+                      </td>
+                      <td>
+                        <%= config.personalemail %>
+                      </td>
+                      <td>
+                        <%= config.workemail %>
+                      </td>
+                      <td>
+                        <%= config.favorite %>
+                      </td>
+                      <td>
+                        <%= config.extension %>
+                      </td>
+                      <td style="display:none;">
+                        <%= config.idcontacts %>
+                      </td>
+                    </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.box-body -->
+              <div class="card-footer">
+                <button type="button" class="btn btn-primary" id="add_extension_btn" onclick='addContact()'>Add
+                  Contact</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modal -->
+      <div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="addContact">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="contactModalLabel">Add Contact</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form class="form-horizontal" id="AddModifyContactForm">
+              <div class="modal-body">
+                <div class="form-group row" id="form_extension">
+                  <label for="inputExtension" class="col-sm-3 control-label">Name</label>
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="inputName"
+                       minlength="4" maxlength="45" required>
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Cell Phone</label>
+                  <div class="col-sm-9">
+                    <input type="tel" pattern="[0-9]{10}" class="form-control" id="inputCell" maxlength="45" required>
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Work Phone</label>
+                  <div class="col-sm-9">
+                    <input type="tel" pattern="[0-9]{10}" class="form-control" id="inputWorkPhone" maxlength="45">
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Home Phone</label>
+                  <div class="col-sm-9">
+                    <input type="tel" pattern="[0-9]{10}" class="form-control" id="inputHomePhone" maxlength="45">
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Fax Phone</label>
+                  <div class="col-sm-9">
+                    <input type="tel" class="form-control" id="inputFaxPhone" maxlength="45">
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Personal Email</label>
+                  <div class="col-sm-9">
+                    <input type="email" class="form-control" id="inputPersonalEmail" maxlength="45">
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Work Email</label>
+                  <div class="col-sm-9">
+                    <input type="email" class="form-control" id="inputWorkEmail" maxlength="45">
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name">
+                  <label for="inputExtension" class="col-sm-3 control-label">Favorite</label>
+                  <div class="col-sm-9">
+                    <input type="checkbox" class="form-control" id="inputFavorite" maxlength="45">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputPassword" class="col-sm-3 control-label">Extension</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="inputExtension">
+                      <option value='ALL' selected="selected">All</option>
+                      <option value='5001'>5001</option>
+                      <option value='5002'>5002</option>
+                      <option value='5003'>5003</option>
+                      <option value='5004'>5004</option>
+                      <option value='5005'>5005</option>
+                      <option value='5006'>5006</option>
+                      <option value='5007'>5007</option>
+                      <option value='5008'>5008</option>
+                      <option value='5009'>5009</option>
+                      <option value='5010'>5010</option>
+                      <option value='5011'>5011</option>
+                      <option value='5012'>5012</option>
+                      <option value='5013'>5013</option>
+                      <option value='5014'>5014</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row" id="form_device_name" style="display:none;">
+                  <label for="inputExtension" class="col-sm-3 control-label">ID</label>
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="inputID" maxlength="45">
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id='loadConfig'>Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id='deleteOption'
+                  onclick='deleteContact()'>Delete</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- /.content -->
+    </div>
+      <footer class="main-footer">
+        <% include ..//partials/footer %>
+      </footer>
+
+    <!-- /.content-wrapper -->
+  </div>
+
+   
+            <!-- Socket.io -->
+  <script src='./../socket.io/socket.io.js'></script>
+  <script type="text/javascript">
+    $('#contacts_treeview').addClass('active');
+
+    var socket = io('/admin', {
+      path: '/socket.io'
+    });
+    socket.on('connect', function (data) {
+      socket.emit('register-admin');
+    });
+
+    var selectedExtension = 0;
+    let idContacts = 0;
+
+    var table = $('#contacttable').DataTable({
+      "paging": false,
+      "ordering": true,
+      "info": false,
+      "searching": false,
+      "order": [],
+      "columnDefs": [{
+      }, {
+        "targets": [0],
+        "render": function (data, type, row) {
+          return data;
+        }
+      }, {
+        "targets": [2],
+        "render": function (data, type, row) {
+          return data;
+        }
+      }, {
+        "targets": [3],
+        "render": function (data, type, row) {
+          return data;
+        }
+      }, {
+        "targets": [4],
+        "render": function (data, type, row) {
+          return data;
+        }
+      }, {
+        "targets": [5],
+        "render": function (data, type, row) {
+          return data;
+        }
+      }, {
+	      "targets": [6],
+        "render": function (data, type, row) {
+          return data;
+        }
+      },  {
+	      "targets": [7],
+        "render": function (data, type, row) {
+          if (data == 0) {
+            data = 'N';
+          } else {
+            data = 'Y'
+          }
+          return data;
+        }
+      },{
+	      "targets": [8],
+        "render": function (data, type, row) {
+          if (data == 0) {
+            data = 'ALL';
+          }
+          return data;
+        }
+      }, {
+        "targets": [9],
+        "render": function (data, type, row) {
+          return data;
+      }
+    }]
+  });
+    
+    $('#contacttable tbody').on('click', 'tr', function() {
+      var row = table.row(this).data();
+      idContacts = row[9];
+      $('#deleteOption').show();
+      $('#inputName').prop('disabled', false);
+      $('#inputName').val(row[0]);
+      $('#inputCell').val(row[1]);
+      $('#inputWorkPhone').val(row[2]);
+      $('#inputHomePhone').val(row[3]);
+      $('#inputFaxPhone').val(row[4]);
+      $('#inputPersonalEmail').val(row[5]);
+      $('#inputWorkEmail').val(row[6]);
+      if (row[7] == 0) {
+        $('#inputFavorite').prop("checked", false);
+      } else {
+        $('#inputFavorite').prop("checked", true);
+      }
+      $('#inputExtension').val(row[8]);
+      $('#inputID').val(row[9]);
+      $('#contactModal').modal();
+    });
+
+
+    $("#AddModifyContactForm").submit(function (event) {
+      let extension = $('#inputExtension').val();
+      let favorite = 0;
+      let idcontacts = idContacts;
+      if (extension == null) {
+         extension = 0;
+      }
+      if($('#inputFavorite').prop("checked") == true) {
+         favorite = 1;
+      }
+      event.preventDefault();      
+      $.post("./UpdateContact", {
+      "idcontacts": idcontacts,
+      "username": $('#inputName').val(),
+      "cellphone": $('#inputCell').val(),
+      "workphone": $('#inputWorkPhone').val(),
+      "homephone": $('#inputHomePhone').val(),
+      "faxphone": $('#inputFaxPhone').val(),
+      "personalemail": $('#inputPersonalEmail').val(),
+      "workemail": $('#inputWorkEmail').val(),
+      "favorite": favorite,
+      "extension": extension,
+      },
+        function (data, status) {
+          console.log("Saved!!!!")
+          location.reload();
+        });
+      });
+
+function addContact() {
+  $("#AddModifyContactForm").trigger("reset");
+  $('#contactModal').modal();
+}
+
+function deleteContact() {
+      $.post("./DeleteContact", {
+        "idcontacts": $('#inputID').val()
+      },
+        function (data, status) {
+          console.log("Deleted!!!!")
+          location.reload();
+        });
+    }
+
+</script>
+</body>
+
+</html>

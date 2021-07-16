@@ -1,0 +1,74 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+
+<html>
+
+<head>
+    <% include ..//partials/head %>
+        <link rel="stylesheet" href="/stylesheets/bundle.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 offset-md-4">
+                <div class="account-wall">
+                    <img class="dvc-img" src="/images/anon.png" alt="">
+                    <form class="form-login" id="form-login" autocomplete="off">
+                        <div id='badcreds' class="alert alert-danger d-none">
+                            Incorrect Username or Password
+                        </div>
+                        <input type="text" class="form-control" id="username" placeholder="Username" autocomplete="off" required autofocus />
+                        <br>
+                        <input type="password" class="form-control" id="password" placeholder="Password" autocomplete="off" required />
+                        <button class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#form-login').submit(function (evt) {
+                evt.preventDefault();
+                var username = $('#username').val();
+                var password = $('#password').val();
+                $.ajax({
+                    url: './login',
+                    data: {
+                        username: username,
+                        password: password
+                    },
+                    type: 'POST',
+                    success: function (data) {
+                        if (data === 'success') {
+                            $('#badcreds').addClass('d-none')
+                            window.location.href = "./";
+                        } else {
+                            $('#badcreds').removeClass('d-none');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('Error');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+public/assets
+logs/*.log*
+uploads/scenarios/*.wav
+uploads/iprelay/*.wav
+uploads/recordings/*.webm
+texttospeech/audiofiles/*.mp3
+configs/*.json
+configs/**/*.json
+
+
+
+

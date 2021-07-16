@@ -1,0 +1,854 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Research Data</h1>
+                            <div id="reportrange" class="dropdown-menu-left">
+                                <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+                                <span></span>
+                                <b class="caret"></b>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-bar-chart"></i>&nbsp;Reports</li>
+                                <li class="breadcrumb-item active">Research Data</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+                    <div class="col-lg-9">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Call Logs</h3>
+                                <div class="card-tools pull-right">
+                                    <button class="btn btn-card-tool" id="refreshdatabtn">
+                                        <i class="fa fa-refresh"></i>
+                                    </button>
+                                    <button class="btn btn-card-tool" id="researchdatadownloadbtn">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- /.card-header -->
+                            <div id="calllogtablediv" class="card-body table-responsive" style="overflow-x: scroll">
+                                <table id="calllogtable" class="table table-bordered table-hover" cellspacing="0"
+                                    width="100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">ID</th>
+                                            <th class="text-center">Call Date</th>
+                                            <th class="text-center">Device</th>
+                                            <th class="text-center">Ext</th>
+                                            <th class="text-center">Dest</th>
+                                            <th class="text-center">Dur</th>
+                                            <th class="text-center">Scen.</th>
+                                            <th class="text-center">STT</th>
+                                            <th class="text-center">Delay</th>
+                                            <th class="text-center">Notes</th>
+                                            <th class="text-center">Has Video</th>
+                                            <th class="text-center">Translation Engine</th>
+                                            <th class="text-center">Caller Language</th>
+                                            <th class="text-center">Callee Language</th>
+                                            <th class="text-center">TTS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.card-body -->
+                        </div>
+                        <!-- /.box -->
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="nav-tabs-custom card">
+                            <ul class="nav nav-tabs justify-content-end">
+                                <li class="nav-item">
+                                    <a href="#notes-call-tab" data-toggle="pill" aria-expanded="true" role="tab"
+                                        class="nav-link active">Call Notes</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#notes-mobizen-tab" data-toggle="pill" aria-expanded="true" role="tab"
+                                        class="nav-link">Mobizen Notes</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content no-padding">
+                                <div class="tab-pane card-body active" id="notes-call-tab">
+                                    <textarea id="callNotesTextarea" class="form-control" rows="5"
+                                        placeholder="Enter notes about the call..."></textarea>
+                                </div>
+                                <div class="tab-pane card-body" id="notes-mobizen-tab">
+                                    <textarea id="mobizenNotesTextarea" class="form-control" rows="5"
+                                        placeholder="Enter notes about mobizen..."></textarea>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button id="saveNotesBtn" type="button" class="btn btn-primary"
+                                    onclick="saveNotes();">Save</button>
+                                <input id="selectedRowId" type="hidden" />
+                            </div>
+
+                        </div>
+
+                        <div class="nav-tabs-custom card">
+                            <ul class="nav nav-tabs ">
+                                <li class="nav-header">
+                                    <h4><span id='transcriptId'>???</span></h4>
+                                </li>
+
+                                <li class="nav-item ml-auto">
+                                    <a href="#video-tab" data-toggle="pill" aria-expanded="true" role="tab"
+                                        class="nav-link">Video</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#recordings-tab" data-toggle="pill" aria-expanded="true" role="tab"
+                                        class="nav-link">Recordings</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#transcripts-tab" data-toggle="pill" aria-expanded="true" role="tab"
+                                        class="nav-link active">Transcript</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#accuracy-tab" data-toggle="pill" aria-expanded="true" role="tab"
+                                        class="nav-link">Accuracy</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content no-padding">
+                                <div class="tab-pane  card-body active direct-chat direct-chat-primary"
+                                    id="transcripts-tab">
+                                    <div class="col-lg-12 col-centered">
+                                        <div class="direct-chat-messages" id="transcriptDiv" style='height: 400px;'>
+                                        </div>
+                                        <br>
+                                        <label for="downloadTranscripts">Download type:</label>
+                                        <select name="downloadTranscripts" id="downloadTranscripts">
+                                            <option value="all">All</option>
+                                            <option value="final">Final</option>
+                                            <option value="intermediary">Intermediary</option>
+                                            <option value="gecko">Gecko</option>
+                                            <option value="iprelay">IP Relay Log</option>
+                                        </select>
+                                        <br>
+                                        <hr>
+                                        <button id="downloadtranscriptsBtn" type="button" class="btn btn-primary"
+                                            onclick="downloadTranscripts();">Download</button>
+                                        <br>
+                                        <hr>
+                                        <audio id="player" controls="controls" style="width: 100%;">
+                                            <source id="wav_src" src="" type="audio/wav" /> Your browser does not
+                                            support audio.
+                                        </audio>
+                                    </div>
+                                </div>
+                                <div class="tab-pane  card-body" id="recordings-tab">
+                                    <div class="col-lg-12 col-centered">
+                                        <ol id="recordingsList">
+                                            <li><a href="#" target="_blank">Screen Recording</a></li>
+                                            <li><a href="#" target="_blank">Camera Recording</a></li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                <div class="tab-pane  card-body direct-chat direct-chat-primary" id="accuracy-tab"
+                                    data="">
+                                    <table class="table">
+                                        <tbody>
+                                            <tr>
+                                                <th></th>
+                                                <th title="Word Error Rate">WER</th>
+                                                <th title="Match Error Rate">MER</th>
+                                                <th title="Word Information Loss">WIL</th>
+                                            </tr>
+                                            <tr>
+                                                <td>Accuracy</td>
+                                                <td id="wer"></td>
+                                                <td id="mer"></td>
+                                                <td id="wil"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="scenariotablediv" class="card-body table-responsive"
+                                        style="height: 300px;overflow: scroll;">
+                                        <select class="form-control" id='scenarioSelect' name='scenarioSelect'>
+                                            <% scenarios.forEach(function(s) {  %>
+                                            <option value='<%= s.id %>'>
+                                                <%= s.scenario_name %>
+                                            </option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" id='StartTestBtn'
+                                        onclick='testScenarios()'>Start
+                                        Test</button>
+                                </div>
+
+                                <div class="tab-pane card-body" id="video-tab">
+                                    <div id='videorowselect' hidden>
+                                        <h4>Select a row from the table</h4>
+                                    </div>
+                                    <div id='videoupload'>
+                                        <!-- Standard Form -->
+                                        <h4>Select video from your computer</h4>
+                                        <form action="" method="post" enctype="multipart/form-data" id="js-upload-form">
+                                            <div class="form-inline">
+                                                <div class="form-group">
+                                                    <input type="file" name="files[]" id="js-upload-video"
+                                                        accept=".mp4" />
+                                                </div>
+                                                <button type="submit" class="btn btn-sm btn-primary"
+                                                    id="js-upload-submit">Upload video</button>
+                                            </div>
+                                        </form>
+                                        <!-- Drop Zone -->
+                                        <h4>Or drag and drop video below</h4>
+                                        <div class="upload-drop-zone" id="drop-zone">
+                                            Just drag and drop video file here
+                                        </div>
+                                        <!-- Progress Bar -->
+                                        <div class="progress">
+                                            <div id='progress-bar' class="progress-bar progress-bar-info"
+                                                role="progressbar" aria-valuenow="0" aria-valuemin="0"
+                                                aria-valuemax="100">
+                                                <span id='progress-text'>0% Complete</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id='videoplayer' hidden>
+                                        <video id="videoFile" controls="controls" style="width: 100%;">
+                                            <source id="video_src" src="" type="video/mp4" /> Your browser does not
+                                            support video.
+                                        </video>
+                                        <div class="pull-right">
+                                            <br>
+                                            <button id="delVideoBtn" type="button" class="btn btn-danger btn-sm"
+                                                onclick="deleteVideo();">Delete Video</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="csv"></div>
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+    <script src='/socket.io/socket.io.js'></script>
+    <script type="text/javascript">
+        var datatable, startdate, enddate;
+        $(document).ready(function () {
+            $('#reports_research_data_treeview').addClass('active');
+
+            $("#scenarioSelect").change(function () {
+                getScenarioDetails($(this).val())
+            }).trigger('change');
+
+
+            var table = $('#scenariotable').DataTable({
+                "searching": false,
+                "paging": false,
+                "lengthChange": false,
+                "order": [],
+                "columnDefs": [{
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false
+                }],
+                "columns": [{
+                    "data": "id"
+                },
+                {
+                    "data": "scenario_name"
+                }]
+            });
+
+            $('#scenariotable tbody').on('click', 'tr', function () {
+                var data = table.row(this).data();
+                console.log("asdfasdfasdf", data);
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+                getScenarioDetails(data.id)
+            });
+
+            DateRangePickerSetup()
+
+            datatable = $('#calllogtable').DataTable({
+                "columns": [{
+                    "data": "id"
+                },
+                {
+                    "data": "call_start",
+                    "render": function (value) {
+                        return moment(value).local().format('YYYY/MM/DD h:mm:ss a');
+                    }
+                },
+                {
+                    "data": "device_id",
+                    "visible": false,
+                    "render": function (value) {
+                        return (value) ? value.substring(0, 8) : "";
+                    }
+                },
+                {
+                    "data": "extension"
+                },
+                {
+                    "data": "dest_phone_number"
+                },
+                {
+                    "data": "call_duration",
+                    "visible": false
+                },
+                {
+                    "data": "scenario_number",
+                    "render": function (value) {
+                        if (value == '-1' || !value) {
+                            value = 'N/A';
+                        }
+                        return value;
+                    }
+                },
+                {
+                    "data": "stt_engine",
+                    "render": function (value) {
+                        return (value) ? value : "";//value.substring(0, 1) : "";
+                    }
+                },
+                {
+                    "data": "added_delay",
+                    "visible": false,
+                    "searchable": false
+                },
+                {
+                    "data": "notes",
+                    "render": function (value) {
+                        return (value) ? value.substring(0, 10) + '...' : "";
+                    }
+                },
+                {
+                    "data": "has_video"
+                },
+                {
+                    "data": "translation_engine"
+                },
+                {
+                    "data": "source_language"
+                },
+                {
+                    "data": "target_language"
+                },
+                {
+                    "data": "tts_engine"
+                }
+                ],
+                "order": [
+                    [0, "desc"]
+                ],
+                "columnDefs": [{
+                    'nowrap': 'true',
+                    "width": "50px",
+                    "targets": 2
+                }]
+            });
+
+            getTableData();
+            var selectedRow = null;
+            $('#calllogtable tbody').on('click', 'tr', function () {
+                var data = datatable.row(this).data();
+                selectedRow = data;
+
+                datatable.$('tr.selected').removeClass('selected');
+
+                $("#selectedRowId").val(data.id);
+                $('#videorowselect').hide();
+                $('#transcriptId').html(data.id);
+
+                $("#mobizenNotesTextarea").val('');
+                $("#callNotesTextarea").val('');
+                $("#recordingsList").html("No Recordings")
+
+                $(this).addClass('selected');
+                clearAccTests();
+                $.ajax({
+                    url: "./getTranscripts",
+                    data: {
+                        "id": data.id
+                    },
+                    success: loadtranscripts
+                });
+
+                $.ajax({
+                    url: "./getRecordings",
+                    data: {
+                        "id": data.id
+                    },
+                    success: listRecordings
+                });
+
+
+                $("#player").show();
+                var audio = $("#player");
+                $("#wav_src").attr("src", './getAudioFile?id=' + data.id);
+                audio[0].pause();
+                audio[0].load();
+
+
+                if (data.has_video == "true") {
+                    var video = $("#videoFile");
+                    $("#video_src").attr("src", './getVideoFile?id=' + data.id);
+                    video[0].pause();
+                    video[0].load();
+                    $('#videoupload').hide();
+                    $('#videoplayer').show();
+                } else {
+                    $('#progress-bar').css('width', 0 + '%')
+                        .attr('aria-valuenow', 0);
+                    $('#progress-text').html(0 + '% Complete');
+                    $('#videoplayer').hide();
+                    $('#videoupload').show();
+                }
+                $.ajax({
+                    url: "./getNotes",
+                    data: {
+                        "id": data.id
+                    },
+                    success: function (notes) {
+                        if (notes) {
+                            if (notes.call) {
+                                $("#callNotesTextarea").val(notes.call);
+                            }
+                            if (notes.mobizen) {
+                                $("#mobizenNotesTextarea").val(notes.mobizen);
+                            }
+                        }
+                    }
+                });
+            });
+
+            // function createGeckoFile(data){
+            //     console.log("gecko stuff", data)
+            //     $.ajax({
+            //         url: "./getGeckoData",
+            //         data: {
+            //             "id": data.id
+            //         },
+            //         success: function (data) {
+            //             if (data) {
+            //                 console.log(" got some gecko data", data);
+            //             }
+            //         }
+            //     });
+            // }
+
+            function clearAccTests() {
+                $('#wer').html("");
+                $('#mer').html("");
+                $('#wil').html("");
+            }
+            var listRecordings = function (data) {
+                if (data) {
+                    $("#recordingsList").html("")
+                    let temp = "";
+                    data.forEach(function (rec) {
+                        temp = "<li><a href='./playrecording?id="+rec[0]+"' target='_blank'>"+rec[1]+"</a></li>"
+                        $("#recordingsList").append(temp)
+                    })
+                }
+            };
+
+            var loadtranscripts = function (data) {
+                $('#transcriptDiv').html('');
+
+                if (data) {
+                    console.log("sssss", selectedRow)
+                    var textblob = "";
+                    data.forEach(function (line) {
+                        textblob += " " + line[2];
+                    })
+                    $("#accuracy-tab").attr("data", textblob);
+                    console.log("textblob", $('#accuracy-tab').attr("data"));
+
+                    data.forEach(function (line) {
+                        var timestamp = line[0];
+                        var ext = line[1] || selectedRow.dest_phone_number;
+                        var msg = line[2];
+                        timestamp = moment.utc(timestamp).local().format('h:mm:ss a');
+
+
+                        var msgsender = document.createElement('span');
+                        var msgblock = document.createElement('div');
+                        var msginfo = document.createElement('div');
+                        var msgtime = document.createElement('span');
+                        var msgtext = document.createElement('div');
+
+
+                        //background: #f39c12;
+                        //  border-color: #f39c12;
+                        //color: #fff;
+                        if (ext == selectedRow.extension) {
+                            $(msgsender).addClass("direct-chat-name pull-right").html(ext).appendTo(msginfo);
+                            $(msgtime).addClass("direct-chat-timestamp pull-left").html(timestamp).appendTo(msginfo);
+                            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+                            $(msgtext).addClass("direct-chat-text").css({ "margin": "5px 0 0 5px" }).html(msg).appendTo(msgblock);
+                            $(msgblock).addClass("direct-chat-msg right").appendTo($("#transcriptDiv"));
+                        } else {
+                            $(msgsender).addClass("direct-chat-name pull-left").html(ext).appendTo(msginfo);
+                            $(msgtime).addClass("direct-chat-timestamp pull-right").html(timestamp).appendTo(msginfo);
+                            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+                            $(msgtext).addClass("direct-chat-text").css("margin", "5px 0 0 5px").html(msg).appendTo(msgblock);
+                            $(msgblock).addClass("direct-chat-msg").appendTo($("#transcriptDiv"));
+                        }
+                    })
+                }
+            };
+
+
+
+
+            var dropZone = $('#drop-zone');
+            var uploadForm = $('#js-upload-form');
+
+            var startUpload = function (files) {
+                if (files[0].type != 'video/mp4')
+                    return;
+
+                var formData = new FormData();
+                var id = $("#selectedRowId").val();
+                formData.append("file", files[0]);
+                formData.append("id", id);
+
+                $.ajax({
+                    type: "POST",
+                    url: "./uploadVideo",
+                    xhr: function () {
+                        var myXhr = $.ajaxSettings.xhr();
+                        if (myXhr.upload) {
+                            myXhr.upload.addEventListener('progress', progressHandling, false);
+                            console.log('progress');
+                        }
+                        return myXhr;
+                    },
+                    success: function (data) {
+                        // your callback here
+                        console.log('success upload')
+                        datatable.rows('.selected').data()[0].has_video = 'true'
+                        datatable.rows().invalidate().draw();
+                        setTimeout(function () {
+                            $('#videoupload').hide();
+                            $('#videoplayer').show();
+                            var video = $("#videoFile");
+                            $("#video_src").attr("src", './getVideoFile?id=' + id);
+                            video[0].pause();
+                            video[0].load();
+                        }, 1000);
+                    },
+                    error: function (error) {
+                        // handle error
+                        console.log('error upload')
+                    },
+                    async: true,
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    timeout: 60000
+                });
+            }
+
+            var progressHandling = function (event) {
+                var percent = 0;
+                var position = event.loaded || event.position;
+                var total = event.total;
+                if (event.lengthComputable) {
+                    percent = Math.ceil(position / total * 100);
+                }
+                console.log('progress: ' + percent)
+                $('#progress-bar').css('width', percent + '%')
+                    .attr('aria-valuenow', percent);
+                $('#progress-text').html(percent + '% Complete');
+            };
+
+            uploadForm.on('submit', function (e) {
+                e.preventDefault()
+                var uploadFiles = $('#js-upload-video').prop('files');
+                startUpload(uploadFiles)
+            })
+
+            dropZone.on('drop', function (e) {
+                e.preventDefault();
+                dropZone.removeClass('drop');
+
+                var dt = e.dataTransfer || (e.originalEvent && e.originalEvent.dataTransfer);
+                var uploadFiles = e.target.files || (dt && dt.files);
+
+                startUpload(uploadFiles);
+            });
+
+            dropZone.on('dragover', function () {
+                dropZone.addClass('drop');
+                return false;
+            });
+
+            dropZone.on('dragleave', function () {
+                dropZone.removeClass('drop');
+                return false;
+            });
+
+        });
+
+        function getTableData(start, end) {
+            $.ajax({
+                url: "./getResearchData",
+                data: {
+                    "start": start,
+                    "end": end
+                },
+                success: function (data) {
+                    $('#transcriptDiv').html('');
+                    $('#transcriptDate').html('');
+                    $("#callNotesTextarea").val('')
+                    $('#videoplayer').hide();
+                    $('#videoupload').hide();
+                    $('#videorowselect').show();
+                    $("#player").hide();
+                    $("#selectedRowId").val('-1');
+
+
+                    if (data.message === "Success" && data.records.length > 0) {
+                        $('#calllogtable').dataTable().fnClearTable();
+                        $('#calllogtable').dataTable().fnAddData(data.records);
+                        $('#calllogtable').resize();
+
+                        $("#calllogtable>tbody>tr:first").trigger('click');
+
+                    } else {
+                        $('#calllogtable').dataTable().fnClearTable();
+                        $('#calllogtable').resize();
+                        $(".dataTables_empty").html("No call records.");
+                    }
+                }
+            });
+
+        }
+
+        function getScenarioDetails(id) {
+            $.get("./ScenarioDetails", {
+                "id": id
+            },
+                function (data, status) {
+                    if (data.status == "Success") {
+                        $("#scenarioSelect").attr("data", data.sText);
+
+                        console.log("scenariotable data", $('#scenariotable').attr("data"));
+                    } else {
+                        console.log("Something failed");
+                    }
+                });
+        }
+        var socket = io('/admin', {
+            path: '/socket.io'
+        });
+        function testScenarios() {
+            data = {
+                baseline: $('#scenarioSelect').attr("data"),
+                transcript: $('#accuracy-tab').attr("data")
+            }
+            socket.emit('test-transcript-accuracy', data);
+            $('#StartTestBtn').prop("disabled", true);
+            // clearAccTests();
+        }
+
+        socket.on('test-transcript-accuracy-results', function (data) {
+            switch (data.engine) {
+                case 'none':
+                    $('#wer').html(data.finding[0]);
+                    $('#mer').html(data.finding[1]);
+                    $('#wil').html(data.finding[2]);
+                    break;
+            }
+            $('#StartTestBtn').prop("disabled", false);
+        });
+
+        function saveNotes() {
+
+            var uId = $("#selectedRowId").val()
+            var callNotes = $("#callNotesTextarea").val();
+            var mobizenNotes = $("#mobizenNotesTextarea").val();
+            $.post("./saveNotes", {
+                "id": uId,
+                "callNotes": callNotes,
+                "mobizenNotes": mobizenNotes
+            },
+                function (data, status) {
+                    console.log("Saved!!!!")
+                    datatable.rows('.selected').data()[0].notes = callNotes
+                    datatable.rows().invalidate().draw();
+                });
+        }
+
+        function downloadTranscripts() {
+
+            var uId = $("#selectedRowId").val();
+            var type = $("#downloadTranscripts").val();
+            if (type === "gecko") {
+                $.get("./getGeckoData", {
+                    "id": uId,
+                },
+                    function (data, status) {
+                        console.log("Downloaded!!");
+                        console.log(data);
+                        a = document.createElement('a');
+                        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+                        a.download = "acequill_" + uId + ".json";
+                        a.click();
+                    });
+            }else if (type === "iprelay"){
+                $.get("./getIPRelayLog", {
+                    "id": uId,
+                },
+                    function (data, status, xhr) {
+                        if(xhr.status == 200){
+                        console.log("Downloaded!!");
+                        console.log(data);
+                        a = document.createElement('a');
+                        a.href = 'data:text/csv;charset=utf-8,' + escape(data);
+                        a.download = 'acequill_ip_relay_log_'+uId+'.csv';
+                        a.click();
+                        }else{
+                            alert("No Content or Error occured");
+                        }
+                    });
+            } else {
+
+                $.get("./getRawTranscript", {
+                    "id": uId,
+                    "type": type
+                },
+                    function (data, status) {
+                        console.log("Downloaded!!");
+                        console.log(data);
+                        a = document.createElement('a');
+                        a.href = 'data:text/csv;charset=utf-8,' + escape(data);
+                        a.download = "acequill_" + uId + "_" + type + ".csv";
+                        a.click();
+                    });
+                
+            }
+        }
+
+        function deleteVideo() {
+
+            var uId = $("#selectedRowId").val()
+            $.post("./deleteVideo", {
+                "id": uId
+            },
+                function (data, status) {
+                    console.log("Deleted!!!!")
+                    datatable.rows('.selected').data()[0].has_video = "false"
+                    datatable.rows().invalidate().draw();
+                    $('#videoplayer').hide();
+                    $('#videoupload').show();
+                });
+        }
+
+        function DateRangePickerSetup() {
+            // sets the Date Range picker start and end date
+            var start = moment("2017-08-01");
+            var end = moment(); //today
+
+            // Call back funtion for setting report range <div> value
+            function cb(start, end) {
+                $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            }
+
+            // controls for the date range picker
+            $('#reportrange').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    'All Time': [start, end]
+                }
+            }, cb);
+
+            // sets initial value for report range <div>
+            cb(start, end);
+
+            // Click event for new date range selected
+            $('#reportrange').on('apply.daterangepicker', function (evt, picker) {
+                startdate = moment(picker.startDate.format('YYYY-MM-DD')).format();
+                enddate = moment(picker.endDate.format('YYYY-MM-DD')).add(1, 'days').format();
+                getTableData(startdate, enddate);
+            });
+        }
+
+
+
+        $('#researchdatadownloadbtn').click(function () {
+            location.href = './getResearchData?download=true&start=' + startdate + '&end=' + enddate;
+        });
+
+        $('#refreshdatabtn').click(function () {
+            getTableData();
+        });
+
+//      $('#transcriptdownloadbtn').click(function() {
+//          var typeval = $("#downloadTranscripts").val();
+//          var idval = $("#selectedRowId").val();
+//          location.href = './getRawTranscripts?type=' + typeval + '&id=' +  idval;
+//      });
+    </script>
+</body>
+
+</html>
