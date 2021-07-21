@@ -305,6 +305,7 @@ CREATE TABLE `research_data` (
   `translation_engine` varchar(45) DEFAULT NULL,
   `source_language` varchar(45) DEFAULT NULL,
   `target_language` varchar(45) DEFAULT NULL,
+  `tts_engine` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idnew_table_UNIQUE` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1483 DEFAULT CHARSET=utf8;

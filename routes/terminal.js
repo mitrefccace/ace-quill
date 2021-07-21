@@ -129,7 +129,7 @@ function translate(text, settings, callback) {
       case 'AZURE':
         info.info('Translating with azure');
         configs = JSON.parse(
-          fs.readFileSync('./translation_configs/microsoft-azure.json'),
+          fs.readFileSync('./configs/azure/azure-translation.json'),
         );
 
         if (decode(nconf.get('proxy'))) {
