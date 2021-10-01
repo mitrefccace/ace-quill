@@ -35,6 +35,8 @@ const error = winston.loggers.get('error');
 const info = winston.loggers.get('info');
 const debug = winston.loggers.get('debug');
 
+const async = require('async');
+
 function restrict(req, res, next) {
   if (req.session.user) {
     next();
@@ -275,7 +277,142 @@ router.get('/research_data', restrict, (req, res) => {
   });
 });
 
+router.get('/iprelay_research_data', restrict, (req, res) => {
+const sql = 'Select * from scenario;';
+  req.dbconn.query(sql, (err, results) => {
+    if (err) {
+      error.error(`SQL Error: ${err}`);
+    } else {
+      results.forEach((s) => {
+        const t = s;
+        delete t.transcript;
+      });
+      res.render('pages/iprelay_research_data', {
+        scenarios: results,
+        role: req.session.role,
+      });
+    }
+  });
+
+});
+
 router.get('/getResearchData', restrict, (req, res) => {
+  let { download } = req.query;
+  const { start } = req.query;
+  const { end } = req.query;
+  // const { groupId } = req.session;
+
+  download = !((typeof download === 'undefined' || download !== 'true'));
+
+  let params = [];
+  let query = `SELECT rd.id, rd.call_start, rd.device_id, rd.extension,
+    rd.dest_phone_number, rd.call_duration, rd.stt_engine, rd.scenario_number,
+    rd.added_delay, rd.transcription_file, rd.audio_file, rd.notes, rd.translation_engine,
+    rd.source_language, rd.target_language, rd.tts_engine, ds.group_id,
+    CASE WHEN rd.video_file IS NULL THEN 'false' ELSE 'true' END AS has_video
+    FROM research_data rd
+    LEFT JOIN device_settings ds ON rd.extension = ds.extension
+    WHERE rd.transcription_file_path LIKE '%${homedir}%' AND is_iprelay = 0 OR is_iprelay IS NULL `;
+
+  if (start && end && start !== 'undefined' && end !== 'undefined') {
+    query += ' AND (call_start BETWEEN ? AND ?)';
+    params = [start, end];
+  }
+
+  req.dbconn.query(query, params, (err, rows) => {
+    if (err) {
+      error.error('/call_logs ERROR: ', err.code);
+      res.send({
+        message: 'Failed',
+      });
+    } else if (download) {
+      // Column names for the CSV file.
+      const csvFields = [
+        'id',
+        'call_start',
+        'device_id',
+        'extension',
+        'dest_phone_number',
+        'call_duration',
+        'scenario_number',
+        'stt_engine',
+        'added_delay',
+        'transcription_file',
+        'audio_file',
+        'transcription_filename',
+        'audio_filename',
+        'notes',
+        'translation_engine',
+        'source_language',
+        'target_language',
+        'tts_engine',
+        'mobizen_notes',
+      ];
+      const csvData = [];
+      const fullUrl = `https://${req.get('host')}`; // req.protocol always return http?
+
+      // for (i in rows) {
+      rows.forEach((row) => {
+        const obj = {
+          id: row.id,
+          call_start: row.call_start,
+          device_id: row.device_id,
+          extension: row.extension,
+          dest_phone_number: row.dest_phone_number,
+          call_duration: row.call_duration,
+          scenario_number: row.scenario_number,
+          stt_engine: row.stt_engine,
+          added_delay: row.added_delay,
+          transcription_file:
+              `=HYPERLINK("${
+                fullUrl
+              }/admin/getTranscripts?download=true&id=${
+                row.id
+              }", "text")`,
+          audio_file:
+              `=HYPERLINK("${
+                fullUrl
+              }/admin/getAudioFile?download=true&id=${
+                row.id
+              }", "audio")`,
+          transcription_filename: row.transcription_file,
+          audio_filename: row.audio_file,
+          notes: row.notes,
+          translation_engine: row.translation_engine,
+          source_language: row.source_language,
+          target_language: row.target_language,
+          tts_engine: row.tts_engine,
+          mobizen_notes: row.mobizen_notes,
+        };
+        csvData.push(obj);
+      });
+      // }
+
+      const csv = json2csv({
+        data: csvData,
+        fields: csvFields,
+      });
+      res.setHeader(
+        'Content-disposition',
+        'attachment; filename=acequill_research_data.csv',
+      );
+      res.set('Content-Type', 'text/csv');
+      res.status(200).send(csv);
+    } else if (rows.length > 0) {
+      res.status(200).send({
+        records: rows,
+        message: 'Success',
+      });
+    } else {
+      res.status(200).send({
+        records: rows,
+        message: 'No Data',
+      });
+    }
+  });
+});
+
+router.get('/getIprelayResearchData', restrict, (req, res) => {
   let { download } = req.query;
   const { start } = req.query;
   const { end } = req.query;
@@ -291,7 +428,7 @@ router.get('/getResearchData', restrict, (req, res) => {
     CASE WHEN rd.video_file IS NULL THEN 'false' ELSE 'true' END AS has_video
     FROM research_data rd
     LEFT JOIN device_settings ds ON rd.extension = ds.extension
-    WHERE rd.transcription_file_path LIKE '%${homedir}%'`;
+    WHERE rd.transcription_file_path LIKE '%${homedir}%' AND is_iprelay = 1`;
 
   if (start && end && start !== 'undefined' && end !== 'undefined') {
     query += ' AND (call_start BETWEEN ? AND ?)';
@@ -440,6 +577,35 @@ router.get('/getTranscripts', restrict, (req, res) => {
       }
     },
   );
+});
+
+router.get('/getAQDUTTranscripts', restrict, (req, res) => {
+  let { id } = req.query;
+  let { download } = req.query;
+
+  if (typeof download === 'undefined' || download !== 'true') download = false;
+
+  if (typeof id === 'undefined' || Number.isNaN(id)) id = 0;
+
+  req.dbconn.query(
+    'SELECT * FROM iprelay_log WHERE fk_call_id = ?;',
+    id,
+    (err, rows) => {
+      if (err) {
+        error.error('/getAQDUTTranscripts ERROR: ' + err);
+        res.send('An Error Occurred');
+      } else if (rows.length !== 0) {
+              const records = [];
+              rows.forEach((row) => {
+                records.push([row.timestamp, row.is_dut, row.text]);
+              });
+              info.info('records ', records);
+              res.send(records);
+            } else {
+              res.send('no records');
+            }
+          },
+        );
 });
 
 router.get('/getRecordings', restrict, (req, res) => {
@@ -1042,7 +1208,7 @@ router.get('/getIPRelayScenario', restrict, (req, res) => {
   const sql = 'Select * from iprelay_scenario_content where iprelay_scenario_id = ?;';
   req.dbconn.query(sql, id, (err, results) => {
     if (err || !results[0]) {
-      error.error('SQL Error: this IpRelay scenario has no content');
+      error.error('SQL Error: this IpRelay scenario has no content'+err);
       res.send(results);
     } else {
       info.info('getIPRelayScenario results ', results);
@@ -1199,7 +1365,7 @@ const iprelayFileUpload = multer({
 });
 
 router.post('/updateIpRelayScenario', iprelayFileUpload.array('scenarioFile', 12), (req, res) => {
-  info.info('files ', req.files);
+  info.info('files '+ req.files);
   const data = req.body.data.split(',');
   const sid = req.body.id;
 
@@ -1207,12 +1373,13 @@ router.post('/updateIpRelayScenario', iprelayFileUpload.array('scenarioFile', 12
   for (let i = 0; i < data.length; i += 7) {
     formated.push(data.slice(i, i + 7));
   }
-  info.info('formated ', formated);
+  info.info('formated '+ formated);
   let k = 0;
   for (let i = 0; i < formated.length; i += 1) {
-    info.info('here ', formated[i][4]);
-    info.info('file name ', req.files[k].filename);
+    info.info('here '+ formated[i][4]);
+    //info.info('file name '+ req.files[k].filename);
     if (formated[i][6] === '1') {
+      info.info('file name '+ req.files[k].filename);
       formated[i][4] = req.files[k].destination + req.files[k].filename;
       k += 1;
     }
@@ -1261,7 +1428,7 @@ router.get('/saveACConfig', restrict, (req, res) => {
   let sql = 'UPDATE device_settings SET stt_engine = ?, source_language = ?, stt_show_final_caption = ?, delay = ?, translation_engine = ?, ';
   sql += 'target_language = ?, tts_engine = ?, tts_translate = ?, tts_voice = ?, ARIA_settings = ?, confidence_show_word = ?,confidence_show_phrase = ?, ';
   sql += 'confidence_upper_lim = ?, confidence_lower_lim = ?, confidence_upper_color = ?, confidence_lower_color = ?, ';
-  sql += 'confidence_bold = ?, confidence_italicize = ?, confidence_underline = ?, iprelay = ?, iprelay_scenario = ?, tts_enabled = ? ';
+  sql += 'confidence_bold = ?, confidence_italicize = ?, confidence_underline = ?, iprelay = ?, iprelay_scenario = ?, tts_enabled = ?, stt_show_entity_sentiment = ? ';
   sql += 'WHERE extension = ?;';
 
   if (data.confidence_lower_lim === '') {
@@ -1279,7 +1446,8 @@ router.get('/saveACConfig', restrict, (req, res) => {
     data.confidence_upper_lim, data.confidence_lower_lim,
     data.confidence_upper_color, data.confidence_lower_color,
     data.confidence_bold, data.confidence_italicize, data.confidence_underline,
-    data.iprelay, data.iprelay_scenario, data.tts_enabled, data.extension,
+    data.iprelay, data.iprelay_scenario, data.tts_enabled, data.stt_show_entity_sentiment,
+    data.extension,
   ];
   for (let i = 0; i < params.length; i += 1) {
     if (params[i] === 'true') {
@@ -1301,18 +1469,37 @@ router.get('/saveACConfig', restrict, (req, res) => {
 
 
 router.get('/contacts', restrict, (req, res) => {
-  const sql = 'SELECT idcontacts, username, cellphone, workphone, homephone, faxphone, personalemail, workemail, favorite, extension FROM contacts;';
-  req.dbconn.query(sql, (err, results) => {
+  const sql1 = 'SELECT idcontacts, username, cellphone, workphone, homephone, faxphone, personalemail, workemail, favorite, extension FROM contacts;';
+  const sql2 = 'SELECT extension FROM device_settings;'
+  async.parallel([
+        function(callback) {
+          req.dbconn.query(sql1, (err, results) => {
+          if (err) {
+            error.error(`SQL Error: ${err}`);
+          }
+          results1 = results;
+          callback(null, 'finished\n')
+          });
+        },
+        function(callback) {
+          req.dbconn.query(sql2, (err, results) => {
+          if (err) {
+            error.error(`SQL Error: ${err}`);
+          }
+          results2 = results;
+          callback(null, 'finished\n')
+            });
+        }
+  ], function(err) {
     if (err) {
-      error.error(`SQL Error: ${err}`);
-    } else {
-      res.render('pages/contacts', {
-        contact: results,
-        role: req.session.role,
-      });
+      error.error(err);
     }
-  });
-});
+        res.render('pages/contacts', {
+        contact: results1,
+        extensions: results2,
+        role: req.session.role,  });
+      });
+    });
 
 router.post('/UpdateConfig', restrict, (req, res) => {
   let extension = parseInt(req.body.extension, 10);
@@ -1500,23 +1687,6 @@ router.post('/DeleteContact', restrict, (req, res) => {
   }
 });
 
-router.get('/stt_engines', restrict, (req, res) => {
-  res.render('pages/stt_engines', {
-    role: req.session.role,
-  });
-});
-
-router.get('/tts_engines', restrict, (req, res) => {
-  res.render('pages/tts_engines', {
-    role: req.session.role,
-  });
-});
-
-router.get('/translation_engines', restrict, (req, res) => {
-  res.render('pages/translation_engines', {
-    role: req.session.role,
-  });
-});
 router.get('/iprelay', restrict, (req, res) => {
   const sql = 'Select * from iprelay_scenario;';
   req.dbconn.query(sql, (err, results) => {
@@ -1553,6 +1723,18 @@ router.get('/configs', restrict, (req, res) => {
       });
     }
   });
+});
+
+router.get('/csp-:cspEngine', restrict, (req, res) => {
+  let csp = req.params.cspEngine || 'unknown';
+  csp = csp.toLowerCase();
+  const available = ['amazon', 'azure', 'google', 'watson'];
+  if (available.includes(csp)){
+    console.log(csp)
+    res.render('pages/config_'+csp);
+  }else{
+    res.render('pages/error',{message:"Unknown CSP"});
+  }
 });
 
 router.get('/rtstt', restrict, (req, res) => {

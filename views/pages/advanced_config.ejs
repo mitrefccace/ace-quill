@@ -104,7 +104,6 @@ McLean, VA 22102-7539, (703) 983-6000.
                     <div class="w-25">
                         <h6 class="col-md-auto" id="delayVar">0s delay</h6>
                         <div class="slidecontainer">
-                            <!-- <input type="range" min="1" max="100" value="0" class="slider" id="delay"> -->
                             <input type="range" min="0" max="100" step="1" value="0" id="delay">
                         </div>
                     </div>
@@ -279,6 +278,21 @@ McLean, VA 22102-7539, (703) 983-6000.
                             </label>
                         </div>
                     </div>
+                    <div class = "w-25">
+                      <!-- <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" checked="" id="stt_show_entity_sentiment">
+                        <label class="form-check-label" for="stt_show_entity_sentiment">
+                        Show Entity and Sentiment
+                        </label>
+                      </div> -->
+                      <h6 class="col-md-auto">Text Analysis</h6>
+                      <div class="col-md-auto">
+                          <select class="form-control" id="stt_show_entity_sentiment">
+                              <option value='NONE' selected="selected"> NONE </option>
+                              <option value='GOOGLE' >G - Google</option>
+                          </select>
+                      </div>
+                  </div>
                 </div>
                 <hr>
                 <div class="row">
@@ -495,6 +509,7 @@ McLean, VA 22102-7539, (703) 983-6000.
       data.stt_engine = $('#stt_engine').val();
       data.source_language = $('#source_language').val();
       data.stt_show_final_caption = $('#stt_show_final_caption').prop('checked');
+      data.stt_show_entity_sentiment = $('#stt_show_entity_sentiment').val();
       data.delay = $('#delay').val();
 
       data.translation_engine = $('#translation_engine').val();
@@ -535,6 +550,7 @@ McLean, VA 22102-7539, (703) 983-6000.
         $('#stt_engine').val(data.stt_engine);
         $('#source_language').val(data.source_language);
         $('#stt_show_final_caption').prop('checked', data.stt_show_final_caption);
+        $('#stt_show_entity_sentiment').val(data.stt_show_entity_sentiment);
         $('#delayVar').text(data.delay + "s delay")
         $('#delay').val(data.delay);
 

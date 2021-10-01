@@ -188,20 +188,9 @@ McLean, VA 22102-7539, (703) 983-6000.
                   <div class="col-sm-9">
                     <select class="form-control" id="inputExtension">
                       <option value='ALL' selected="selected">All</option>
-                      <option value='5001'>5001</option>
-                      <option value='5002'>5002</option>
-                      <option value='5003'>5003</option>
-                      <option value='5004'>5004</option>
-                      <option value='5005'>5005</option>
-                      <option value='5006'>5006</option>
-                      <option value='5007'>5007</option>
-                      <option value='5008'>5008</option>
-                      <option value='5009'>5009</option>
-                      <option value='5010'>5010</option>
-                      <option value='5011'>5011</option>
-                      <option value='5012'>5012</option>
-                      <option value='5013'>5013</option>
-                      <option value='5014'>5014</option>
+                      <% extensions.forEach(function(config) {  %>
+                        <option value=<%= config.extension %>><%= config.extension %></option>
+                      <% }) %>
                     </select>
                   </div>
                 </div>
@@ -231,18 +220,8 @@ McLean, VA 22102-7539, (703) 983-6000.
     <!-- /.content-wrapper -->
   </div>
 
-   
-            <!-- Socket.io -->
-  <script src='./../socket.io/socket.io.js'></script>
   <script type="text/javascript">
     $('#contacts_treeview').addClass('active');
-
-    var socket = io('/admin', {
-      path: '/socket.io'
-    });
-    socket.on('connect', function (data) {
-      socket.emit('register-admin');
-    });
 
     var selectedExtension = 0;
     let idContacts = 0;

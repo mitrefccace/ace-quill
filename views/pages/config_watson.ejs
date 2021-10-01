@@ -1,0 +1,218 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Watson Accounts</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-tags"></i>&nbsp;CSP Accounts</li>
+                                <li class="breadcrumb-item active">Watson</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+
+                <div class="row">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                Speech to Text
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="inputWatsonAuthType">Authentication Type</label>
+                                    <select class="form-control" id="watson_stt_authtype">
+                                        <option disabled selected value> -- select type -- </option>
+                                        <option value='bearer_token'>Bearer Token</option>
+                                        <option value='iam_auth'>IAM Authentication</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputWatsonAPIKey">Key</label>
+                                    <input type="text" class="form-control" id="watson_stt_apiKey">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputWatsonURL">URL</label>
+                                    <input type="text" class="form-control" id="watson_stt_url">
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="save_watson_stt_btn">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                Translation
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="inputWatsonAuthType">Authentication Type</label>
+                                    <select class="form-control" id="watson_translation_authtype">
+                                        <option disabled selected value> -- select type -- </option>
+                                        <option value='bearer_token'>Bearer Token</option>
+                                        <option value='iam_auth'>IAM Authentication</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputWatsonAPIKey">Key</label>
+                                    <input type="text" class="form-control" id="watson_translation_apiKey">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputWatsonURL">URL</label>
+                                    <input type="text" class="form-control" id="watson_translation_url">
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary"
+                                    id="save_watson_translation_btn">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                Text to Speech
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="inputWatsonAuthType">Authentication Type</label>
+                                    <select class="form-control" id="watson_tts_authtype">
+                                        <option disabled selected value> -- select type -- </option>
+                                        <option value='bearer_token'>Bearer Token</option>
+                                        <option value='iam_auth'>IAM Authentication</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputWatsonAPIKey">Key</label>
+                                    <input type="text" class="form-control" id="watson_tts_apiKey">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputWatsonURL">URL</label>
+                                    <input type="text" class="form-control" id="watson_tts_url">
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="save_watson_tts_btn">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- The actual snackbar -->
+            <div id="snackbar">Saved</div>
+
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- Socket.io -->
+    <script src='/socket.io/socket.io.js'></script>
+    <script type="text/javascript">
+        $('#csp_watson_treeview').addClass('active');
+
+
+        var socket = io('/admin', {
+            path: '/socket.io'
+        });
+        socket.on('connect', function (data) {
+            socket.emit('get-configs-watson');
+        }).on('load-watson-stt-configs', function (data) {
+            $('#watson_stt_authtype').val(data.authtype);
+            $('#watson_stt_apiKey').val(data.apikey);
+            $('#watson_stt_url').val(data.url);
+        }).on('load-watson-translation-configs', function (data) {
+            $('#watson_translation_authtype').val(data.authtype);
+            $('#watson_translation_apiKey').val(data.apikey);
+            $('#watson_translation_url').val(data.url);
+        }).on('load-watson-tts-configs', function (data) {
+            $('#watson_tts_authtype').val(data.authtype);
+            $('#watson_tts_apiKey').val(data.apikey);
+            $('#watson_tts_url').val(data.url);
+        }).on('save-success', function (service) {
+            $('#snackbar').html(service + " Account Saved")
+            $('#snackbar').addClass("show");
+            setTimeout(function () {
+                $('#snackbar').removeClass("show");
+            }, 3000);
+        });
+
+
+        $('#save_watson_stt_btn').on('click', function (e) {
+            e.preventDefault();
+            var data = {};
+            data.authtype = $('#watson_stt_authtype').val();
+            data.apikey = $('#watson_stt_apiKey').val();
+            data.url = $('#watson_stt_url').val();
+            socket.emit('update-watson-stt-configs', data);
+        });
+
+        $('#save_watson_translation_btn').on('click', function (e) {
+            e.preventDefault();
+            var data = {};
+            data.authtype = $('#watson_translation_authtype').val();
+            data.apikey = $('#watson_translation_apiKey').val();
+            data.url = $('#watson_translation_url').val();
+            socket.emit('update-watson-translation-configs', data);
+        });
+
+        $('#save_watson_tts_btn').on('click', function (e) {
+            e.preventDefault();
+            var data = {};
+            data.authtype = $('#watson_tts_authtype').val();
+            data.apikey = $('#watson_tts_apiKey').val();
+            data.url = $('#watson_tts_url').val();
+            socket.emit('update-watson-tts-configs', data);
+        });
+
+
+
+    </script>
+</body>
+
+</html>

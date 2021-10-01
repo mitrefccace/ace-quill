@@ -1,0 +1,130 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+  <div class="wrapper">
+
+    <!-- Header -->
+    <% include ..//partials/header %>
+
+    <!-- Left side column. contains the logo and sidebar -->
+    <% include ..//partials/sidebar %>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+      <!-- Content Header (Page header) -->
+      <section class="content-header">
+        <div class="container-fluid">
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h1>Amazon Account</h1>
+            </div>
+            <div class="col-sm-6">
+              <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><i class="fa fa-tags"></i>&nbsp;CSP Accounts</li>
+                <li class="breadcrumb-item active">Amazon</li>
+              </ol>
+            </div>
+          </div>
+        </div><!-- /.container-fluid -->
+      </section>
+
+      <!-- Main content -->
+      <section class="content">
+
+        <div class="row">
+
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="inputAmazonAPIKey">API Key</label>
+                  <input type="text" class="form-control" id="amazon_apiKey">
+                </div>
+                <div class="form-group">
+                  <label for="inputAmazonSecret">secret</label>
+                  <input type="text" class="form-control" id="amazon_secret">
+                </div>
+                <div class="form-group">
+                  <label for="inputAmazonRegion">Region</label>
+                  <input type="text" class="form-control" id="amazon_region">
+                </div>
+              </div>
+              <div class="card-footer">
+                <button type="button" class="btn btn-primary" id="save_amazon_btn">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The actual snackbar -->
+      <div id="snackbar">Saved</div>
+
+      <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer">
+      <% include ..//partials/footer %>
+    </footer>
+  </div>
+  <!-- ./wrapper -->
+
+
+  <!-- Socket.io -->
+  <script src='/socket.io/socket.io.js'></script>
+  <script type="text/javascript">
+    $('#csp_amazon_treeview').addClass('active');
+
+
+    var socket = io('/admin', {
+      path: '/socket.io'
+    });
+    socket.on('connect', function (data) {
+      socket.emit('get-configs-amazon');
+    }).on('load-amazon-configs', function (data) {
+      $('#amazon_apiKey').val(data.key);
+      $('#amazon_secret').val(data.secret);
+      $('#amazon_region').val(data.region);
+    }).on('save-stt-success', function (service) {
+      $('#snackbar').html(service + " Account Saved")
+      $('#snackbar').addClass("show");
+      setTimeout(function () {
+        $('#snackbar').removeClass("show");
+      }, 3000);
+    });
+
+
+    $('#save_amazon_btn').on('click', function (e) {
+      e.preventDefault();
+      var data = {};
+      data.key = $('#amazon_apiKey').val();
+      data.secret = $('#amazon_secret').val();
+      data.region = $('#amazon_region').val();
+      socket.emit('update-amazon-configs', data);
+    });
+
+
+
+  </script>
+</body>
+
+</html>

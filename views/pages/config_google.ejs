@@ -1,0 +1,198 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+  <div class="wrapper">
+
+    <!-- Header -->
+    <% include ..//partials/header %>
+
+    <!-- Left side column. contains the logo and sidebar -->
+    <% include ..//partials/sidebar %>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+      <!-- Content Header (Page header) -->
+      <section class="content-header">
+        <div class="container-fluid">
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h1>Google Account</h1>
+            </div>
+            <div class="col-sm-6">
+              <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><i class="fa fa-tags"></i>&nbsp;CSP Accounts</li>
+                <li class="breadcrumb-item active">Google</li>
+              </ol>
+            </div>
+          </div>
+        </div><!-- /.container-fluid -->
+      </section>
+
+      <!-- Main content -->
+      <section class="content">
+
+        <div class="row">
+
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-lg-4">
+                    <div class="form-group">
+                      <label for="inputGoogleType">Type</label>
+                      <select class="form-control" id="google_type">
+                        <option disabled selected value> -- select type -- </option>
+                        <option value='service_account'>Service Account</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="form-group">
+                      <label for="inputGoogleProjectId">Project ID</label>
+                      <input type="text" class="form-control" id="google_project_id">
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="form-group">
+                      <label for="inputGooglePrivateKeyId">Private Key ID</label>
+                      <input type="text" class="form-control" id="google_private_key_id">
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="inputGooglePrivateKey">Private Key</label>
+                      <textarea class="form-control" rows="5" id="google_private_key"></textarea>
+                    </div>
+                  </div>
+                  <div class="col-lg-6">
+                    <div class="form-group">
+                      <label for="inputGoogleClientEmail">Client Email</label>
+                      <input type="text" class="form-control" id="google_client_email">
+                    </div>
+                    <div class="form-group">
+                      <label for="inputGoogleClientId">Client ID</label>
+                      <input type="text" class="form-control" id="google_client_id">
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4">
+                    <div class="form-group">
+                      <label for="inputGoogleAuthURI">Auth URI</label>
+                      <input type="text" class="form-control" id="google_auth_uri">
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="form-group">
+                      <label for="inputGoogleTokenUri">Token URI</label>
+                      <input type="text" class="form-control" id="google_token_uri">
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="form-group">
+                      <label for="inputGoogleAuthProviderx509CertUrl">Auth Provider x509 Certificate URL</label>
+                      <input type="text" class="form-control" id="google_auth_provider_x509_cert_url">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="inputGoogleClientx509CertUrl">Client x509 Certificate URL</label>
+                  <input type="text" class="form-control" id="google_client_x509_cert_url">
+                </div>
+              </div>
+              <div class="card-footer">
+                <button type="button" class="btn btn-primary" id="save_google_btn">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The actual snackbar -->
+      <div id="snackbar">Saved</div>
+
+      <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer">
+      <% include ..//partials/footer %>
+    </footer>
+  </div>
+  <!-- ./wrapper -->
+
+
+  <!-- Socket.io -->
+  <script src='/socket.io/socket.io.js'></script>
+  <script type="text/javascript">
+    $('#csp_google_treeview').addClass('active');
+
+
+    var socket = io('/admin', {
+      path: '/socket.io'
+    });
+    socket.on('connect', function (data) {
+      socket.emit('get-configs-google');
+    }).on('load-google-configs', function (data) {
+      $('#google_type').val(data.type);
+      $('#google_project_id').val(data.project_id);
+      $('#google_private_key_id').val(data.private_key_id);
+      $('#google_private_key').text(data.private_key);
+      $('#google_client_email').val(data.client_email);
+      $('#google_client_id').val(data.client_id);
+      $('#google_auth_uri').val(data.auth_uri);
+      $('#google_token_uri').val(data.token_uri);
+      $('#google_auth_provider_x509_cert_url').val(data.auth_provider_x509_cert_url);
+      $('#google_client_x509_cert_url').val(data.client_x509_cert_url);
+    }).on('save-stt-success', function (service) {
+      $('#snackbar').html(service + " Account Saved")
+      $('#snackbar').addClass("show");
+      setTimeout(function () {
+        $('#snackbar').removeClass("show");
+      }, 3000);
+    });
+
+
+    $('#save_google_btn').on('click', function (e) {
+      e.preventDefault();
+      var data = {};
+      data.type = $('#google_type').val();
+      data.project_id = $('#google_project_id').val();
+      data.private_key_id = $('#google_private_key_id').val();
+      data.private_key = $('#google_private_key').val();
+      data.client_email = $('#google_client_email').val();
+      data.client_id = $('#google_client_id').val();
+      data.auth_uri = $('#google_auth_uri').val();
+      data.token_uri = $('#google_token_uri').val();
+      data.auth_provider_x509_cert_url = $('#google_auth_provider_x509_cert_url').val();
+      data.client_x509_cert_url = $('#google_client_x509_cert_url').val();
+
+      socket.emit('update-google-configs', data);
+    });
+
+
+
+  </script>
+</body>
+
+</html>

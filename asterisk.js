@@ -56,6 +56,12 @@ const wavFilePath = decode(nconf.get('wavFilePath'));
 
 let ami = null;
 
+let s = "";
+
+let is_iprelay = null;
+
+let researchId = null;
+
 function openMySqlConnection() {
   info.info('watson sql pool connection');
   const mySqlConnection = mysql.createPool({
@@ -232,9 +238,7 @@ function startTranscription(
     }
     case 'AMAZON': {
       try {
-        const config = JSON.parse(
-          fs.readFileSync('./configs/amazon/amazon.json'),
-        );
+        const config = {};
         config.file = file;
         config.language = en.aws;
         if (sttSettings.sourceLanguage === 'es') {
@@ -301,6 +305,15 @@ function startTranscription(
     Data.msgid = pstnMsgTime;
     Data.sttengine = engineCd;
 
+    let ip_config = JSON.parse(
+          fs.readFileSync('./configs/acequill.json'),
+        );
+    if (ip_config.isIprelay == "true"){
+      is_iprelay = 1;
+    } else{
+      is_iprelay = 0;
+    }
+
     const dataStore = {
       transcript: Data.transcript,
       extension: Data.extension,
@@ -309,6 +322,8 @@ function startTranscription(
       raw: Data.raw,
       sttEngine: Data.sttengine,
       research_data_id: sttSettings.researchId,
+      is_iprelay: is_iprelay,
+
     };
     info.info('callback dataStore, ', dataStore);
     mySqlConnection.query('INSERT INTO data_store SET ?', dataStore, (
@@ -328,12 +343,30 @@ function startTranscription(
       const delay = sttSettings.delay * 1000;
       setTimeout(() => {
         if (channel) {
-          sendAmiAction({
-            Action: 'SendText',
-            ActionID: data.msgid,
-            Channel: channel,
-            Message: JSON.stringify(data),
+          if (Buffer.byteLength(JSON.stringify(data)) > 1024){
+            var theData = (JSON.stringify(data));
+            var msgCount = Math.ceil((Buffer.byteLength(theData)) / 1024);
+            var i = 0;
+            var splitAt = Math.ceil(theData.length / msgCount);
+            while (i < msgCount){
+                i += 1;
+                s = "Part " + i + " of " + msgCount + ": " + theData.slice(0, splitAt);
+                sendAmiAction({
+                  Action: 'SendText',
+                  ActionID: data.msgid,
+                  Channel: channel,
+                  Message: s,
+                });
+                theData = theData.slice(splitAt);
+            }
+          } else {
+            sendAmiAction({
+                Action: 'SendText',
+                ActionID: data.msgid,
+                Channel: channel,
+                Message: JSON.stringify(data),
           });
+          }
         }
       }, delay);
       if (Data.final) {
@@ -376,6 +409,7 @@ function handleManagerEvent(evt) {
   let extString;
   let extensionArray;
   let ext;
+
   switch (evt.event) {
     case 'DialEnd':
       /*
@@ -384,6 +418,7 @@ function handleManagerEvent(evt) {
       info.info('****** Processing AMI DialEnd ******');
 
       if (evt.dialstatus === 'ANSWER') {
+
         /*
          * Get the channel names (channel and destchannel)
          * Send AMI Monitor events for those channels
@@ -424,6 +459,8 @@ function handleManagerEvent(evt) {
               evt.destchannel}`,
           );
           channelToDestChannelMap.set(evt.channel, evt.destchannel);
+
+
 
           // Build unique filenames using timestamp and channel name
           const now = moment().format('MM-DD-YYYY_HH-mm-ss');
@@ -593,6 +630,9 @@ function handleManagerEvent(evt) {
                                   deviceId = result[0].device_id;
                                   console.log("deviceId: " + deviceId);
               */
+
+
+
               const mySet = {
                 device_id: ext, // deviceId,
                 extension: ext,
@@ -613,6 +653,7 @@ function handleManagerEvent(evt) {
                 audio_file: `${pstnFilename}-mix.wav16`,
                 build_number: buildNumber,
                 git_commit: gitCommit,
+                is_iprelay: is_iprelay,
               };
 
               info .info(`Call data: ${JSON.stringify(mySet)}`);
@@ -626,6 +667,9 @@ function handleManagerEvent(evt) {
                   } else {
                     info.info(`INSERT result: ${JSON.stringify(result2)}`);
                     sttSettings.researchId = result2.insertId;
+
+                    researchId = sttSettings.researchId;
+
 
                     // let en;
                     // let es;
@@ -673,6 +717,8 @@ function handleManagerEvent(evt) {
                   }
                 },
               );
+
+
               // }
               // }
               // );
@@ -727,6 +773,33 @@ function handleManagerEvent(evt) {
        * the SIP side of the call, the uniqueid and destunique are equal.
        *
        */
+
+
+       let sql = 'SELECT is_iprelay FROM data_store WHERE research_data_id = ? LIMIT 1';
+
+      mySqlConnection.query(sql, researchId, (err, result) => {
+          if (err){
+            error.error("error!!" + err)
+          } else{
+            let sql = 'UPDATE research_data SET is_iprelay = ? WHERE id = ?'
+
+            if (result.length != 0){
+                let args = [result[0].is_iprelay, researchId]
+                mySqlConnection.query(sql, args,
+                (err, result) => {
+                  if(err){
+                    console.log("error:" + err);
+                  } else {
+                    console.log("Success!!!");
+                  }
+                }
+              );
+            }
+          }
+      } );
+
+
+
       if (evt.uniqueid === evt.linkedid && validator.isUniqueId(evt.uniqueid)) {
         let sql = 'UPDATE research_data SET call_end = CURRENT_TIMESTAMP(), ';
         sql

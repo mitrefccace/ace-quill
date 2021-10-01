@@ -29,6 +29,7 @@ const GoogleT = require('../translation/google');
 const WatsonT = require('../translation/watson');
 const AzureT = require('../translation/azure');
 const AmazonT = require('../translation/amazon');
+const GoogleTA = require('../textanalysis/google');
 const decode = require('../utils/decode');
 
 const winston = require('winston');
@@ -36,6 +37,17 @@ const logger = require('../utils/logger')
 const error = winston.loggers.get('error');
 const info = winston.loggers.get('info');
 const debug = winston.loggers.get('debug');
+
+let is_iprelay = null;
+
+let ip_config = JSON.parse(
+          fs.readFileSync('./configs/acequill.json'),
+        );
+if (ip_config.isIprelay == "true"){
+   is_iprelay = 1
+} else{
+   is_iprelay = 0;
+}
 
 router.get('/', (_req, res) => {
   res.redirect('./terminal');
@@ -129,7 +141,7 @@ function translate(text, settings, callback) {
       case 'AZURE':
         info.info('Translating with azure');
         configs = JSON.parse(
-          fs.readFileSync('./configs/azure/azure-translation.json'),
+          fs.readFileSync('./translation_configs/microsoft-azure.json'),
         );
 
         if (decode(nconf.get('proxy'))) {
@@ -170,6 +182,21 @@ router.get('/loadACConfig', (req, res) => {
       res.send(results[0]);
     }
   });
+});
+
+router.post('/iprelay/updateIprelay', (req, res) => {
+  const isIprelay = req.body.isIprelay;
+
+  var config = fs.readFileSync("./configs/acequill.json");
+
+  config = JSON.parse(config);
+
+  if (isIprelay == "true") {
+    config.isIprelay = "true";
+    fs.writeFileSync("./configs/acequill.json", JSON.stringify(config));
+  } else {
+    config.isIprelay = "false";
+    fs.writeFileSync("./configs/acequill.json", JSON.stringify(config));  }
 });
 
 router.post('/iprelay/savenotes', (req, res) => {
@@ -275,7 +302,8 @@ router.post('/terminal/texttospeech', (req, res) => {
                     final: true,
                     timestamp: d,
                     sttEngine: engine,
-                    research_data_id: researchDataId
+                    research_data_id: researchDataId,
+                    is_iprelay: is_iprelay,
                   };
                   req.dbconn.query('INSERT INTO data_store SET ?', dataStore, (
                     err5,
@@ -304,6 +332,7 @@ router.post('/terminal/texttospeech', (req, res) => {
                   timestamp: d,
                   sttEngine: engine,
                   research_data_id: researchDataId,
+                  is_iprelay: is_iprelay,
                 };
                 req.dbconn.query('INSERT INTO data_store SET ?', dataStore, (
                   err7, result7
@@ -362,7 +391,14 @@ router.get('/iprelay/playScenarioSpeech', (req, res) => {
 });
 
 router.post('/iprelay/logIPRelay', (req, res) => {
-  const { callID } = req.body;
+  let sql_researchdata = 'SELECT * FROM data_store ORDER BY id DESC LIMIT 1;';
+      req.dbconn.query(sql_researchdata, (err, result) => {
+        if (err) {
+          error.error(err)
+          res.status(500).send({ status: 'Error' });
+        } else {
+          const callID = result[0].research_data_id;
+
   const { text } = req.body;
   const { isDUT } = req.body;
 
@@ -378,6 +414,8 @@ router.post('/iprelay/logIPRelay', (req, res) => {
   } else {
     res.status(400).send('Bad Inputs');
   }
+  }
+      });
 });
 
 router.post('/terminal/ariaSettings', (req, res) => {
@@ -402,6 +440,132 @@ router.post('/terminal/ariaSettings', (req, res) => {
       }
       info.info(aria);
       res.status(200).send({ status: 'Success', aria });
+    },
+  );
+});
+
+router.post('/terminal/getEntities', (req, res) => {
+  const ext = req.body.extension;
+  let aria;
+  let engine;
+  let configs;
+  info.info('text analysis with google');
+  engine = new GoogleTA();
+
+  const sql = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
+  req.dbconn.query(sql, ext, (err2, lastCall) => {
+    if (err2 || lastCall.length < 1) {
+      error.error('sql error:', err2);
+    } else {
+      id = lastCall[0].id
+      console.log("id ",  id)
+      if (typeof id === 'undefined' || Number.isNaN(id)) id = 0;
+
+      req.dbconn.query(
+        'SELECT translation, extension, timestamp FROM translation_data where research_data_id = ?;',
+        id,
+        (err, rows) => {
+          if (err) {
+            error.error('/getTranscripts ERROR: ' + err);
+          } else if (rows.length === 0) {
+            // send non translated transcription data back
+            req.dbconn.query(
+              'SELECT * FROM data_store where research_data_id = ? and final = 1;',
+              id,
+              (err2, rows2) => {
+                if (err2) {
+                  error.error('/getTranscripts ERROR: ', err.code);
+                } else if (rows2.length !== 0) {
+                  let records = '';
+                  rows2.forEach((row) => {
+                    records += row.transcript + '. '
+                    console.log("row.transcript ", row.transcript)
+                  });
+                  engine.getEntites(
+                    records,
+                    (results) => {
+                      res.status(200).send({ status: 'Success', results});
+                    },
+                  );
+                }
+              },
+            );
+          } else {
+            // res.send('no records');
+          }
+        },
+      );
+    }
+  });
+});
+
+router.post('/terminal/getClassification', (req, res) => {
+  const ext = req.body.extension;
+  let aria;
+  let engine;
+  let configs;
+  info.info('text analysis with google');
+  engine = new GoogleTA();
+
+  const sql = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
+  req.dbconn.query(sql, ext, (err2, lastCall) => {
+    if (err2 || lastCall.length < 1) {
+      error.error('sql error:', err2);
+    } else {
+      id = lastCall[0].id
+      console.log("id ",  id)
+      if (typeof id === 'undefined' || Number.isNaN(id)) id = 0;
+
+      req.dbconn.query(
+        'SELECT translation, extension, timestamp FROM translation_data where research_data_id = ?;',
+        id,
+        (err, rows) => {
+          if (err) {
+            error.error('/getTranscripts ERROR: ' + err);
+          } else if (rows.length === 0) {
+            // send non translated transcription data back
+            req.dbconn.query(
+              'SELECT * FROM data_store where research_data_id = ? and final = 1;',
+              id,
+              (err2, rows2) => {
+                if (err2) {
+                  error.error('/getTranscripts ERROR: ', err.code);
+                } else if (rows2.length !== 0) {
+                  let records = '';
+                  rows2.forEach((row) => {
+                    records += row.transcript + '. '
+                    console.log("row.transcript ", row.transcript)
+                  });
+                  console.log("records ", records)
+                  engine.getClassification(
+                    records,
+                    (results) => {
+                      res.status(200).send({ status: 'Success', results});
+                    },
+                  );
+                }
+              },
+            );
+          } else {
+            // res.send('no records');
+          }
+        },
+      );
+    }
+  });
+});
+
+router.post('/terminal/sentenceAnalysis', (req, res) => {
+  const text = req.body.text;
+  let engine;
+  let configs;
+  engine = new GoogleTA();
+
+  engine.getSentiment(
+    text,
+    (results) => {
+      console.log(results)
+      res.status(200).send({ status: 'Success', results});
     },
   );
 });
@@ -459,5 +623,6 @@ router.post('/iprelay/uploadRecording', (req, res) => {
     }
   });
 });
+
 
 module.exports = router;

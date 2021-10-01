@@ -1,0 +1,168 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <% include ..//partials/sidebar %>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1>Azure Accounts</h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><i class="fa fa-tags"></i>&nbsp;CSP Accounts</li>
+                                <li class="breadcrumb-item active">Azure</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div><!-- /.container-fluid -->
+            </section>
+
+            <!-- Main content -->
+            <section class="content">
+
+                <div class="row">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                Cognitive Service
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="inputAzureClientID">Client ID</label>
+                                    <input type="text" class="form-control" id="azure_cog_key">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputAzureURL">URL</label>
+                                    <input type="text" class="form-control" id="azure_cog_url">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputAzureLocation">Location</label>
+                                    <input type="text" class="form-control" id="azure_cog_location">
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="save_azure_cog_btn">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                Translation Service
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="inputAzureSpeechClientID">Client ID</label>
+                                    <input type="text" class="form-control" id="azure_translation_key">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputAzureURL">URL</label>
+                                    <input type="text" class="form-control" id="azure_translation_url">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputAzureLocation">Location</label>
+                                    <input type="text" class="form-control" id="azure_translation_location">
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary"
+                                    id="save_azure_translation_btn">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- The actual snackbar -->
+            <div id="snackbar">Saved</div>
+
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        <footer class="main-footer">
+            <% include ..//partials/footer %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- Socket.io -->
+    <script src='/socket.io/socket.io.js'></script>
+    <script type="text/javascript">
+        $('#csp_azure_treeview').addClass('active');
+
+
+        var socket = io('/admin', {
+            path: '/socket.io'
+        });
+        socket.on('connect', function (data) {
+            socket.emit('get-configs-azure');
+        }).on('load-azure-cognitive-configs', function (data) {
+            $('#azure_cog_key').val(data.key);
+            $('#azure_cog_url').val(data.url);
+            $('#azure_cog_location').val(data.location);
+        }).on('load-azure-translation-configs', function (data) {
+            $('#azure_translation_key').val(data.key);
+            $('#azure_translation_url').val(data.url);
+            $('#azure_translation_location').val(data.location);
+        }).on('save-success', function (service) {
+            $('#snackbar').html(service + " Account Saved")
+            $('#snackbar').addClass("show");
+            setTimeout(function () {
+                $('#snackbar').removeClass("show");
+            }, 3000);
+        });
+
+
+        $('#save_azure_cog_btn').on('click', function (e) {
+            e.preventDefault();
+            var data = {};
+            data.key = $('#azure_cog_key').val();
+            data.url = $('#azure_cog_url').val();
+            data.location = $('#azure_cog_location').val();
+            socket.emit('update-azure-cognitive-configs', data);
+        });
+
+        $('#save_azure_translation_btn').on('click', function (e) {
+            e.preventDefault();
+            var data = {};
+            data.key = $('#azure_translation_key').val();
+            data.url = $('#azure_translation_url').val();
+            data.location = $('#azure_translation_location').val();
+            socket.emit('update-azure-translation-configs', data);
+        });
+
+    </script>
+</body>
+
+</html>

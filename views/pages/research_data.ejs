@@ -506,7 +506,6 @@ McLean, VA 22102-7539, (703) 983-6000.
                 $('#transcriptDiv').html('');
 
                 if (data) {
-                    console.log("sssss", selectedRow)
                     var textblob = "";
                     data.forEach(function (line) {
                         textblob += " " + line[2];
@@ -778,7 +777,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                         a.download = "acequill_" + uId + "_" + type + ".csv";
                         a.click();
                     });
-                
+
             }
         }
 

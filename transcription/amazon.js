@@ -5,11 +5,16 @@ const WebSocket = require('ws');
 const GrowingFile = require('growing-file');
 const urlUtil = require('url');
 const HttpsProxyAgent = require('https-proxy-agent');
+const fs = require('fs');
 
-const agent = new HttpsProxyAgent(urlUtil.parse('{proxy}'));
+const aceConfig = JSON.parse(
+          fs.readFileSync('./configs/acequill.json'),
+        );
+
+const agent = new HttpsProxyAgent(urlUtil.parse(aceConfig.proxy));
 const marshaller = require('@aws-sdk/eventstream-marshaller'); // for converting binary event stream messages to and from JSON
 const utilUtf8Node = require('@aws-sdk/util-utf8-node'); // utilities for encoding and decoding UTF8
-// const AWS = require('aws-sdk');
+const AWS = require('aws-sdk');
 
 const winston = require('winston');
 const logger = require('../utils/logger');
@@ -25,11 +30,8 @@ const eventStreamMarshaller = new marshaller.EventStreamMarshaller(
 
 function Amazon(configs) {
   this.file = configs.file;
-  this.key = configs.key;// AWS.config.credentials.accessKeyId;
-  this.secret = configs.secret;// AWS.config.credentials.secretAccessKey;
   this.language = configs.language;
   this.sampleRate = '16400';
-  this.region = '{region}';
 }
 
 function toTime(time) {
@@ -107,7 +109,7 @@ function createSignature(secret, time, region, service, stringToSign) {
 }
 
 function createPresignedUrl() {
-  const host = 'transcribestreaming.{region}.amazonaws.com:8443';
+  const host = 'transcribestreaming.us-east-1.amazonaws.com:8443';
   const path = '/stream-transcription-websocket';
   const service = 'transcribe';
 
@@ -183,6 +185,12 @@ function getAudioEventMessage(buffer) {
 
 Amazon.prototype.start = function start(callback) {
   info.info('start amazon');
+  const config = JSON.parse(fs.readFileSync('./configs/amazon/amazon.json'),);
+
+  this.key = config.key;
+  this.secret = config.secret;
+  this.region = config.region;
+
   const url = createPresignedUrl.call(this);
 
   // open up our WebSocket connection

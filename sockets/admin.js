@@ -182,132 +182,92 @@ module.exports = function mod(io, nconf) {
 
     const mySqlConnection = openMySqlConnection();
 
-    socket.on('get-stt-configs', () => {
-      adminLogger.debug('Incoming Socket.IO:get-stt-configs');
-      try {
-        const azure = JSON.parse(
-          fs.readFileSync('./configs/azure/azure-cognitive.json'),
-        );
-        io.to(socket.id).emit('load-stt-azure-configs', azure);
-      } catch (err) {
-        adminLogger.error('Error parsing stt configs azure JSON');
-        adminLogger.error(err);
-      }
-      try {
-        const google = JSON.parse(
-          fs.readFileSync('./configs/google/google.json'),
-        );
-        io.to(socket.id).emit('load-stt-google-configs', google);
-      } catch (err) {
-        adminLogger.error('Error parsing stt configs google JSON');
-        adminLogger.error(err);
-      }
-      try {
-        const watson = JSON.parse(
-          fs.readFileSync('./configs/watson/watson-stt.json'),
-        );
-        io.to(socket.id).emit('load-stt-watson-configs', watson);
-      } catch (err) {
-        adminLogger.error('Error parsing stt configs watson JSON');
-        adminLogger.error(err);
-      }
+    socket.on('get-configs-amazon', () => {
+      adminLogger.debug('Incoming Socket.IO:get-configs-amazon');
       try {
         const amazon = JSON.parse(
           fs.readFileSync('./configs/amazon/amazon.json'),
         );
-        io.to(socket.id).emit('load-stt-amazon-configs', amazon);
+        io.to(socket.id).emit('load-amazon-configs', amazon);
       } catch (err) {
-        adminLogger.error('Error parsing stt configs amazon JSON',);
+        adminLogger.error('Error parsing configs amazon JSON',);
         adminLogger.error(err);
       }
     });
 
-    socket.on('get-tts-configs', () => {
-      adminLogger.debug('Incoming Socket.IO:get-tts-configs');
+    socket.on('get-configs-azure', () => {
+      adminLogger.debug('Incoming Socket.IO:get-configs-azure');
       try {
-        const azure = JSON.parse(
+        const azureCog = JSON.parse(
           fs.readFileSync('./configs/azure/azure-cognitive.json'),
         );
-        io.to(socket.id).emit('load-tts-azure-configs', azure);
+        io.to(socket.id).emit('load-azure-cognitive-configs', azureCog);
       } catch (err) {
-        adminLogger.error('Error parsing tts configs azure JSON');
+        adminLogger.error('Error parsing stt configs azure-cognitive JSON',);
         adminLogger.error(err);
       }
       try {
-        const google = JSON.parse(
-          fs.readFileSync('./configs/google/google.json'),
-        );
-        io.to(socket.id).emit('load-tts-google-configs', google);
-      } catch (err) {
-        adminLogger.error('Error parsing tts configs google JSON');
-        adminLogger.error(err);
-      }
-      try {
-        const watson = JSON.parse(
-          fs.readFileSync('./configs/watson/watson-tts.json'),
-        );
-        io.to(socket.id).emit('load-tts-watson-configs', watson);
-      } catch (err) {
-        adminLogger.error('Error parsing tts configs watson JSON');
-        adminLogger.error(err);
-      }
-      try {
-        const amazon = JSON.parse(
-          fs.readFileSync('./configs/amazon/amazon.json'),
-        );
-        io.to(socket.id).emit('load-tts-amazon-configs', amazon);
-      } catch (err) {
-        adminLogger.error('Error parsing tts configs amazon JSON');
-        adminLogger.error(err);
-      }
-    });
-
-    socket.on('get-translation-configs', () => {
-      adminLogger.debug('Incoming Socket.IO:get-translation-configs');
-      try {
-        const azure = JSON.parse(
+        const azureTranslation = JSON.parse(
           fs.readFileSync('./configs/azure/azure-translation.json'),
         );
-        io.to(socket.id).emit('load-translation-azure-configs', azure);
+        io.to(socket.id).emit('load-azure-translation-configs', azureTranslation);
       } catch (err) {
-        adminLogger.error('Error parsing translation configs azure JSON');
+        adminLogger.error('Error parsing stt configs azure-translation JSON',);
         adminLogger.error(err);
       }
+    });
+
+    socket.on('get-configs-google', () => {
+      adminLogger.debug('Incoming Socket.IO:get-configs-google');
       try {
         const google = JSON.parse(
           fs.readFileSync('./configs/google/google.json'),
         );
-        io.to(socket.id).emit('load-translation-google-configs', google);
+        io.to(socket.id).emit('load-google-configs', google);
       } catch (err) {
-        adminLogger.error('Error parsing translation configs google JSON');
-        adminLogger.error(err);
-      }
-      try {
-        const watson = JSON.parse(
-          fs.readFileSync('./configs/watson/watson-translation.json'),
-        );
-        io.to(socket.id).emit('load-translation-watson-configs', watson);
-      } catch (err) {
-        adminLogger.error('Error parsing translation configs watson JSON');
-        adminLogger.error(err);
-      }
-      try {
-        const amazon = JSON.parse(
-          fs.readFileSync('./configs/amazon/amazon.json'),
-        );
-        io.to(socket.id).emit('load-translation-amazon-configs', amazon);
-      } catch (err) {
-        adminLogger.error('Error parsing translation configs amazon JSON');
+        adminLogger.error('Error parsing configs google JSON',);
         adminLogger.error(err);
       }
     });
-    
+
+    socket.on('get-configs-watson', () => {
+      adminLogger.debug('Incoming Socket.IO:get-configs-watson');
+      try {
+        const watsonStt = JSON.parse(
+          fs.readFileSync('./configs/watson/watson-stt.json'),
+        );
+        io.to(socket.id).emit('load-watson-stt-configs', watsonStt);
+      } catch (err) {
+        adminLogger.error('Error parsing  configs watson-stt JSON',);
+        adminLogger.error(err);
+      }
+      try {
+        const watsonTranslation = JSON.parse(
+          fs.readFileSync('./configs/watson/watson-translation.json'),
+        );
+        io.to(socket.id).emit('load-watson-translation-configs', watsonTranslation);
+      } catch (err) {
+        adminLogger.error('Error parsing  configs watson-translation JSON',);
+        adminLogger.error(err);
+      }
+      try {
+        const watsonTts = JSON.parse(
+          fs.readFileSync('./configs/watson/watson-tts.json'),
+        );
+        io.to(socket.id).emit('load-watson-tts-configs', watsonTts);
+      } catch (err) {
+        adminLogger.error('Error parsing  configs watson-tts JSON',);
+        adminLogger.error(err);
+      }
+    });
+
     socket.on('update-amazon-configs', (data) => {
       adminLogger.debug('Incoming Socket.IO:update-amazon-configs');
       adminLogger.debug(JSON.stringify(data));
       const amazon = {};
       amazon.key = data.key;
       amazon.secret = data.secret;
+      amazon.region = data.region;
       fs.writeFile(
         './configs/amazon/amazon.json',
         JSON.stringify(amazon, null, 2),
@@ -329,9 +289,8 @@ module.exports = function mod(io, nconf) {
       );
     });
 
-    socket.on('update-azure-configs', (data) => {
-      adminLogger.debug('Incoming Socket.IO:update-azure-configs');
-      adminLogger.debug(JSON.stringify(data));
+    socket.on('update-azure-cognitive-configs', (data) => {
+      adminLogger.debug('Incoming Socket.IO:update-azure-cognitive-configs');
       const azure = {};
       azure.key = data.key;
       azure.url = data.url;
@@ -350,15 +309,13 @@ module.exports = function mod(io, nconf) {
           adminLogger.debug(
             'Azure config saveed to ./configs/azure/azure-cognitive.json',
           );
-          io.to(socket.id).emit('save-stt-success', 'Azure');
-          io.to(socket.id).emit('save-tts-success', 'Azure');
+          io.to(socket.id).emit('save-success', 'Azure Cognitive');
         },
       );
     });
 
     socket.on('update-azure-translation-configs', (data) => {
       adminLogger.debug('Incoming Socket.IO:update-translation-azure-configs');
-      adminLogger.debug(JSON.stringify(data));
       const azure = {};
       azure.key = data.key;
       azure.url = data.url;
@@ -377,7 +334,7 @@ module.exports = function mod(io, nconf) {
           adminLogger.debug(
             'Azure config saveed to ./configs/azure/azure-translation.json',
           );
-          io.to(socket.id).emit('save-translation-success', 'Azure');
+          io.to(socket.id).emit('save-success', 'Azure Translation');
         },
       );
     });
@@ -417,10 +374,8 @@ module.exports = function mod(io, nconf) {
       );
     });
 
-    socket.on('update-watson-configs', (data) => {
-      adminLogger.debug('Incoming Socket.IO:update-watson-configs');
-      adminLogger.debug(JSON.stringify(data));
-
+    socket.on('update-watson-stt-configs', (data) => {
+      adminLogger.debug('Incoming Socket.IO:update-watson-stt-configs');
       const watson = {};
       watson.authtype = data.authtype;
       watson.apikey = data.apikey;
@@ -435,15 +390,13 @@ module.exports = function mod(io, nconf) {
             return;
           }
           adminLogger.debug('Watson config to ./configs/watson/watson-stt.json');
-          io.to(socket.id).emit('save-stt-success', 'Watson');
+          io.to(socket.id).emit('save-success', 'Watson Speech to Text');
         },
       );
     });
 
-    socket.on('update-watson-configs-tts', (data) => {
-      adminLogger.debug('Incoming Socket.IO:update-watson-configs');
-      adminLogger.debug(JSON.stringify(data));
-
+    socket.on('update-watson-tts-configs', (data) => {
+      adminLogger.debug('Incoming Socket.IO:update-watson-tts-configs');
       const watson = {};
       watson.authtype = data.authtype;
       watson.apikey = data.apikey;
@@ -458,15 +411,13 @@ module.exports = function mod(io, nconf) {
             return;
           }
           adminLogger.debug('Watson config to ./configs/watson/watson-tts.json');
-          io.to(socket.id).emit('save-tts-success', 'Watson');
+          io.to(socket.id).emit('save-success', 'Watson Text to Speech');
         },
       );
     });
 
     socket.on('update-watson-translation-configs', (data) => {
       adminLogger.debug('Incoming Socket.IO:update-watson-translation-configs');
-      adminLogger.debug(JSON.stringify(data));
-
       const watson = {};
       watson.authtype = data.authtype;
       watson.apikey = data.apikey;
@@ -485,7 +436,7 @@ module.exports = function mod(io, nconf) {
           adminLogger.debug(
             'Watson config to ./configs/watson/watson-translation.json',
           );
-          io.to(socket.id).emit('save-translation-success', 'Watson');
+          io.to(socket.id).emit('save-success', 'Watson Translation');
         },
       );
     });
@@ -543,7 +494,7 @@ module.exports = function mod(io, nconf) {
             });
 
             // AWS
-            const awsConfig = JSON.parse(fs.readFileSync('./configs/amazon/amazon.json'));
+            const awsConfig = {};
             awsConfig.file = filepath;
             awsConfig.language = en.aws;
             const amazon = new Amazon(awsConfig);
@@ -554,10 +505,10 @@ module.exports = function mod(io, nconf) {
             });
 
             // AWS Spanish
-            const config = {};
-            config.file = filepathSpanish;
-            config.language = es.aws;
-            const amazonSpanish = new Amazon(config);
+            const awsConfig2 = {};
+            awsConfig2.file = filepathSpanish;
+            awsConfig2.language = es.aws;
+            const amazonSpanish = new Amazon(awsConfig2);
             amazonSpanish.start((data) => {
               const data2 = data;
               data2.engine = 'amazonSpanish';

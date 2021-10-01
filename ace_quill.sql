@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.34, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.35, for Linux (x86_64)
 --
 -- Host: localhost    Database: ace_quill
 -- ------------------------------------------------------
--- Server version	5.7.34
+-- Server version	5.7.35
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,6 +14,37 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `advanced_controls`
+--
+
+DROP TABLE IF EXISTS `advanced_controls`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advanced_controls` (
+  `extension` smallint(5) NOT NULL,
+  `stt_engine` varchar(45) DEFAULT NULL,
+  `stt_callee_language` varchar(45) DEFAULT NULL,
+  `stt_show_final_caption` tinyint(1) DEFAULT NULL,
+  `stt_delay` smallint(2) DEFAULT NULL,
+  `translation_engine` varchar(45) DEFAULT NULL,
+  `translation_callee_language` varchar(45) DEFAULT NULL,
+  `tts_engine` varchar(45) DEFAULT NULL,
+  `tts_translate` tinyint(1) DEFAULT NULL,
+  `aria_settings` varchar(64) DEFAULT NULL,
+  `confidence_show_word` tinyint(1) DEFAULT NULL,
+  `confidence_show_phrase` tinyint(1) DEFAULT NULL,
+  `confidence_upper_lim` smallint(5) DEFAULT NULL,
+  `confidence_lower_lim` smallint(5) DEFAULT NULL,
+  `confidence_bold` tinyint(1) DEFAULT NULL,
+  `confidence_italicize` tinyint(1) DEFAULT NULL,
+  `confidence_underline` tinyint(1) DEFAULT NULL,
+  `iprelay` tinyint(1) DEFAULT NULL,
+  `iprelay_scenario` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`extension`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `contacts`
@@ -32,9 +63,10 @@ CREATE TABLE `contacts` (
   `personalemail` varchar(64) DEFAULT NULL,
   `workemail` varchar(64) DEFAULT NULL,
   `favorite` tinyint(4) DEFAULT NULL,
-  `extension` varchar(10) DEFAULT NULL,
-  PRIMARY KEY (`idcontacts`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+  `extension` smallint(5) DEFAULT NULL,
+  PRIMARY KEY (`idcontacts`),
+  UNIQUE KEY `idcontacts` (`idcontacts`)
+) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,17 +78,17 @@ DROP TABLE IF EXISTS `data_store`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `data_store` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `extension` varchar(45) DEFAULT NULL,
   `transcript` text,
   `final` varchar(64) DEFAULT NULL,
   `timestamp` varchar(64) DEFAULT NULL,
   `sttEngine` varchar(64) DEFAULT NULL,
-  `research_data_id` int(10) unsigned DEFAULT NULL,
-  `raw` text,
-  `extension` varchar(45) DEFAULT NULL,
+  `research_data_id` int(10) DEFAULT NULL,
+  `raw` mediumtext,
+  `is_iprelay` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `research_data_id` (`research_data_id`),
-  CONSTRAINT `data_store_ibfk_1` FOREIGN KEY (`research_data_id`) REFERENCES `research_data` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=136 DEFAULT CHARSET=latin1;
+  KEY `research_data_id` (`research_data_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=178643 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -89,13 +121,13 @@ CREATE TABLE `device_settings` (
   `name` varchar(45) DEFAULT NULL,
   `group_id` int(11) DEFAULT NULL,
   `groups` int(11) DEFAULT NULL,
-  `translation_engine` varchar(45) DEFAULT NULL,
+  `translation_engine` varchar(10) DEFAULT NULL,
   `source_language` varchar(10) DEFAULT NULL,
   `target_language` varchar(10) DEFAULT NULL,
+  `ARIA_settings` varchar(45) DEFAULT NULL,
   `stt_show_final_caption` tinyint(1) DEFAULT NULL,
   `tts_engine` varchar(45) DEFAULT NULL,
   `tts_translate` tinyint(1) DEFAULT NULL,
-  `ARIA_settings` varchar(45) DEFAULT NULL,
   `confidence_show_word` tinyint(1) DEFAULT NULL,
   `confidence_show_phrase` tinyint(1) DEFAULT NULL,
   `confidence_upper_lim` smallint(5) DEFAULT NULL,
@@ -109,18 +141,17 @@ CREATE TABLE `device_settings` (
   `iprelay_scenario` varchar(45) DEFAULT NULL,
   `tts_voice` varchar(45) DEFAULT NULL,
   `tts_enabled` int(11) DEFAULT NULL,
+  `stt_show_entity_sentiment` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `extension_UNIQUE` (`extension`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
 
 LOCK TABLES `device_settings` WRITE;
 /*!40000 ALTER TABLE `device_settings` DISABLE KEYS */;
-INSERT INTO `device_settings` VALUES (47,5001,'AZURE',0,0,'terminal 01',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(48,5002,'AZURE',0,0,'terminal 02',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(49,5003,'AZURE',0,0,'terminal 03',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(50,5004,'AZURE',0,0,'terminal 04',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(51,5005,'AZURE',0,0,'terminal 05',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(52,5006,'AZURE',0,0,'terminal 06',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(53,5007,'AZURE',0,0,'terminal 07',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(54,5008,'AZURE',0,0,'terminal 08',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(55,5009,'AZURE',0,0,'terminal 09',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(56,5010,'AZURE',0,0,'terminal 10',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(57,5011,'AZURE',0,0,'terminal 11',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(58,5012,'AZURE',0,0,'terminal 12',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(59,5013,'AZURE',0,0,'terminal 13',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(60,5014,'AZURE',0,0,'terminal 14',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(61,5015,'AZURE',0,0,'terminal 15',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(62,5016,'AZURE',0,0,'terminal 16',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(63,5017,'AZURE',0,0,'terminal 17',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(64,5018,'AZURE',0,0,'terminal 18',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(65,5019,'AZURE',0,0,'terminal 19',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(66,5020,'AZURE',0,0,'terminal 20',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `device_settings` VALUES (47,5001,'AZURE',0,0,'terminal 01',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(48,5002,'AZURE',0,0,'terminal 02',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(49,5003,'AZURE',0,0,'terminal 03',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(50,5004,'AZURE',0,0,'terminal 04',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(51,5005,'AZURE',0,0,'terminal 05',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(52,5006,'AZURE',0,0,'terminal 06',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(53,5007,'AZURE',0,0,'terminal 07',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(54,5008,'AZURE',0,0,'terminal 08',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(55,5009,'AZURE',0,0,'terminal 09',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(56,5010,'AZURE',0,0,'terminal 10',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(57,5011,'AZURE',0,0,'terminal 11',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(58,5012,'AZURE',0,0,'terminal 12',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(59,5013,'AZURE',0,0,'terminal 13',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(60,5014,'AZURE',0,0,'terminal 14',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(61,5015,'AZURE',0,0,'terminal 15',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(62,5016,'AZURE',0,0,'terminal 16',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(63,5017,'AZURE',0,0,'terminal 17',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(64,5018,'AZURE',0,0,'terminal 18',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(65,5019,'AZURE',0,0,'terminal 19',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(66,5020,'AZURE',0,0,'terminal 20',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `device_settings` ENABLE KEYS */;
 UNLOCK TABLES;
-
 
 --
 -- Table structure for table `groups`
@@ -134,7 +165,7 @@ CREATE TABLE `groups` (
   `group_name` varchar(45) DEFAULT NULL,
   `description` text,
   PRIMARY KEY (`idgroups`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +184,7 @@ CREATE TABLE `iprelay_log` (
   PRIMARY KEY (`id`),
   KEY `fk_call_id_idx` (`fk_call_id`),
   CONSTRAINT `fk_call_id` FOREIGN KEY (`fk_call_id`) REFERENCES `research_data` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -171,7 +202,7 @@ CREATE TABLE `iprelay_recordings` (
   PRIMARY KEY (`id`),
   KEY `fk_researchdata_idx` (`fk_research_data_id`),
   CONSTRAINT `fk_researchdata` FOREIGN KEY (`fk_research_data_id`) REFERENCES `research_data` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=130 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -183,11 +214,11 @@ DROP TABLE IF EXISTS `iprelay_scenario`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `iprelay_scenario` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) DEFAULT NULL,
-  `use_count` int(10) DEFAULT NULL,
+  `name` varchar(256) DEFAULT NULL,
+  `use_count` smallint(5) DEFAULT NULL,
   `notes` text,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -206,9 +237,9 @@ CREATE TABLE `iprelay_scenario_content` (
   `audioFilePath` varchar(256) DEFAULT NULL,
   `isDUT` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `iprelay_scenario_id` (`iprelay_scenario_id`),
-  CONSTRAINT `iprelay_scenario_content_ibfk_1` FOREIGN KEY (`iprelay_scenario_id`) REFERENCES `iprelay_scenario` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
+  KEY `iprelay_scenario_content_ibfk_1` (`iprelay_scenario_id`),
+  CONSTRAINT `iprelay_scenario_content_ibfk_1` FOREIGN KEY (`iprelay_scenario_id`) REFERENCES `iprelay_scenario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=713 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -233,6 +264,14 @@ CREATE TABLE `language_code` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+LOCK TABLES `language_code` WRITE;
+/*!40000 ALTER TABLE `language_code` DISABLE KEYS */;
+INSERT INTO language_code(code,google, google_translate,azure, azure_translate,watson, watson_translate, aws, aws_translate)
+VALUES('en', 'en-US', 'en', 'en-US', 'en-US', 'en-US_BroadbandModel', 'en', 'en-US', 'en'),
+('es', 'es-US', 'es', 'es-MX', 'es-MX', 'es-MX_BroadbandModel', 'es', 'es-US', 'es');
+/*!40000 ALTER TABLE `language_code` ENABLE KEYS */;
+UNLOCK TABLES;
+
 --
 -- Table structure for table `login_credentials`
 --
@@ -252,7 +291,7 @@ CREATE TABLE `login_credentials` (
   `last_login` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`idlogin_credentials`),
   UNIQUE KEY `username_UNIQUE` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -303,12 +342,13 @@ CREATE TABLE `research_data` (
   `notes` text,
   `mobizen_notes` text,
   `translation_engine` varchar(45) DEFAULT NULL,
-  `source_language` varchar(45) DEFAULT NULL,
-  `target_language` varchar(45) DEFAULT NULL,
+  `source_language` varchar(10) DEFAULT NULL,
+  `target_language` varchar(10) DEFAULT NULL,
   `tts_engine` varchar(45) DEFAULT NULL,
+  `is_iprelay` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idnew_table_UNIQUE` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1483 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2510 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -325,7 +365,7 @@ CREATE TABLE `scenario` (
   `audio_file` varchar(64) DEFAULT NULL,
   `audio_file_path` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -352,17 +392,17 @@ DROP TABLE IF EXISTS `translation_data`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `translation_data` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `extension` varchar(45) DEFAULT NULL,
   `translation` text,
   `timestamp` varchar(64) DEFAULT NULL,
   `engine` varchar(64) DEFAULT NULL,
   `msgid` varchar(64) DEFAULT NULL,
   `research_data_id` int(10) unsigned DEFAULT NULL,
   `preTranslation` text,
-  `extension` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `research_data_id` (`research_data_id`),
   CONSTRAINT `translation_data_ibfk_1` FOREIGN KEY (`research_data_id`) REFERENCES `research_data` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1063 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -374,4 +414,4 @@ CREATE TABLE `translation_data` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-07-16 16:17:09
+-- Dump completed on 2021-10-01 20:49:21

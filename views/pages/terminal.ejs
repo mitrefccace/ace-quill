@@ -106,7 +106,7 @@
                     <div class="tab-content ">
                         <div class="tab-pane active" id="tab_history">
                             <div class="col-12"></div>
-                                <ul id="call_history" style="padding-left: 0.5em; padding-right: 0.5em;" 
+                                <ul id="call_history" style="padding-left: 0.5em; padding-right: 0.5em;"
                                 >
                                 </ul>
                             </div>
@@ -116,7 +116,7 @@
                                     </ul>
                             </div>
                         </div>
-                   
+
                 </div>
             </div>
         </aside>
@@ -135,7 +135,7 @@ Welcome to the ACE Quill terminal.
                 <div class="row">
                     <!--Grid column-->
                     <div class="col-12">
-                        <form class="input-group" id="ttsForm">
+                        <form class="input-group"  autocomplete="off" id="ttsForm">
                             <input type="text" class="form-control form-control-lg" placeholder="Teletype" id='ttsText'>
                             <div class="input-group-append">
                                 <button class="btn btn-lg btn-info" type="submit" id='ttsBtn'>Say it</button>
@@ -176,78 +176,6 @@ Welcome to the ACE Quill terminal.
                     <div class="form-group text-center">
                         <button type="button" class="btn btn-default btn-sm" id='clearBtn'>Clear Terminal</button>
                     </div>
-                    <!--div class="form-group text-center">
-                        <a href='#' onclick="fixCert()">If registration fails click here, accept the certificate.</a>
-                    </div-->
-                    <!--div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="ttsEnabledCheckbox">
-                        <label class="form-check-label" for="ttsEnabledCheckbox">Text-to-Speech</label>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="phraseConfidenceCheckbox">
-                        <label class="form-check-label" for="phraseConfidenceCheckbox">Show Phrase Confidence</label>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="wordConfidenceCheckbox">
-                        <label class="form-check-label" for="wordConfidenceCheckbox">Show Word Confidence</label>
-                    </div>
-                    <hr>
-                    <div class="form-group">
-                        <label>Confidence Settings</label>
-                    </div>
-                    <div class="form-group row">
-                        <label for="mediumConfidence" class="col-sm-4 col-form-label col-form-label-sm">less
-                            than</label>
-                        <div class="col-sm-3">
-                            <input type="number" class="form-control form-control-sm" id="mediumConfidencePercent"
-                                placeholder="%" value='75'>
-                        </div>
-                        <div class="col-sm-5">
-                            <select class="form-control form-control-sm" id="mediumConfidenceColor">
-                                <option value="none">None</option>
-                                <option value="blue">Blue</option>
-                                <option value="green">Green</option>
-                                <option value="orange">Orange</option>
-                                <option value="red">Red</option>
-                                <option value="yellow" selected>Yellow</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="mediumConfidence" class="col-sm-4 col-form-label col-form-label-sm">less
-                            than</label>
-                        <div class="col-sm-3">
-                            <input type="number" class="form-control form-control-sm" id="lowConfidencePercent"
-                                placeholder="%" value='50'>
-                        </div>
-                        <div class="col-sm-5">
-                            <select class="form-control form-control-sm" id="lowConfidenceColor">
-                                <option value="none">None</option>
-                                <option value="blue">Blue</option>
-                                <option value="green">Green</option>
-                                <option value="orange">Orange</option>
-                                <option value="red" selected>Red</option>
-                                <option value="yellow">Yellow</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <div class="col-sm-4">
-                            <input type="checkbox" class="form-check-input" id="wordConfidenceBoldCheckbox">
-                            <label class="form-check-label" for="wordConfidenceBoldCheckbox">Bold</label>
-                        </div>
-                        <div class="col-sm-3">
-                            <input type="checkbox" class="form-check-input" id="wordConfidenceItalicCheckbox">
-                            <label class="form-check-label" for="wordConfidenceItalicCheckbox">Italic</label>
-                        </div>
-                        <div class="col-sm-3">
-                            <input type="checkbox" class="form-check-input" id="wordConfidenceUnderlineCheckbox">
-                            <label class="form-check-label" for="wordConfidenceUnderlineCheckbox">Underline</label>
-                        </div>
-                    </div>
-
-                </form>
-            </div-->
         </aside>
 
     </div>
@@ -274,6 +202,8 @@ Welcome to the ACE Quill terminal.
         var asteriskHost = $('#sipServer').val();
         window.open('https://' + asteriskHost + '/ws');
     }
+
+    entitySentimentEnabled = 0
 
     $(document).ready(function () {
         loadConfig(localStorage.getItem('sipExtension'));
@@ -348,7 +278,7 @@ Welcome to the ACE Quill terminal.
         $.ajax({
             url: './terminal/texttospeech',
             type: 'POST',
-            data: { "text": ttsText, "extension": localStorage.getItem('sipExtension') },
+            data: { "text": ttsText, "extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
                 playTextToSpeech(data)
@@ -416,6 +346,9 @@ Welcome to the ACE Quill terminal.
     var remoteStream = document.getElementById('remoteView')
 	var selfStream = document.getElementById("selfView");
 
+    var sipMessageOne = "";
+    var sipMessageWhole = "";
+
     var jssipConnection = {
         display_name: null,
         uri: null,
@@ -471,6 +404,87 @@ Welcome to the ACE Quill terminal.
 	});
     }
 
+
+    function sentenceAnalysis(text, markup) {
+ 	    $.ajax({
+            url: './terminal/sentenceAnalysis',
+            type: 'POST',
+            data: { "text": text },
+            datatype: 'json',
+            success: function (data) {
+                let sentiment = ""
+                if(entitySentimentEnabled == 1){
+                    data.results.forEach(res => {
+                        score = JSON.stringify(res.Score)
+                        if (score > 0){
+                            sentiment = '<span class="text-green"> (positive)</span>'
+                        }else if (score < 0){
+                            sentiment = '<span class="text-red"> (negative)</span>'
+                        }
+                    });
+                }
+
+                writeToConsole(markup + sentiment);
+                appOutput('');
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+	    });
+    }
+
+    function getEntities() {
+ 	    $.ajax({
+            url: './terminal/getEntities',
+            type: 'POST',
+            data: { "extension": localStorage.getItem('sipExtension') },
+            datatype: 'json',
+            success: function (data) {
+                if(data.results.length != 0)
+                    writeToConsole("--- Entities ---");
+                data.results.forEach(res => {
+                    let name = '<span class="text-yellow">' + JSON.stringify(res.Name) + '</span>'
+                    let salience = '<span class="text-blue">' + JSON.stringify(res.salience).substring(0,5) + '</span>'
+                    let type = '<span class="text-green">' + JSON.stringify(res.Type) + '</span>'
+                    url = ""
+                    if(res.url != null){
+                        url = res.url
+                        url = '<a href="' + url + '" target="_blank">Wikipedia</a>'
+                        writeToConsole("Name: "+ name + " Salience: "+salience+ " Type: "+type+ " Link: "+url);
+                    }else{
+                        writeToConsole("Name: "+ name + " Salience: "+salience+ " Type: "+type);
+                    }
+                    appOutput('');
+                });
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+	});
+    }
+
+    function getClassification() {
+ 	    $.ajax({
+            url: './terminal/getClassification',
+            type: 'POST',
+            data: { "extension": localStorage.getItem('sipExtension') },
+            datatype: 'json',
+            success: function (data) {
+                if(data.results.length != 0)
+                    writeToConsole("--- Classification ---");
+                data.results.forEach(res => {
+                    let name = '<span class="text-yellow">' + JSON.stringify(res.Name) + '</span>'
+                    let salience = '<span class="text-blue">' + JSON.stringify(res.Confidence).substring(0,5) + '</span>'
+                    writeToConsole("Name: "+ name + " Confidence: "+salience);
+                    appOutput('');
+                });
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("error")
+            }
+	});
+    }
+
     function setARIASettings(data) {
 	   aria = data;
 	}
@@ -482,11 +496,13 @@ Welcome to the ACE Quill terminal.
         getHistory();
         getContacts();
 
-
         jssipConnection.display_name = localStorage.getItem('sipExtension');
         jssipConnection.uri = localStorage.getItem('sipExtension') + '@' + localStorage.getItem('sipServer');
         jssipConnection.password = localStorage.getItem('sipPassword');
         jssipConnection.socket.uri = 'wss://' + localStorage.getItem('sipServer') + '/ws';
+
+        console.log(jssipConnection.uri);
+        console.log(jssipConnection.socket.uri);
 
         $('#extensionInfo').html('<i class="fa fa-circle text-gray"></i> ' + jssipConnection.uri + '</span>');
         try {
@@ -538,6 +554,10 @@ Welcome to the ACE Quill terminal.
                     writeToConsole($('#app-output').html());
                     appOutput('');
                     writeToConsole("<span class='text-red'>Call Ended</span>");
+                    if(entitySentimentEnabled){
+                        getEntities();
+                        getClassification();
+                    }
                     $('#call_btn').removeClass('incall_btn')
 
                 });
@@ -558,26 +578,36 @@ Welcome to the ACE Quill terminal.
 
 
             ua.on('newMessage', function (e) {
-                try {
-                    var transcripts = JSON.parse(e.request.body);
-                    if (transcripts.transcript) {
-                        if( !config.stt_show_final_caption){
-                            appOutput(transcripts.transcript);
-                        }
-                        if (transcripts.final) {
-                            var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
-                            writeToConsole(markup);
-                            appOutput('');
-                        }
+                if (e.request.body.slice(0,4) == 'Part') {
+                    sipMessageWhole += (e.request.body.slice(13));
+                    if (e.request.body[5] == e.request.body[10]) {
+                        processTranscripts(sipMessageWhole);
                     }
-                } catch (err) {
-                    console.log(err);
+                } else {
+                    processTranscripts(e.request.body);
                 }
             });
         } catch (err) {
             $('#extensionInfo').html('<i class="fa fa-circle text-gray"></i> Unknown Registration</span>');
         }
 
+    }
+    function processTranscripts(body){
+        try {
+                sipMessageWhole = "";
+                var transcripts = JSON.parse(body);
+                if (transcripts.transcript) {
+                    if( !config.stt_show_final_caption){
+                        appOutput(transcripts.transcript);
+                    }
+                    if (transcripts.final) {
+                        var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
+                        sentenceAnalysis(transcripts.transcript, markup);
+                    }
+                }
+                } catch (err) {
+                    console.log(err);
+                }
     }
 
     function startCall(number) {
@@ -682,7 +712,7 @@ Welcome to the ACE Quill terminal.
             datatype: 'json',
             success: function (data) {
                 $('#call_history').html("");
-                //Loop through the result and populate the table 
+                //Loop through the result and populate the table
                 for (var i = 0; i < data.results.length; i++) {
                   var timeOfDay;
                   var localDate = new String(new Date(data.results[i].call_start));
@@ -716,7 +746,7 @@ Welcome to the ACE Quill terminal.
             datatype: 'json',
             success: function (data) {
                 $('#contacts').html("");
-                //Loop through the result and populate the table 
+                //Loop through the result and populate the table
                 for (var i = 0; i < data.results.length; i++) {
                     var username = data.results[i].username;
                     var number = data.results[i].cellphone;
@@ -724,7 +754,7 @@ Welcome to the ACE Quill terminal.
                   liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
                   liAttribute.setAttribute("id", number);
                   liAttribute.setAttribute("onclick", "callContact(this)");
-                  liAttribute.innerHTML = username + " " + '<span class="pull-right badge bg-blue" style="font-size:x-small">' + number + "</span>"; 
+                  liAttribute.innerHTML = username + " " + '<span class="pull-right badge bg-blue" style="font-size:x-small">' + number + "</span>";
  	              $('#contacts').append(liAttribute);
                 }
             },
@@ -733,7 +763,7 @@ Welcome to the ACE Quill terminal.
             }
 	    });
     }
-    
+
 
     function reDial(element){
         $("#output").val("");
@@ -752,8 +782,6 @@ Welcome to the ACE Quill terminal.
         let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
         let divScrollHeight = element.scrollHeight;
         let delta = divCurrentUserScrollPosition - divScrollHeight
-        console.log(divCurrentUserScrollPosition +"|"+divScrollHeight);
-        console.log(delta);
 	    if(aria=="final") {
 	        var innerDiv = document.createElement('div');
             innerDiv.innerHTML = text;
@@ -769,12 +797,10 @@ Welcome to the ACE Quill terminal.
 	        var innerDiv = document.createElement('div');
             innerDiv.innerHTML = text;
             if ((-5 < delta ) && (delta < 5)) {
- 	            $('#history').append(innerDiv);	
+ 	            $('#history').append(innerDiv);
                 scrollPage();
-                console.log("scroll");
             } else {
                 $('#history').append(innerDiv);
-                console.log("don't scroll");
             }
         }
     }
@@ -784,28 +810,24 @@ Welcome to the ACE Quill terminal.
         let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
         let divScrollHeight = element.scrollHeight;
         let delta = divCurrentUserScrollPosition - divScrollHeight;
-        console.log(divCurrentUserScrollPosition +"|"+divScrollHeight);
-        console.log(delta);
         if ((-5 < delta ) && (delta < 5)) {
             $('#app-output').html(text);
             scrollPage();
-            console.log("scroll");
         } else {
             $('#app-output').html(text);
-            console.log("don't scroll");
         }
     }
 
     function setConfidence(data){
-        $('#wordConfidenceCheckbox').prop('checked', data.confidence_show_word);
-        $('#phraseConfidenceCheckbox').prop('checked', data.confidence_show_phrase);
-        $('#mediumConfidencePercent').val(data.confidence_upper_lim);
-        $('#lowConfidencePercent').val(data.confidence_lower_lim);
-        $('#mediumConfidenceColor').val(data.confidence_upper_color);
-        $('#lowConfidenceColor').val(data.confidence_lower_color);
-        $('#wordConfidenceBoldCheckbox').prop('checked', data.confidence_bold)
-        $('#wordConfidenceItalicCheckbox').prop('checked', data.confidence_italicize);
-        $('#wordConfidenceUnderlineCheckbox').prop('checked', data.confidence_underline);
+        localStorage.setItem('wordConfidenceEnabled', data.confidence_show_word);
+        localStorage.setItem('phraseConfidenceEnabled', data.confidence_show_phrase);
+        localStorage.setItem('mediumConfidencePercent', data.confidence_upper_lim);
+        localStorage.setItem('lowConfidencePercent', data.confidence_lower_lim);
+        localStorage.setItem('mediumConfidenceColor', data.confidence_upper_color);
+        localStorage.setItem('lowConfidenceColor', data.confidence_lower_color);
+        localStorage.setItem('wordConfidenceBold', data.confidence_bold);
+        localStorage.setItem('wordConfidenceItalic', data.confidence_italicize);
+        localStorage.setItem('wordConfidenceUnderline', data.confidence_underline);
     }
 
     function setTts(value){
@@ -818,6 +840,13 @@ Welcome to the ACE Quill terminal.
         }
     }
 
+    function setTextAnalysis(val){
+        if(val == "GOOGLE"){
+            entitySentimentEnabled = 1;
+        }
+
+    }
+
     var config;
     function loadConfig(ext) {
             $.get("./loadACConfig", {
@@ -825,6 +854,8 @@ Welcome to the ACE Quill terminal.
             },
             function (data, status) {
                 config = data;
+                // entitySentimentEnabled = data.stt_show_entity_sentiment
+                setTextAnalysis(data.stt_show_entity_sentiment)
                 setTts(config.tts_enabled);
                 setConfidence(data);
             });
@@ -832,14 +863,14 @@ Welcome to the ACE Quill terminal.
 
     function markUpTranscripts(text, wC, tC) {
         var textArray = text.split(" ");
-        if (localStorage.getItem('wordConfidenceEnabled') == 'true') {
-            var mConfPercent = $('#mediumConfidencePercent').val()
-            var mConfColor = $('#mediumConfidenceColor').val()
-            var lConfPercent = $('#lowConfidencePercent').val()
-            var lConfColor = $('#lowConfidenceColor').val()
-            var underline = $("#wordConfidenceUnderlineCheckbox").prop("checked")
-            var bold = $("#wordConfidenceBoldCheckbox").prop("checked")
-            var italic = $("#wordConfidenceItalicCheckbox").prop("checked")
+        if (localStorage.getItem('wordConfidenceEnabled') == '1') {
+            var mConfPercent = localStorage.getItem('mediumConfidencePercent');
+            var mConfColor = localStorage.getItem('mediumConfidenceColor');
+            var lConfPercent = localStorage.getItem('lowConfidencePercent');
+            var lConfColor = localStorage.getItem('lowConfidenceColor');
+            var underline = localStorage.getItem('wordConfidenceUnderline');
+            var bold = localStorage.getItem('wordConfidenceBold');
+            var italic = localStorage.getItem('wordConfidenceItalic');
             var font = ""
             if (underline || bold || italic) {
                 font += bold ? "font-weight: 900;" : ""
@@ -863,7 +894,7 @@ Welcome to the ACE Quill terminal.
             }
         }
 
-        if (localStorage.getItem('phraseConfidenceEnabled') == 'true') {
+        if (localStorage.getItem('phraseConfidenceEnabled') == '1') {
             if (tC != null) {
                 tC = parseInt(tC * 100);
                 textArray[textArray.length - 1] = textArray[textArray.length - 1] + "(" + tC + "%)"
