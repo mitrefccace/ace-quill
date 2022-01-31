@@ -22,6 +22,7 @@ const router = express.Router();
 const nconf = require('nconf');
 const homedir = require('os').homedir();
 const multer = require('multer');
+const archiver = require('archiver');
 // const { name } = require('ejs');
 const formidable = require('formidable');
 const decode = require('../utils/decode');
@@ -36,6 +37,7 @@ const info = winston.loggers.get('info');
 const debug = winston.loggers.get('debug');
 
 const async = require('async');
+const config = require('../configs/acequill.json')
 
 function restrict(req, res, next) {
   if (req.session.user) {
@@ -255,11 +257,187 @@ router.post('/DeleteUser', restrict, (req, res) => {
   }
 });
 
-router.get('/research_data', restrict, (req, res) => {
-  // res.render("pages/research_data", {
-  //   role: req.session.role,
-  // });
+router.get('/accuracy', restrict, (req, res) => {
+  const sql = 'Select id, scenario_name from scenario;';
+  req.dbconn.query(sql, (err, results) => {
+    if (err) {
+      error.error(`SQL Error: ${err}`);
+    } else {
+      res.render('pages/accuracy', {
+        scenarios: results,
+        data: config,
+      });
+    }
+  });
+});
 
+router.get('/getAccuracyConfig', restrict, (req, res) => {
+    res.send(config.accuracy);
+});
+
+router.get('/accuracyreportdownload', restrict, (req, res) => {
+  const { date, id, filename, ace2, jiwer, sclite, parsingtype } = req.query;
+  csvId = id.split(",");
+  console.log("here id ", req.query)
+  const reportPath = './uploads/accuracy/'
+  const arch = archiver('zip');
+
+  const refPath = reportPath + 'reference_' + date + '.txt';
+  const hypPath = reportPath + 'hypothesis_' + date + '.txt';
+  const ace2Path = reportPath + 'ace2_' + date + '.txt';
+  const jiwerPath = reportPath + 'jiwer_' + date + '.txt';
+  const sclitePath = reportPath + 'sclite_' + date + '.txt';
+  const csvPath = reportPath + 'csv_' + date + '.txt';
+
+  var hypo = fs.readFileSync(hypPath).toString().split("\n");
+  var ref = fs.readFileSync(refPath).toString().split("\n");
+
+  // create csv
+  // ace2
+  ace2res = []
+  if(ace2 === 'true' && fs.existsSync(ace2Path)){
+    var array = fs.readFileSync(ace2Path).toString().split("\n");
+    // ace2res = []
+    array.forEach(function (value, i) {
+      // console.log('%d: %s', i, value);
+      if ( i > 4 && i < array.length-2 ){
+        curArray = value.split(" ")
+        // console.log(curArray);
+        score = curArray[curArray.length-1]
+        ace2res.push(score.substring(1,score.length-1))
+      }
+    });
+  }
+
+  // sclite
+  scliteErr = []
+  scliteSub = []
+  scliteDel = []
+  scliteIns = []
+  if(sclite === 'true' && fs.existsSync(sclitePath)){
+    var array = fs.readFileSync(sclitePath).toString().split("\n");
+
+    array.forEach(function (value, i) {
+      console.log('%d: %s', i, value);
+      if (hypo.length %2 == 0)
+        k = 1
+      else
+        k = 0
+      if ( i > 12 + hypo.length && i < array.length-8 && i%2==k){
+        curArray = value.split(" ")
+        const result = curArray.filter(function(x) {
+            return x !== '';
+        });
+        console.log("sclite res", result);
+        err = result[result.length-3]
+        ins = result[result.length-4]
+        del = result[result.length-5]
+        sub = result[result.length-6]
+
+        // if (curArray[curArray.length-2]==0)
+        //   err = curArray[curArray.length-6]
+        //   ins = curArray[curArray.length-10]
+        //   del = curArray[curArray.length-14]
+        //   sub = curArray[curArray.length-18]
+        scliteSub.push(sub)
+        scliteDel.push(del)
+        scliteIns.push(ins)
+        scliteErr.push(err)
+      }
+    });
+  }
+
+  //jiwer
+  var array = fs.readFileSync(jiwerPath).toString().split("\n");
+  // if(parsingtype == "whole")
+  //   jiwerRes = array[1].split(" ")
+  // else{
+  wer = [];
+  mer = [];
+  wil = [];
+  if(jiwer === 'true' && fs.existsSync(jiwerPath)){
+    array.forEach(function (value, i) {
+      console.log('%d: %s', i, value);
+      if ( i > 0 && i < array.length-1){
+        curArray = value.split(" ")
+        console.log(curArray);
+        wer.push(curArray[0])
+        mer.push(curArray[1])
+        wil.push(curArray[2])
+      }
+    });
+  }
+
+  // create CSV
+
+  csv = 'id, hypothesis, reference, ACE2, SCLITE SUB, SCLITE DEL, SCLITE INS, SCLITE ERR, JIWER WER, JIWER MER, JIWER WIL \n'
+  console.log("scliteSub ", scliteSub)
+  console.log("scliteDel ", scliteDel)
+  console.log("scliteIns ", scliteIns)
+  console.log("scliteErr ", scliteErr)
+  wer.forEach(function (value, i) {
+    console.log('%d: %s', i, value);
+    aceVal = ace2res[i]
+    if(aceVal == undefined)
+      aceVal = ' '
+    sclitesub = scliteSub[i]
+    if(sclitesub == undefined)
+      sclitesub = ' '
+    sclitedel = scliteDel[i]
+    if(sclitedel == undefined)
+      sclitedel = ' '
+    scliteins = scliteIns[i]
+    if(scliteins == undefined)
+      scliteins = ' '
+    scliteVal = scliteErr[i]
+    if(scliteVal == undefined)
+      scliteVal = ' '
+    werVal = wer[i]
+    if(werVal == undefined)
+      werVal = ' '
+    merVal = mer[i]
+    if(merVal == undefined)
+      merVal = ' '
+    wilVal = wil[i]
+    if(wilVal == undefined)
+      wilVal = ' '
+
+    if(i==0 && parsingtype=="all"){
+      csv += csvId[i]+','+hypo[i]+','+ref[i]+','+aceVal+','+sclitesub+','+sclitedel+','+scliteins+','+scliteVal+','+wer[0]+','+wer[1]+','+wer[2]+'\n';
+      wer[1] = undefined
+      wer[2] = undefined
+    }
+    else
+      csv += csvId[i]+','+hypo[i]+','+ref[i]+','+aceVal+','+sclitesub+','+sclitedel+','+scliteins+','+scliteVal+','+werVal+','+merVal+','+wilVal+'\n';
+  });
+  fs.writeFileSync(csvPath, csv);
+
+
+  if(fs.existsSync(refPath))
+    arch.append(fs.createReadStream(refPath), { name: 'reference.txt' });
+
+  if(fs.existsSync(hypPath))
+    arch.append(fs.createReadStream(hypPath), { name: 'hypothesis.txt' });
+
+  if(fs.existsSync(csvPath))
+    arch.append(fs.createReadStream(csvPath), { name: 'output_'+parsingtype+'.csv' });
+
+  if(ace2 === 'true' && fs.existsSync(ace2Path))
+    arch.append(fs.createReadStream(ace2Path), { name: 'ace2.txt' });
+
+  if(jiwer === 'true' && fs.existsSync(jiwerPath))
+    arch.append(fs.createReadStream(jiwerPath), { name: 'jiwer.txt' });
+
+  if(sclite === 'true' && fs.existsSync(sclitePath))
+    arch.append(fs.createReadStream(sclitePath), { name: 'sclite.txt' });
+
+  res.attachment(filename+'.zip').type('zip');
+  arch.on('end', () => res.end());
+  arch.pipe(res);
+  arch.finalize();
+});
+
+router.get('/research_data', restrict, (req, res) => {
   const sql = 'Select * from scenario;';
   req.dbconn.query(sql, (err, results) => {
     if (err) {
@@ -278,7 +456,7 @@ router.get('/research_data', restrict, (req, res) => {
 });
 
 router.get('/iprelay_research_data', restrict, (req, res) => {
-const sql = 'Select * from scenario;';
+  const sql = 'Select * from scenario;';
   req.dbconn.query(sql, (err, results) => {
     if (err) {
       error.error(`SQL Error: ${err}`);
@@ -364,17 +542,13 @@ router.get('/getResearchData', restrict, (req, res) => {
           stt_engine: row.stt_engine,
           added_delay: row.added_delay,
           transcription_file:
-              `=HYPERLINK("${
-                fullUrl
-              }/admin/getTranscripts?download=true&id=${
-                row.id
-              }", "text")`,
+            `=HYPERLINK("${fullUrl
+            }/admin/getTranscripts?download=true&id=${row.id
+            }", "text")`,
           audio_file:
-              `=HYPERLINK("${
-                fullUrl
-              }/admin/getAudioFile?download=true&id=${
-                row.id
-              }", "audio")`,
+            `=HYPERLINK("${fullUrl
+            }/admin/getAudioFile?download=true&id=${row.id
+            }", "audio")`,
           transcription_filename: row.transcription_file,
           audio_filename: row.audio_file,
           notes: row.notes,
@@ -423,7 +597,7 @@ router.get('/getIprelayResearchData', restrict, (req, res) => {
   let params = [];
   let query = `SELECT rd.id, rd.call_start, rd.device_id, rd.extension,
     rd.dest_phone_number, rd.call_duration, rd.stt_engine, rd.scenario_number,
-    rd.added_delay, rd.transcription_file, rd.audio_file, rd.notes, rd.translation_engine, 
+    rd.added_delay, rd.transcription_file, rd.audio_file, rd.notes, rd.translation_engine,
     rd.source_language, rd.target_language, rd.tts_engine, ds.group_id,
     CASE WHEN rd.video_file IS NULL THEN 'false' ELSE 'true' END AS has_video
     FROM research_data rd
@@ -480,17 +654,13 @@ router.get('/getIprelayResearchData', restrict, (req, res) => {
           stt_engine: row.stt_engine,
           added_delay: row.added_delay,
           transcription_file:
-              `=HYPERLINK("${
-                fullUrl
-              }/admin/getTranscripts?download=true&id=${
-                row.id
-              }", "text")`,
+            `=HYPERLINK("${fullUrl
+            }/admin/getTranscripts?download=true&id=${row.id
+            }", "text")`,
           audio_file:
-              `=HYPERLINK("${
-                fullUrl
-              }/admin/getAudioFile?download=true&id=${
-                row.id
-              }", "audio")`,
+            `=HYPERLINK("${fullUrl
+            }/admin/getAudioFile?download=true&id=${row.id
+            }", "audio")`,
           transcription_filename: row.transcription_file,
           audio_filename: row.audio_file,
           notes: row.notes,
@@ -565,7 +735,6 @@ router.get('/getTranscripts', restrict, (req, res) => {
               rows2.forEach((row) => {
                 records.push([row.timestamp, row.extension, row.transcript]);
               });
-              info.info('records ', records);
               res.send(records);
             } else {
               res.send('no records');
@@ -595,17 +764,17 @@ router.get('/getAQDUTTranscripts', restrict, (req, res) => {
         error.error('/getAQDUTTranscripts ERROR: ' + err);
         res.send('An Error Occurred');
       } else if (rows.length !== 0) {
-              const records = [];
-              rows.forEach((row) => {
-                records.push([row.timestamp, row.is_dut, row.text]);
-              });
-              info.info('records ', records);
-              res.send(records);
-            } else {
-              res.send('no records');
-            }
-          },
-        );
+        const records = [];
+        rows.forEach((row) => {
+          records.push([row.timestamp, row.is_dut, row.text]);
+        });
+        info.info('records ', records);
+        res.send(records);
+      } else {
+        res.send('no records');
+      }
+    },
+  );
 });
 
 router.get('/getRecordings', restrict, (req, res) => {
@@ -703,7 +872,7 @@ router.get('/getGeckoData', restrict, (req, res) => {
           word.forEach((line) => {
             temp = {
               start: parseInt(line.startTime.seconds, 10)
-                 + (line.startTime.nanos / (10 ** 9)) + prevTime,
+                + (line.startTime.nanos / (10 ** 9)) + prevTime,
               end: parseInt(line.endTime.seconds, 10) + (line.endTime.nanos / (10 ** 9)) + prevTime,
               text: line.word,
               type: 'WORD',
@@ -1169,8 +1338,8 @@ router.get('/ScenarioDetails', restrict, (req, res) => {
       });
     }
   });
-// res.send({status: "Success", id: "2", sName:"Some Name",sText:
-// "The rain in Spain falls mainly on the plain."})
+  // res.send({status: "Success", id: "2", sName:"Some Name",sText:
+  // "The rain in Spain falls mainly on the plain."})
 });
 
 router.get('/getScenarioAudioFile', restrict, (req, res) => {
@@ -1208,7 +1377,7 @@ router.get('/getIPRelayScenario', restrict, (req, res) => {
   const sql = 'Select * from iprelay_scenario_content where iprelay_scenario_id = ?;';
   req.dbconn.query(sql, id, (err, results) => {
     if (err || !results[0]) {
-      error.error('SQL Error: this IpRelay scenario has no content'+err);
+      error.error('SQL Error: this IpRelay scenario has no content' + err);
       res.send(results);
     } else {
       info.info('getIPRelayScenario results ', results);
@@ -1242,7 +1411,7 @@ router.post('/renameScenario', restrict, (req, res) => {
   let sql = 'UPDATE iprelay_scenario SET ? WHERE id =' + sid;
   req.dbconn.query(sql, scenario, (
     err,
-  ) => {});
+  ) => { });
   res.send({ status: 'Success', id: '1' });
 });
 
@@ -1254,20 +1423,20 @@ router.post('/cloneScenario', restrict, (req, res) => {
   console.log("cloneScenario asdcoiasdcaoisdcaidosc", req.body)
 
   let sql = 'INSERT INTO iprelay_scenario (name, use_count, notes)'
-    +'SELECT name, use_count, notes FROM iprelay_scenario WHERE id = '+sid+';';
+    + 'SELECT name, use_count, notes FROM iprelay_scenario WHERE id = ' + sid + ';';
 
-  req.dbconn.query(sql, (err,result) => {
+  req.dbconn.query(sql, (err, result) => {
     if (err) {
       // console.log(`Error in INSERT: ${JSON.stringify(err)}`);
     } else {
       console.log("ascasdcasdcasdc insertId: ", result.insertId)
       let contentsql = 'INSERT INTO iprelay_scenario_content (iprelay_scenario_id, convoOrder, bubbleText, rawText, audioFilePath, isDUT)'
-        + 'SELECT '+result.insertId+', convoOrder, bubbleText, rawText, audioFilePath, isDUT FROM iprelay_scenario_content WHERE iprelay_scenario_id = '
-        + sid +' ;';
+        + 'SELECT ' + result.insertId + ', convoOrder, bubbleText, rawText, audioFilePath, isDUT FROM iprelay_scenario_content WHERE iprelay_scenario_id = '
+        + sid + ' ;';
       newid = result.insertId;
 
       // duplicate content
-      req.dbconn.query(contentsql, (err,result) => {
+      req.dbconn.query(contentsql, (err, result) => {
         // duplicate the audio files
         const sql = 'Select * from iprelay_scenario_content where iprelay_scenario_id = ?;';
         req.dbconn.query(sql, sid, (err, results) => {
@@ -1277,27 +1446,27 @@ router.post('/cloneScenario', restrict, (req, res) => {
             // console.log("getIPRelayScenario results ", results);
             results.forEach(row => {
               // console.log("old path ", row.audioFilePath);
-              if(row.audioFilePath != 'DUT'){
+              if (row.audioFilePath != 'DUT') {
                 fn = row.audioFilePath.substring(31, row.audioFilePath.length);
                 fn = "./uploads/iprelay/" + Date.now() + fn
                 fs.copyFile(row.audioFilePath, fn, (err) => {
                   if (err) {
                     // console.log("Error in cloning Scenario:", err);
-                  }else{
+                  } else {
                     // console.log("new fn ", fn);
                     // console.log("new newid ", newid);
                     // console.log("new row.convoOrder ", row.convoOrder);
                     let updatePathSql = 'UPDATE iprelay_scenario_content SET audioFilePath = "' + fn
-                    + '" WHERE iprelay_scenario_id = '+ newid +' AND convoOrder = '+ row.convoOrder+' ;'
+                      + '" WHERE iprelay_scenario_id = ' + newid + ' AND convoOrder = ' + row.convoOrder + ' ;'
                     req.dbconn.query(updatePathSql, (
                       err,
                     ) => {
-                          if (err) {
-                            // console.log(`Error in INSERT: ${JSON.stringify(err)}`);
-                          } else {
-                            // console.log(`INSERT result: ${JSON.stringify(result)}`);
-                          }
-                      });
+                      if (err) {
+                        // console.log(`Error in INSERT: ${JSON.stringify(err)}`);
+                      } else {
+                        // console.log(`INSERT result: ${JSON.stringify(result)}`);
+                      }
+                    });
                   }
                 });
               }
@@ -1365,7 +1534,7 @@ const iprelayFileUpload = multer({
 });
 
 router.post('/updateIpRelayScenario', iprelayFileUpload.array('scenarioFile', 12), (req, res) => {
-  info.info('files '+ req.files);
+  info.info('files ' + req.files);
   const data = req.body.data.split(',');
   const sid = req.body.id;
 
@@ -1373,13 +1542,13 @@ router.post('/updateIpRelayScenario', iprelayFileUpload.array('scenarioFile', 12
   for (let i = 0; i < data.length; i += 7) {
     formated.push(data.slice(i, i + 7));
   }
-  info.info('formated '+ formated);
+  info.info('formated ' + formated);
   let k = 0;
   for (let i = 0; i < formated.length; i += 1) {
-    info.info('here '+ formated[i][4]);
+    info.info('here ' + formated[i][4]);
     //info.info('file name '+ req.files[k].filename);
     if (formated[i][6] === '1') {
-      info.info('file name '+ req.files[k].filename);
+      info.info('file name ' + req.files[k].filename);
       formated[i][4] = req.files[k].destination + req.files[k].filename;
       k += 1;
     }
@@ -1390,7 +1559,7 @@ router.post('/updateIpRelayScenario', iprelayFileUpload.array('scenarioFile', 12
   info.info('formated ', formated);
 
   const sql = 'DELETE FROM iprelay_scenario_content WHERE iprelay_scenario_id = ?;';
-  console.log(">>>>>",sid);
+  console.log(">>>>>", sid);
   req.dbconn.query(sql, sid, (err, result) => {
     if (err) {
       error.error(`Error in DELETE: ${JSON.stringify(err)}`);
@@ -1439,15 +1608,15 @@ router.get('/saveACConfig', restrict, (req, res) => {
   }
 
   const params = [data.stt_engine, data.source_language,
-    data.stt_show_final_caption, Number(data.delay),
-    data.translation_engine, data.target_language, data.tts_engine,
-    data.tts_translate, data.tts_voice, data.ARIA_settings,
-    data.confidence_show_word, data.confidence_show_phrase,
-    data.confidence_upper_lim, data.confidence_lower_lim,
-    data.confidence_upper_color, data.confidence_lower_color,
-    data.confidence_bold, data.confidence_italicize, data.confidence_underline,
-    data.iprelay, data.iprelay_scenario, data.tts_enabled, data.stt_show_entity_sentiment,
-    data.extension,
+  data.stt_show_final_caption, Number(data.delay),
+  data.translation_engine, data.target_language, data.tts_engine,
+  data.tts_translate, data.tts_voice, data.ARIA_settings,
+  data.confidence_show_word, data.confidence_show_phrase,
+  data.confidence_upper_lim, data.confidence_lower_lim,
+  data.confidence_upper_color, data.confidence_lower_color,
+  data.confidence_bold, data.confidence_italicize, data.confidence_underline,
+  data.iprelay, data.iprelay_scenario, data.tts_enabled, data.stt_show_entity_sentiment,
+  data.extension,
   ];
   for (let i = 0; i < params.length; i += 1) {
     if (params[i] === 'true') {
@@ -1472,34 +1641,35 @@ router.get('/contacts', restrict, (req, res) => {
   const sql1 = 'SELECT idcontacts, username, cellphone, workphone, homephone, faxphone, personalemail, workemail, favorite, extension FROM contacts;';
   const sql2 = 'SELECT extension FROM device_settings;'
   async.parallel([
-        function(callback) {
-          req.dbconn.query(sql1, (err, results) => {
-          if (err) {
-            error.error(`SQL Error: ${err}`);
-          }
-          results1 = results;
-          callback(null, 'finished\n')
-          });
-        },
-        function(callback) {
-          req.dbconn.query(sql2, (err, results) => {
-          if (err) {
-            error.error(`SQL Error: ${err}`);
-          }
-          results2 = results;
-          callback(null, 'finished\n')
-            });
+    function (callback) {
+      req.dbconn.query(sql1, (err, results) => {
+        if (err) {
+          error.error(`SQL Error: ${err}`);
         }
-  ], function(err) {
+        results1 = results;
+        callback(null, 'finished\n')
+      });
+    },
+    function (callback) {
+      req.dbconn.query(sql2, (err, results) => {
+        if (err) {
+          error.error(`SQL Error: ${err}`);
+        }
+        results2 = results;
+        callback(null, 'finished\n')
+      });
+    }
+  ], function (err) {
     if (err) {
       error.error(err);
     }
-        res.render('pages/contacts', {
-        contact: results1,
-        extensions: results2,
-        role: req.session.role,  });
-      });
+    res.render('pages/contacts', {
+      contact: results1,
+      extensions: results2,
+      role: req.session.role,
     });
+  });
+});
 
 router.post('/UpdateConfig', restrict, (req, res) => {
   let extension = parseInt(req.body.extension, 10);
@@ -1526,12 +1696,12 @@ router.post('/UpdateConfig', restrict, (req, res) => {
 
   if (
     sttEngine
-      && delay
-      && name
-      && translationEngine
-      && sourceLanguage
-      && targetLanguage
-      && ariaSettings
+    && delay
+    && name
+    && translationEngine
+    && sourceLanguage
+    && targetLanguage
+    && ariaSettings
   ) {
     const sql = `INSERT INTO device_settings
       (extension, stt_engine, delay, name, group_id,
@@ -1716,7 +1886,7 @@ router.get('/configs', restrict, (req, res) => {
           res.render('pages/advanced_config', {
             extensions: results,
             iprelay: iprelayResults,
-            device_setting: results[0] ? JSON.stringify(results[0]): "{}",
+            device_setting: results[0] ? JSON.stringify(results[0]) : "{}",
             role: req.session.role,
           });
         }
@@ -1729,11 +1899,11 @@ router.get('/csp-:cspEngine', restrict, (req, res) => {
   let csp = req.params.cspEngine || 'unknown';
   csp = csp.toLowerCase();
   const available = ['amazon', 'azure', 'google', 'watson'];
-  if (available.includes(csp)){
+  if (available.includes(csp)) {
     console.log(csp)
-    res.render('pages/config_'+csp);
-  }else{
-    res.render('pages/error',{message:"Unknown CSP"});
+    res.render('pages/config_' + csp);
+  } else {
+    res.render('pages/error', { message: "Unknown CSP" });
   }
 });
 
@@ -1806,9 +1976,20 @@ router.post('/CreateAdmin', (req, res) => {
 router.get('/login', (req, res) => {
   if (req.session.user) {
     res.redirect('./');
-  } else {
-    res.render('pages/login');
   }
+  const sql = "SELECT COUNT(*) AS adminCount FROM login_credentials WHERE role = 'admin' limit 0,1;";
+  req.dbconn.query(sql, (err, result) => {
+    if (err) {
+      error.error(`SQL ERR: ${err}`);
+      res.send('err');
+    } else if (result[0].adminCount === 0) {
+      res.render('pages/firsttimesetup');
+    } else {
+      res.render('pages/login')
+    }
+  });
+
+
 });
 
 router.post('/login', (req, res) => {

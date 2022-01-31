@@ -1,6 +1,7 @@
 const path = require('path');
 var fs = require('fs');
-const shell = require('shelljs')
+const shell = require('shelljs');
+const config = require('./configs/acequill.json');
 
 
 const CSS = [
@@ -33,10 +34,12 @@ const JS = [
     'datatables.net-bs4/js/dataTables.bootstrap4.min.js',
     'html2canvas/dist/html2canvas.min.js',
     'jquery/dist/jquery.min.js',
+    'jquery-csv/src/jquery.csv.min.js',
     'jquery-validation/dist/jquery.validate.min.js',
     'jssip/dist/jssip.min.js',
     'moment/moment.js',
-    'recordrtc/RecordRTC.js'
+    'recordrtc/RecordRTC.js',
+    'popper.js/dist/umd/popper.js'
 ];
 
 
@@ -89,3 +92,17 @@ FONT.map(asset => {
 });
 
 shell.exec('./python.sh')
+if (config.accuracy.ace2 == 'true') {
+    shell.exec('git clone ' + config.accuracy.ace2_repo, {cwd: './resources'})
+    shell.exec('git lfs pull', {cwd: './resources/ace-code-master'})
+    shell.exec('sudo pip3.6 install -r requirements.txt', {cwd: './resources/ace-code-master'})
+    shell.exec('mkdir w2v', {cwd: './resources/ace-code-master/res'})
+    shell.exec('wget -c "https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz"', {cwd: './resources/ace-code-master/res/w2v'})
+    shell.exec('gzip -d GoogleNews-vectors-negative300.bin.gz', {cwd: './resources/ace-code-master/res/w2v'})
+}
+
+if (config.accuracy.sclite == 'true') {
+    shell.exec('git clone https://github.com/usnistgov/SCTK.git', {cwd: './resources'})
+    shell.exec('make config && make all && make check && make install && make doc', {cwd: './resources/SCTK'})
+}
+

@@ -107,7 +107,7 @@ console.log("Listening for HTTP connections");
 var server = http.createServer(app);
 */
 
-io = require('socket.io').listen(server);
+io = require('socket.io')(server);
 require('../sockets/admin')(io.of('/admin'), nconf);
 require('../asterisk');
 

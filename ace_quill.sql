@@ -16,37 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `advanced_controls`
---
-
-DROP TABLE IF EXISTS `advanced_controls`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `advanced_controls` (
-  `extension` smallint(5) NOT NULL,
-  `stt_engine` varchar(45) DEFAULT NULL,
-  `stt_callee_language` varchar(45) DEFAULT NULL,
-  `stt_show_final_caption` tinyint(1) DEFAULT NULL,
-  `stt_delay` smallint(2) DEFAULT NULL,
-  `translation_engine` varchar(45) DEFAULT NULL,
-  `translation_callee_language` varchar(45) DEFAULT NULL,
-  `tts_engine` varchar(45) DEFAULT NULL,
-  `tts_translate` tinyint(1) DEFAULT NULL,
-  `aria_settings` varchar(64) DEFAULT NULL,
-  `confidence_show_word` tinyint(1) DEFAULT NULL,
-  `confidence_show_phrase` tinyint(1) DEFAULT NULL,
-  `confidence_upper_lim` smallint(5) DEFAULT NULL,
-  `confidence_lower_lim` smallint(5) DEFAULT NULL,
-  `confidence_bold` tinyint(1) DEFAULT NULL,
-  `confidence_italicize` tinyint(1) DEFAULT NULL,
-  `confidence_underline` tinyint(1) DEFAULT NULL,
-  `iprelay` tinyint(1) DEFAULT NULL,
-  `iprelay_scenario` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`extension`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `contacts`
 --
 
@@ -152,21 +121,6 @@ LOCK TABLES `device_settings` WRITE;
 INSERT INTO `device_settings` VALUES (47,5001,'AZURE',0,0,'terminal 01',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(48,5002,'AZURE',0,0,'terminal 02',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(49,5003,'AZURE',0,0,'terminal 03',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(50,5004,'AZURE',0,0,'terminal 04',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(51,5005,'AZURE',0,0,'terminal 05',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(52,5006,'AZURE',0,0,'terminal 06',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(53,5007,'AZURE',0,0,'terminal 07',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(54,5008,'AZURE',0,0,'terminal 08',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(55,5009,'AZURE',0,0,'terminal 09',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(56,5010,'AZURE',0,0,'terminal 10',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(57,5011,'AZURE',0,0,'terminal 11',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(58,5012,'AZURE',0,0,'terminal 12',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(59,5013,'AZURE',0,0,'terminal 13',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(60,5014,'AZURE',0,0,'terminal 14',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(61,5015,'AZURE',0,0,'terminal 15',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(62,5016,'AZURE',0,0,'terminal 16',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(63,5017,'AZURE',0,0,'terminal 17',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(64,5018,'AZURE',0,0,'terminal 18',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(65,5019,'AZURE',0,0,'terminal 19',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(66,5020,'AZURE',0,0,'terminal 20',NULL,NULL,'NONE','en','en',NULL,NULL,NULL,'None',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `device_settings` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `groups`
---
-
-DROP TABLE IF EXISTS `groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `groups` (
-  `idgroups` int(11) NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(45) DEFAULT NULL,
-  `description` text,
-  PRIMARY KEY (`idgroups`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `iprelay_log`

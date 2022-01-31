@@ -1,0 +1,462 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ..//partials/head %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <% include ..//partials/header %>
+
+            <!-- Left side column. contains the logo and sidebar -->
+            <% include ..//partials/sidebar %>
+
+                <div class="content-wrapper">
+                    <!-- Content Header (Page header) -->
+                    <section class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6">
+                                    <h1>Accuracy</h1>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ol class="breadcrumb float-sm-right">
+                                        <li class="breadcrumb-item"><i class="fa fa-bar-chart"></i>&nbsp;Reports</li>
+                                        <li class="breadcrumb-item active">Accuracy</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div><!-- /.container-fluid -->
+                    </section>
+
+                    <!-- Main content -->
+                    <section class="content">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <h5>Reference Text&nbsp;<a href='#' data-toggle="popover"
+                                                            data-trigger="focus" title="Formatting Help"
+                                                            data-html="true" data-placement="bottom"
+                                                            data-content="Word alternatives are wrapped with [ ] separated by | <br> Optional words are indicated by @<br> <b>examples:</b><br>[ok|okay]<br>[um|umm|@]">
+                                                            <i class="fa fa-question-circle-o text-muted"
+                                                                aria-hidden="true"></i></a></h5>
+                                                    <textarea class="form-control" id="referenceText"
+                                                        rows="20"></textarea>
+                                                </div>
+                                                <div class="form-group">
+                                                    <select class="form-control" id="scenarioSelect">
+                                                        <option value="0">---User Input---</option>
+                                                        <% scenarios.forEach(function(s) { %>
+                                                            <option value="<%= s.id %>">
+                                                                <%= s.scenario_name %>
+                                                            </option>ß
+                                                            <% }) %>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <h5>Hypothesis Text</h5>
+                                                <div class="form-group">
+                                                    <textarea class="form-control" id="hypothesisText"
+                                                        rows="20"></textarea>
+                                                </div>
+                                                <div class="input-group mb-3">
+                                                    <input type="text" class="form-control" id='loadCallId'
+                                                        placeholder="Load Call From ID # (optional)"
+                                                        aria-label="Load Call From ID #"
+                                                        aria-describedby="basic-addon2">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-outline-secondary" id="loadCallbtn"
+                                                            type="button">Load</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <div class="custom-file" id="customFile" lang="es">
+                                                    <input type="file" accept=".csv" class="custom-file-input"
+                                                        id="csvFileUpload">
+                                                    <label class="custom-file-label" for="csvFileUpload">
+                                                        CSV File
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="alphaValueLabel">ACE2 Alpha
+                                                            Value</span>
+                                                    </div>
+                                                    <input type="text" class="form-control"
+                                                        aria-label="ACE2 Alpha Value" id="alphaValue" value="0.65">
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <select class="form-control" id="parsingType">
+                                                    <option value="all" selected="all">Whole Passage</option>
+                                                    <option value="line">Line by Line</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-3">
+                                                <div class="text-right">
+                                                    <button id="runReportbtn" type="button"
+                                                        class="btn btn-success mb-2">Run
+                                                        Reports</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr class="my-12" />
+                                        <h5>Reports</h5>
+                                        <div class="row">
+                                            <div class="col-10">
+                                                <ul class="nav nav-tabs" role="tablist">
+                                                    <li class="nav-item" id="ace2">
+                                                        <a class="nav-link active" id="ace2-tab" data-toggle="tab"
+                                                            href="#ace2-panel" role="tab" aria-controls="ace2-panel"
+                                                            aria-selected="true">Ace 2 <i id="ace2StatusIcon"
+                                                                aria-hidden="true"></i></a>
+                                                    </li>
+                                                    <li class="nav-item" id="jiwer">
+                                                        <a class="nav-link" id="jiwer-tab" data-toggle="tab"
+                                                            href="#jiwer-panel" role="tab" aria-controls="jiwer-panel"
+                                                            aria-selected="false">JiWER <i id="jiwerStatusIcon"
+                                                                aria-hidden="true"></i></a>
+                                                    </li>
+                                                    <li class="nav-item" id="sclite">
+                                                        <a class="nav-link" id="sclite-tab" data-toggle="tab"
+                                                            href="#sclite-panel" role="tab" aria-controls="sclite-panel"
+                                                            aria-selected="false">SCLite <i id="scliteStatusIcon"
+                                                                aria-hidden="true"></i></a>
+                                                    </li>
+                                                </ul>
+                                                <div class="tab-content">
+                                                    <div class="tab-pane fade show active" id="ace2-panel"
+                                                        role="tabpanel" aria-labelledby="ace2-tab">
+                                                        <textarea class="form-control accuracy-results" disabled
+                                                            id="ace2-results" rows="20"> </textarea>
+                                                    </div>
+                                                    <div class="tab-pane fade" id="jiwer-panel" role="tabpanel"
+                                                        aria-labelledby="jiwer-tab"><textarea
+                                                            class="form-control accuracy-results" disabled
+                                                            id="jiwer-results" rows="20"></textarea></div>
+                                                    <div class="tab-pane fade" id="sclite-panel" role="tabpanel"
+                                                        aria-labelledby="sclite-tab"><textarea
+                                                            class="form-control accuracy-results" disabled
+                                                            id="sclite-results" rows="20"></textarea></div>
+                                                </div>
+
+
+
+                                            </div>
+                                            <div class="col-2 pt-5">
+                                                <h5>Download</h5>
+                                                <div class="form-check" id="ace2-check">
+                                                    <input type="checkbox" class="form-check-input" id="report-ace2-cb"
+                                                        checked>
+                                                    <label class="form-check-label" for="report-ace2-cb">ACE 2</label>
+                                                </div>
+                                                <div class="form-check" id="jiwer-check">
+                                                    <input type="checkbox" class="form-check-input" id="report-jiwer-cb"
+                                                        checked>
+                                                    <label class="form-check-label" for="report-jiwer-cb">JiWER</label>
+                                                </div>
+                                                <div class="form-check" id="sclite-check">
+                                                    <input type="checkbox" class="form-check-input"
+                                                        id="report-sclite-cb" checked>
+                                                    <label class="form-check-label"
+                                                        for="report-sclite-cb">SCLite</label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="formGroupExampleInput">Filename</label>
+                                                    <input type="text" class="form-control" id="report-filename"
+                                                        placeholder="ReportABC">
+                                                </div>
+                                                <button type="button" class="btn btn-primary"
+                                                    id="report-download-btn">Download</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                    </section>
+                    <!-- /.content -->
+                </div>
+                <!-- /.content - wrapper -->
+
+                <footer class="main-footer">
+                    <% include ..//partials/footer %>
+                </footer>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- modals -->
+
+    <!-- ./modals -->
+
+    <script src='/socket.io/socket.io.js'></script>
+    <script>
+
+        $(document).ready(function () {
+            loadConfig();
+        });
+
+        function setAccuracy(ace2, sclite, jiwer) {
+            if (ace2=='true') {
+                $('#ace2').removeAttr("hidden");
+                $('#ace2-check').removeAttr("hidden");
+            } else {
+                $('#ace2').attr("hidden", true);
+                $('#ace2-check').attr("hidden", true);
+            }
+            if (sclite=='true') {
+                $('#sclite').removeAttr("hidden");
+                $('#sclite-check').removeAttr("hidden");
+            } else {
+                $('#sclite').attr("hidden", true);
+                $('#sclite-check').attr("hidden", true);
+            }
+            if (jiwer=='true') {
+                $('#jiwer').removeAttr("hidden");
+                $('#jiwer-check').removeAttr("hidden");
+            } else {
+                $('#jiwer').attr("hidden", true);
+                $('#jiwer-check').attr("hidden", true);
+            }
+        }
+
+        var config;
+
+        function loadConfig() {
+                $.get("./getAccuracyConfig", {
+                },
+                function (data, status) {
+                    config = data;
+                    setAccuracy(config.ace2, config.sclite, config.jiwer);
+                });
+        }
+
+
+    </script>
+    <script type="text/javascript">
+        $('#reports_accuracy_treeview').addClass('active');
+        $('[data-toggle="popover"]').popover();
+
+        var socket = io('/admin', {
+            path: '/socket.io'
+        });
+
+
+        $('#scenarioSelect').on('change', function (e) {
+            $('#referenceText').val('');
+            if (this.value !== "0") {
+                $.get({
+                    url: "./ScenarioDetails",
+                    data: {
+                        "id": this.value
+                    },
+                    success: function (data) {
+                        $('#referenceText').val(data.sText)
+                    },
+                    error: function () {
+                        alert("Something went wrong");
+                    }
+                });
+            }
+        });
+
+        $('#loadCallId').keypress(function (event) {
+            var keycode = (event.keyCode ? event.keyCode : event.which);
+            if (keycode == '13') {
+                getTranscripts();
+            }
+        });
+        $('#loadCallbtn').on('click', getTranscripts);
+
+        function getTranscripts() {
+            var callId = $('#loadCallId').val();
+            $('#hypothesisText').val('');
+            $.get({
+                url: "./getTranscripts",
+                data: {
+                    "id": callId
+                },
+                success: function (data) {
+                    var textblob = "";
+                    data.forEach(function (line) {
+                        textblob += line[2] + "\n";
+                    })
+                    $('#hypothesisText').val(textblob);
+                },
+                error: function () {
+                    alert("Something went wrong");
+                }
+            });
+        }
+
+        //runReports
+        var reportDate;
+        $('#runReportbtn').on('click', function (e) {
+            // Change these for configs
+            updateReportStatus('ace2', 'pending');
+            updateReportStatus('jiwer', 'pending');
+            updateReportStatus('sclite', 'pending');
+
+            updateReport('ace2');
+            updateReport('jiwer');
+            updateReport('sclite');
+
+            reportDate = (new Date()).getTime();
+            var data = {};
+            data.libraries = ["ace2", "jiwer", "sclite"];
+            data.id = csvId
+            data.hypothesis = $('#hypothesisText').val();
+            data.reference = $('#referenceText').val();
+            data.timestamp = reportDate;
+            data.alpha = $('#alphaValue').val();
+            data.perLine = $('#parsingType').val();
+            socket.emit('run-accuracy-reports', data);
+        });
+
+        socket.on('accuracy-report', (data) => {
+            updateReportStatus(data.library, data.status);
+            updateReport(data.library, data.report);
+        })
+
+        function updateReportStatus(lib, status) {
+            var elId = '#' + lib + "StatusIcon";
+            $(elId).removeClass().hide();
+            switch (status) {
+                case 'pending':
+                    $(elId).addClass("fa fa-spinner fa-pulse").show();
+                    break;
+                case 'success':
+                    $(elId).addClass("fa fa-check text-green").show().fadeOut(5000);
+                    break;
+                case 'fail':
+                    $(elId).addClass("fa fa-times text-red").show().fadeOut(5000);
+                    break;
+            }
+        }
+
+        var ace2_data = "";
+        function updateReport(lib, data = 'none') {
+            if (data == 'none') {
+                //clear old reports
+                var elId = '#' + lib + "-results";
+                $(elId).html('');
+            } else {
+                if (data != 'none' && lib == 'jiwer') {
+                    var elId = '#' + lib + "-results";
+                    console.log("data", data)
+                    // $(elId).html("wer: "+data.finding[0]+"\nmer: "+data.finding[1]+"\nwil: "+data.finding[2]);
+                    $(elId).html(data);
+                }
+                if (data != 'none' && lib == 'sclite') {
+                    var elId = '#' + lib + "-results";
+                    console.log("data sclite", data)
+                    $(elId).html(data);
+                }
+                if (data != 'none' && lib == 'ace2') {
+                    var elId = '#' + lib + "-results";
+                    console.log("data ace2", data)
+                    ace2_data += data
+                    $(elId).html(ace2_data);
+                }
+            }
+        }
+        $('#report-download-btn').click(() => {
+            if (reportDate) {
+                var filename = $('#report-filename').val();
+                let ace2download = $('#report-ace2-cb').prop("checked");
+                let jiwerdownload = $('#report-jiwer-cb').prop("checked");
+                let sclitedownload = $('#report-sclite-cb').prop("checked");
+                let parsingtype = $('#parsingType').val();
+                let error = 'Error:';
+
+                if (!(ace2download || jiwerdownload || sclitedownload))
+                    error += '\n   At least 1 report type must be selected.'
+                if (filename.length <= 0)
+                    error += '\n   Filename must have a value.'
+                if (error.length > 6) {
+                    alert(error)
+                } else {
+                    let params = "date=" + reportDate;
+                    params += "&id=" + csvId;
+                    params += "&filename=" + filename;
+                    params += "&ace2=" + ace2download;
+                    params += "&jiwer=" + jiwerdownload;
+                    params += "&sclite=" + sclitedownload;
+                    params += "&parsingtype=" + parsingtype;
+                    window.location = "./accuracyreportdownload?" + params
+                }
+
+            } else {
+                alert("Error: No reports")
+            }
+        })
+        let csvId = []
+        $('#csvFileUpload').bind("change", function () {
+            var filename = $(this).val();
+            filename = filename.split('\\').pop();
+            $(this).next('.custom-file-label').html(filename);
+            var theFile = this.files[0];
+            console.log(theFile.size)
+            readCSVFile(theFile, function (data) {
+                csvId = data.id.split(/\r?\n/);
+                $('#hypothesisText').val(data.hyp);
+                $('#referenceText').val(data.ref);
+            });
+
+        });
+
+        function readCSVFile(file, callback) {
+            var content = { id: "", hyp: "", ref: "" };
+            var reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function (event) {
+                var csv = event.target.result;
+                var data = $.csv.toArrays(csv);
+                var html = '';
+                for (var row in data) {
+                    if (row > 0) {
+                        content.id += data[row][0] + '\n'
+                        content.ref += data[row][1] + '\n'
+                        content.hyp += data[row][2] + '\n'
+                    }
+                }
+                callback(content)
+            };
+            reader.onerror = function () { alert('Unable to read ' + file.fileName); };
+        }
+
+
+
+
+    </script>
+</body>
+
+</html>

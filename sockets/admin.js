@@ -17,6 +17,7 @@ McLean, VA 22102-7539, (703) 983-6000.
 const fs = require('fs');
 const log4js = require('log4js');
 
+process.env.TF_CPP_MIN_LOG_LEVEL = 2
 const adminLogger = log4js.getLogger('admin');
 const mysql = require('mysql');
 // const { exec } = require('child_process');
@@ -39,6 +40,8 @@ const logger = require('../utils/logger')
 const error = winston.loggers.get('error');
 const info = winston.loggers.get('info');
 const debug = winston.loggers.get('debug');
+
+const config = require('../configs/acequill.json');
 
 module.exports = function mod(io, nconf) {
   if (decode(nconf.get('sttService')) !== 'enabled') {
@@ -70,6 +73,19 @@ module.exports = function mod(io, nconf) {
       }
     }
 
+    function accuracyPageResults(data, timestamp, parseType) {
+      console.log("jwer ", data)
+      report =  'WER MER WIL \n'
+      if(parseType == "whole")
+        report += data.finding[0]+' '+data.finding[1]+' '+data.finding[2]
+      else
+        for (let i = 0; i < data.finding.length-1; i++) {
+          report += data.finding[i]+'\n'
+        }
+      fs.writeFileSync('./uploads/accuracy/jiwer_'+timestamp+'.txt', report);
+      io.to(socket.id).emit('accuracy-report', {library:'jiwer', status: 'success', report:report});
+    }
+
     function accuracyResults(data) {
       debug.debug('Accuracy Results here', data);
       if (data.engine === 'none') io.to(socket.id).emit('test-transcript-accuracy-results', data);
@@ -81,14 +97,14 @@ module.exports = function mod(io, nconf) {
       io.to(socket.id).emit('test-translation-engine-results', data);
     }
 
-    function testAccuracy(engine, transcript, groundTruth) {
+    function testAccuracy(engine, transcript, groundTruth, parseType, timestamp = null) {
       let gTruth = groundTruth.toLowerCase();
       let transc = transcript.toLowerCase();
 
       gTruth = gTruth.replace(/\./g, ' ');
       gTruth = gTruth.replace(/,/g, ' ');
       gTruth = gTruth.replace(/\?/g, ' ');
-      gTruth = gTruth.replace(/\r?\n|\r/g, ' ');
+      // gTruth = gTruth.replace(/\r?\n|\r/g, ' ');
       transc = transc.replace(/\./g, ' ');
       transc = transc.replace(/,/g, ' ');
       transc = transc.replace(/\?/g, ' ');
@@ -127,7 +143,7 @@ module.exports = function mod(io, nconf) {
       gTruth = gTruth.replace(/\[/g, '');
       gTruth = gTruth.replace(/\]/g, '');
 
-      const py = spawn('python3', [`${__dirname}/research.py`]);
+      const py = spawn('python3', [`${__dirname}/research.py`, parseType]);
       const data = [gTruth, transc];
       const dataString = [];
 
@@ -147,6 +163,7 @@ module.exports = function mod(io, nconf) {
         wrapper.finding = dataString[index];
         wrapper.translation = transc;
         accuracyResults(wrapper);
+        accuracyPageResults(wrapper, timestamp, parseType);
       });
       py.stdin.write(JSON.stringify(data));
       py.stdin.end();
@@ -650,12 +667,113 @@ module.exports = function mod(io, nconf) {
       testMySQL();
     });
 
+    socket.on('run-accuracy-reports', (data) => {
+      adminLogger.debug('Incoming Socket.IO:run-accuracy-reports');
+
+      console.log("data, ", data)
+      const { hypothesis, reference, libraries, timestamp, alpha, perLine } = data;
+      console.log(">>>", hypothesis, reference, libraries, timestamp, alpha, perLine);
+
+      fs.writeFileSync('./uploads/accuracy/hypothesis_'+timestamp+'.txt', hypothesis);
+      fs.writeFileSync('./uploads/accuracy/reference_'+timestamp+'.txt', reference);
+
+      fs.writeFileSync('./resources/hypothesis.txt', hypothesis + "\n");
+      fs.writeFileSync('./resources/reference.txt', reference + "\n");
+
+      sclite_hypo = hypothesis.replace(/\r?\n|\r/g, " ")
+      sclite_ref = reference.replace(/\r?\n|\r/g, " ")
+      fs.writeFileSync('./resources/sclite_hypothesis.txt', sclite_hypo + "\n");
+      fs.writeFileSync('./resources/sclite_reference.txt', sclite_ref + "\n");
+
+      var arr = hypothesis.replace(/\r\n/g,'\n').split('\n');
+      k = 0;
+      for(let i of arr) {
+
+          arr[k] = i+ " (s_"+k+")"
+          console.log("word ", arr[k]);
+          k+=1;
+      }
+      sclite_hypo = arr.join('\n')
+
+      var arr = reference.replace(/\r\n/g,'\n').split('\n');
+      k = 0;
+      for(let i of arr) {
+
+          arr[k] = i+ " (s_"+k+")"
+          console.log("word ", arr[k]);
+          k+=1;
+      }
+      sclite_ref = arr.join('\n')
+
+      fs.writeFileSync('./resources/sclite_hypothesis.trn', sclite_hypo + "\n");
+      fs.writeFileSync('./resources/sclite_reference.trn', sclite_ref + "\n");
+
+
+      testAccuracy('none', hypothesis, reference, perLine, timestamp);
+
+      const { exec } = require("child_process");
+      var scliteData = ""
+      if (config.accuracy.sclite == 'true') {
+        if (perLine == 'all')
+          sclitecmd = "./resources/SCTK/bin/sclite -i wsj -r ./resources/sclite_reference.txt -h ./resources/sclite_hypothesis.txt"
+        else
+          sclitecmd = "./resources/SCTK/bin/sclite -i wsj -r ./resources/sclite_reference.trn -h ./resources/sclite_hypothesis.trn"
+        exec(sclitecmd, (error, stdout, stderr) => {
+            if (error) {
+                console.log(`error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.log(`stderr: ${stderr}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+            fs.writeFileSync('./uploads/accuracy/sclite_'+timestamp+'.txt', stdout);
+            scliteData = stdout
+            io.to(socket.id).emit('accuracy-report', {library:'sclite', status: 'success', report:scliteData});
+        });
+      }
+      var ace2Data = ""
+      // python3.6 ./resources/ace-code-master/importance.py --file ./resources/ace-code-master/test/ref.txt --model simp
+      // python3.6 ./resources/ace-code-master/ace.py --rfile ./resources/ace-code-master/test/ref.txt --hfile ./resources/ace-code-master/test/hyp.txt --ace
+      if (config.accuracy.ace2 == 'true') {
+        exec("python3.6 ./resources/ace-code-master/importance.py --file ./resources/reference.txt --model simp", (error, stdout, stderr) => {
+            if (error) {
+                console.log(`error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.log(`stderr: ${stderr}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+            // fs.writeFileSync('./uploads/accuracy/ace2_'+timestamp+'.txt', stdout);
+            ace2Data = stdout
+            io.to(socket.id).emit('accuracy-report', {library:'ace2', status: 'success', report:ace2Data});
+        });
+        exec("python3.6 ./resources/ace-code-master/ace.py --rfile ./resources/reference.txt --hfile ./resources/hypothesis.txt --ace"+" --alpha "+parseFloat(alpha), (error, stdout, stderr) => {
+            if (error) {
+                console.log(`error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.log(`stderr: ${stderr}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+            fs.writeFileSync('./uploads/accuracy/ace2_'+timestamp+'.txt', stdout);
+            ace2Data = stdout
+            io.to(socket.id).emit('accuracy-report', {library:'ace2', status: 'success', report:ace2Data});
+        });
+      }
+    });
+
     socket.on('test-transcript-accuracy', (data) => {
       adminLogger.debug('Incoming Socket.IO:test-transcript-accuracy');
 
       const { transcript } = data;
       const { baseline } = data;
-      testAccuracy('none', transcript, baseline);
+      testAccuracy('none', transcript, baseline, "all");
     });
 
     socket.on('test-scenario-accuracy', (data) => {
@@ -691,7 +809,7 @@ module.exports = function mod(io, nconf) {
 
       let azureTranscript = '';
       azure.start((data2) => {
-        if (Object.prototype.hasOwnProperty.call(data2, 'end')) setTimeout(() => testAccuracy('azure', azureTranscript, baseline), 80000);
+        if (Object.prototype.hasOwnProperty.call(data2, 'end')) setTimeout(() => testAccuracy('azure', azureTranscript, baseline, "all"), 80000);
         if (data2.final) azureTranscript += data2.transcript;
       });
 
@@ -700,7 +818,7 @@ module.exports = function mod(io, nconf) {
       let googleTranscript = '';
       google.start((data3) => {
         if (Object.prototype.hasOwnProperty.call(data3, 'end')) {
-          testAccuracy('google', googleTranscript, baseline);
+          testAccuracy('google', googleTranscript, baseline, "all");
         }
         if (data3.final === true) googleTranscript += ` ${data3.transcript}`;
       });
@@ -722,7 +840,7 @@ module.exports = function mod(io, nconf) {
         'en-US',
       );
       watson.start((data4) => {
-        if (Object.prototype.hasOwnProperty.call(data4, 'end')) setTimeout(() => testAccuracy('watson', watsonTranscript, baseline), 110000);
+        if (Object.prototype.hasOwnProperty.call(data4, 'end')) setTimeout(() => testAccuracy('watson', watsonTranscript, baseline, "all"), 110000);
         if (data4.final) {
           watsonTranscript += data.transcript;
           info.info('watson transcripts', watsonTranscript);

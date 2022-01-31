@@ -28,5 +28,12 @@
       "host": "<asterisk ip>",
       "user": "<ami username>",
       "password": "<ami password>"
+    },
+    "accuracy" {
+      "ace2_repo":"<path to clone ace2 from e.g. https://github.com/YOUR-USERNAME/YOUR-REPOSITORY>",
+      "ace2": "false",
+      "sclite": "true",
+      "jiwer": "true"
     }
+
 }
