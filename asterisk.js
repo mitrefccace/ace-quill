@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 */
 
 const AsteriskManager = require('asterisk-manager');
@@ -22,6 +22,7 @@ const mysql = require('mysql');
 const HashMap = require('hashmap');
 const Watson = require('./transcription/watson');
 const Google = require('./transcription/google');
+const PredefinedTranscripts = require('./transcription/predefined');
 const Azure = require('./transcription/azure');
 const Amazon = require('./transcription/amazon');
 const WatsonT = require('./translation/watson');
@@ -53,6 +54,7 @@ const debug = winston.loggers.get('debug');
 
 const transcriptFilePath = decode(nconf.get('transcriptFilePath'));
 const wavFilePath = decode(nconf.get('wavFilePath'));
+const adminExtension = decode(nconf.get('asterisk:ext_admin'))
 
 let ami = null;
 
@@ -160,6 +162,8 @@ function startTranscription(
     }, and file: ${
       file}`,
   );
+  //sttSettings.sttEngine = "PREDEFINED"
+  //sttSettings.predefined_id = 10;
   info.info(`STT Engine: ${sttSettings.sttEngine}`);
   info.info(`Delay: ${sttSettings.delay}`);
   info.info('language codes ', langCodes);
@@ -253,6 +257,13 @@ function startTranscription(
         error.error(err);
       }
       break;
+    }
+    case 'PREDEFINED': {
+          console.log("PREDEFINED: " + sttSettings.predefined_id);
+          pstn = new PredefinedTranscripts(sttSettings.predefined_id, mySqlConnection);
+          engineCd = 'P';
+          info.info('Connected to Predefined Transcripts');
+          break;
     }
     default: {
       const now = new Date();
@@ -410,15 +421,21 @@ function handleManagerEvent(evt) {
   let extensionArray;
   let ext;
 
+  if(evt.channel && evt.channel.startsWith(`PJSIP/${adminExtension}-`))
+    return;
+
   switch (evt.event) {
     case 'DialEnd':
+
       /*
        * Listen for DialEnd to indicate a connected call.
        */
       info.info('****** Processing AMI DialEnd ******');
+      console.log(`PJSIP/+${adminExtension}-`)
+      if(evt.channel.startsWith(`PJSIP/${adminExtension}-`))
+           break
 
       if (evt.dialstatus === 'ANSWER') {
-
         /*
          * Get the channel names (channel and destchannel)
          * Send AMI Monitor events for those channels
@@ -543,9 +560,9 @@ function handleManagerEvent(evt) {
           const destArray = destString.split(/[/,-]/);
           const dest = destArray[1];
 
-          const sql = '(SELECT id, extension, stt_engine, delay, default_device, translation_engine, source_language, target_language, ARIA_settings, tts_engine FROM device_settings WHERE extension = ?) '
+          const sql = '(SELECT id, extension, stt_engine, delay, default_device, translation_engine, source_language, target_language, ARIA_settings, tts_engine, predefined_id FROM device_settings WHERE extension = ?) '
             + 'UNION '
-            + '(SELECT id, extension, stt_engine, delay, default_device, translation_engine, source_language, target_language, ARIA_settings, tts_engine FROM device_settings WHERE default_device = 1) '
+            + '(SELECT id, extension, stt_engine, delay, default_device, translation_engine, source_language, target_language, ARIA_settings, tts_engine, predefined_id FROM device_settings WHERE default_device = 1) '
             + 'LIMIT 1;';
 
           mySqlConnection.query(sql, ext, (err, result) => {
@@ -570,6 +587,9 @@ function handleManagerEvent(evt) {
                   ? result[0].tts_engine
                   : 'UNKNOWN',
                 ariaSettings: result[0] ? result[0].ARIA_settings : 'UNKNOWN',
+                predefined_id: result[0]
+                ? result[0].predefined_id
+                : 'UNKNOWN',
               };
               /*
                             startTranscription(
@@ -654,6 +674,7 @@ function handleManagerEvent(evt) {
                 build_number: buildNumber,
                 git_commit: gitCommit,
                 is_iprelay: is_iprelay,
+                predefined_id: sttSettings.predefined_id,
               };
 
               info .info(`Call data: ${JSON.stringify(mySet)}`);
@@ -774,7 +795,7 @@ function handleManagerEvent(evt) {
        *
        */
 
-
+      if(researchId){
        let sql = 'SELECT is_iprelay FROM data_store WHERE research_data_id = ? LIMIT 1';
 
       mySqlConnection.query(sql, researchId, (err, result) => {
@@ -797,6 +818,7 @@ function handleManagerEvent(evt) {
             }
           }
       } );
+    }
 
 
 

@@ -39,7 +39,10 @@ const JS = [
     'jssip/dist/jssip.min.js',
     'moment/moment.js',
     'recordrtc/RecordRTC.js',
-    'popper.js/dist/umd/popper.js'
+    'popper.js/dist/umd/popper.js',
+    'popper.js/dist/umd/popper.js.map',
+    'tone/build/Tone.js',
+    'tone/build/Tone.js.map'
 ];
 
 

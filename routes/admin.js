@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 */
 
 const express = require('express');
@@ -128,76 +128,18 @@ router.get('/getallcdrrecs', restrict, (req, res) => {
 });
 
 router.get('/users', restrict, (req, res) => {
-  const sqlUsers = 'SELECT u.idlogin_credentials, u.username, u.first_name, u.last_name, g.group_name, u.last_login FROM login_credentials u LEFT JOIN groups g ON u.group_id = g.idgroups;';
-  const sqlGroups = 'SELECT * FROM groups;';
+  const sqlUsers = 'SELECT idlogin_credentials, username, first_name, last_name, last_login FROM login_credentials;';
+
   req.dbconn.query(sqlUsers, (err1, users) => {
     if (err1) {
       error.error(`SQL Error: ${err1}`);
     } else {
-      req.dbconn.query(sqlGroups, (err2, groups) => {
-        if (err2) {
-          error.error(`SQL Error: ${err2}`);
-        } else {
           res.render('pages/users', {
             users,
-            groups,
             role: req.session.role,
           });
-        }
-      });
     }
   });
-});
-
-router.get('/groups', restrict, (req, res) => {
-  const sql = 'SELECT idgroups, group_name, description FROM groups;';
-  req.dbconn.query(sql, (err, results) => {
-    if (err) {
-      error.error(`SQL Error: ${err}`);
-    } else {
-      res.render('pages/groups', {
-        groups: results,
-        role: req.session.role,
-      });
-    }
-  });
-});
-
-router.post('/AddGroup', restrict, (req, res) => {
-  const { groupname } = req.body;
-  const { description } = req.body;
-
-  if (groupname && description) {
-    const sql = 'INSERT INTO groups (group_name, description) VALUES (?,?);';
-    req.dbconn.query(sql, [groupname, description], (err, result) => {
-      if (err) {
-        error.error(`SQL ERR: ${err}`);
-        res.send('err');
-      } else {
-        res.send(`${result.affectedRows} record updated`);
-      }
-    });
-  } else {
-    res.send('Bad Inputs');
-  }
-});
-
-router.post('/DeleteGroup', restrict, (req, res) => {
-  const { id } = req.body;
-  info.info(`Delete ID: ${id}`);
-  if (!Number.isNaN(id)) {
-    const sql = 'DELETE FROM groups WHERE idgroups = ?;';
-    req.dbconn.query(sql, id, (err, result) => {
-      if (err) {
-        error.error(`SQL ERR: ${err}`);
-        res.send('err');
-      } else {
-        res.send(`${result.affectedRows} record deleted`);
-      }
-    });
-  } else {
-    res.send('Bad Inputs');
-  }
 });
 
 router.get('/servertest', restrict, (req, res) => {
@@ -211,7 +153,6 @@ router.post('/AddUser', restrict, (req, res) => {
   const { password } = req.body;
   const { firstname } = req.body;
   const { lastname } = req.body;
-  const { groupId } = req.body;
 
   if (
     validator.isUsernameValid(username)
@@ -220,10 +161,10 @@ router.post('/AddUser', restrict, (req, res) => {
     && validator.isNameValid(lastname)
   ) {
     bcrypt.hash(password, 10, (err, hash) => {
-      const sql = 'INSERT INTO login_credentials (username, password, first_name, last_name, role, last_login, group_id) VALUES (?,?,?,?,?,?,?);';
+      const sql = 'INSERT INTO login_credentials (username, password, first_name, last_name, role, last_login) VALUES (?,?,?,?,?,?);';
       req.dbconn.query(
         sql,
-        [username, hash, firstname, lastname, 'researcher', null, groupId],
+        [username, hash, firstname, lastname, 'researcher', null],
         (err2, result) => {
           if (err2) {
             error.error(`SQL ERR: ${err}`);
@@ -257,6 +198,325 @@ router.post('/DeleteUser', restrict, (req, res) => {
   }
 });
 
+router.get('/audiocontrols', restrict, (req, res) => {
+  const sql = `SELECT p.id, p.name, p.description, p.active, COUNT(f.id) as freq_num FROM audio_profiles p
+  LEFT JOIN audio_filters f ON f.profile_id = p.id
+  GROUP BY p.id;`;
+  req.dbconn.query(sql, (err, results) => {
+    res.render('pages/audio_controls_admin', {
+      extension: config.asterisk.ext_admin,
+      password: config.asterisk.ext_admin_password,
+      host: config.asterisk.fqdn,
+      profiles: err ? [] : results
+    });
+  })
+});
+
+
+router.get('/audioprofiledata', restrict, (req, res) => {
+  const { id } = req.query;
+  const sql = `SELECT * from audio_filters WHERE profile_id = ? ORDER BY id;`;
+  req.dbconn.query(sql, id, (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send({
+        message: 'Error'
+      })
+    } else {
+      res.status(200).send({
+        message: 'Success',
+        filters: results
+      });
+    }
+  })
+});
+
+router.post('/audioprofiledelete', restrict, (req, res) => {
+  const { id } = req.body;
+  const sql = 'DELETE FROM audio_profiles WHERE id = ?;';
+  req.dbconn.query(sql, id, (err) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      res.send("OK")
+    }
+  })
+});
+
+router.post('/audioprofilenamesave', restrict, (req, res) => {
+  let { id, name } = req.body;
+  let sql = '';
+  let params = []
+
+  if (id == 'NEW') {
+    sql = 'INSERT INTO audio_profiles (name) VALUES (?);';
+    params = [name]
+  } else {
+    sql = 'UPDATE audio_profiles SET name = ? WHERE id = ?;';
+    params = [name, id]
+  }
+  req.dbconn.query(sql, params, (err, result) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      if (id == "NEW")
+        id = result.insertId
+      res.send({ "message": "success", "id": id })
+    }
+  })
+});
+
+router.post('/audioprofileactive', restrict, (req, res) => {
+  console.log("We're in the correct route");
+  let { id, active } = req.body;
+  active = active == 'true' ? 1 : 0;
+
+  const sql = 'UPDATE audio_profiles SET active = ? WHERE id = ?;';
+
+  const params = [active, id]
+
+  req.dbconn.query(sql, params, (err, result) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      if (id == "NEW")
+        id = result.insertId
+      res.send({ "message": "success", "id": id })
+    }
+  })
+});
+
+router.get('/audiofilterdata', restrict, (req, res) => {
+  const { id } = req.query;
+  const sql = `SELECT * from audio_filters WHERE id = ?;`;
+  req.dbconn.query(sql, id, (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send({
+        message: 'Error'
+      })
+    } else {
+      res.status(200).send({
+        message: 'Success',
+        filter: results[0]
+      });
+    }
+  })
+});
+
+router.post('/audiofiltersave', restrict, (req, res) => {
+  let { id, name, type, profile_id, gain, frequency, rolloff, q_value, pitchshift } = req.body;
+  gain = gain ? parseInt(gain) : null;
+  frequency = frequency ? parseInt(frequency) : null;
+  rolloff = rolloff ? parseInt(rolloff) : null;
+  pitchshift = pitchshift ? parseInt(pitchshift) : null;
+  q_value = q_value ? parseFloat(q_value) : null;
+
+  console.log("SAVE: ", id, name, profile_id, gain, frequency, rolloff, q_value, pitchshift)
+  let sql = ""
+  let params = []
+  if (id) {
+    sql = 'UPDATE audio_filters SET name = ?, gain = ?, frequency = ?, type = ?, rolloff = ?, q_value = ?, pitchshift = ? WHERE id = ?;';
+    params = [name, gain, frequency, type, rolloff, q_value, pitchshift, id]
+  } else {
+    sql = 'INSERT INTO audio_filters (profile_id, name, gain, frequency, type, rolloff, q_value, pitchshift) VALUES (?,?,?,?,?,?,?,?);';
+    params = [profile_id, name, gain, frequency, type, rolloff, q_value, pitchshift]
+  }
+  req.dbconn.query(sql, params, (err) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      res.send("OK")
+    }
+  })
+});
+
+router.post('/audiofilterdelete', restrict, (req, res) => {
+  const { id } = req.body;
+  const sql = 'DELETE FROM audio_filters WHERE id = ?;';
+  req.dbconn.query(sql, id, (err) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      res.send("OK")
+    }
+  })
+});
+
+router.get('/precanned', restrict, (req, res) => {
+  //const sql = `SELECT p.id, p.title FROM predefined_captions p;`;
+  const sql = `SELECT p.id, p.title, MAX(w.ms) AS duration FROM predefined_captions p
+  LEFT JOIN predefined_captions_data w ON p.id = w.fk_id
+GROUP BY id;`;
+  req.dbconn.query(sql, (err, results) => {
+    res.render('pages/precanned_admin', {
+      extension: config.asterisk.ext_admin,
+      password: config.asterisk.ext_admin_password,
+      host: config.asterisk.fqdn,
+      profiles: err ? [] : results
+    });
+  })
+});
+
+router.post('/precannednamesave', restrict, (req, res) => {
+  let { id, name } = req.body;
+  let sql = '';
+  let params = []
+
+  if (id == 'NEW') {
+    sql = 'INSERT INTO predefined_captions (title) VALUES (?);';
+    params = [name]
+  } else {
+    sql = 'UPDATE predefined_captions SET title = ? WHERE id = ?;';
+    params = [name, id]
+  }
+  req.dbconn.query(sql, params, (err, result) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      if (id == "NEW")
+        id = result.insertId
+      res.send({ "message": "success", "id": id })
+    }
+  })
+});
+
+router.get('/precanneddata', restrict, (req, res) => {
+  const { id } = req.query;
+  const sql = `SELECT phrase_id, GROUP_CONCAT(word ORDER BY ms SEPARATOR ' ') AS phrase,
+  MIN(ms) as start_time, MAX(ms) AS end_time
+  FROM predefined_captions_data
+  WHERE fk_id = ?
+  GROUP BY phrase_id;`
+  req.dbconn.query(sql, id, (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send({
+        message: 'Error'
+      })
+    } else {
+      res.status(200).send({
+        message: 'Success',
+        filters: results
+      });
+    }
+  })
+});
+
+router.post('/precannedphrasesave', restrict, (req, res) => {
+  let { fk_id,word,offset,final,phrase_id } = req.body;
+  let sql = '';
+  let params = [];
+
+  sql = 'INSERT INTO predefined_captions_data (fk_id,word,ms,final,phrase_id) VALUES (?,?,?,?,?);';
+  params = [fk_id,word,offset,final,phrase_id];
+
+  req.dbconn.query(sql, params, (err, result) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      res.send({ "message": "success", "result": result })
+    }
+  })
+});
+
+router.post('/precanneddelete', restrict, (req, res) => {
+  const { id } = req.body;
+  const sql = 'DELETE FROM predefined_captions WHERE id = ?;';
+  req.dbconn.query(sql, id, (err) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      const sql = 'DELETE FROM predefined_captions_data WHERE fk_id = ?;'
+      req.dbconn.query(sql, id, (err) => {
+        if (err) {
+          console.log(err)
+          res.status(500).send("ERROR")
+        } else {
+          res.send("OK")
+        }
+      })
+    }
+  })
+});
+
+router.post('/phrasedelete', restrict, (req, res) => {
+  const { id } = req.body;
+  console.log(id);
+  const sql = 'DELETE FROM predefined_captions_data WHERE phrase_id = ?;';
+  req.dbconn.query(sql, id, (err) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      res.send("OK")
+    }
+  })
+});
+
+router.get('/phrasedata', restrict, (req, res) => {
+  const { id } = req.query;
+  const sql = `SELECT * from predefined_captions_data WHERE phrase_id = ? ORDER BY ms;`;
+  req.dbconn.query(sql, id, (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send({
+        message: 'Error'
+      })
+    } else {
+      res.status(200).send({
+        message: 'Success',
+        filter: results
+      });
+    }
+  })
+});
+
+router.post('/precannedphraseedit', restrict, (req, res) => {
+  const { id,word,offset } = req.body;
+
+  const sql = `UPDATE predefined_captions_data SET word=?, ms=? WHERE id = ?;`;
+  params = [word,offset,id];
+  req.dbconn.query(sql, params, (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send({
+        message: 'Error'
+      })
+    } else {
+      res.status(200).send({
+        message: 'Success',
+        filter: results
+      });
+    }
+  })
+});
+
+router.get('/getMaxPhraseId', restrict, (req, res) => {
+  let sql = '';
+
+  sql = `SELECT MAX(phrase_id) as max FROM predefined_captions_data;`;
+
+  req.dbconn.query(sql, (err, result) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("ERROR")
+    } else {
+      res.send({ "message": "success", "results": result[0].max })
+    }
+  })
+});
+
+
+
 router.get('/accuracy', restrict, (req, res) => {
   const sql = 'Select id, scenario_name from scenario;';
   req.dbconn.query(sql, (err, results) => {
@@ -272,13 +532,13 @@ router.get('/accuracy', restrict, (req, res) => {
 });
 
 router.get('/getAccuracyConfig', restrict, (req, res) => {
-    res.send(config.accuracy);
+  res.send(config.accuracy);
 });
 
 router.get('/accuracyreportdownload', restrict, (req, res) => {
   const { date, id, filename, ace2, jiwer, sclite, parsingtype } = req.query;
   csvId = id.split(",");
-  console.log("here id ", req.query)
+  // console.log("here id ", req.query)
   const reportPath = './uploads/accuracy/'
   const arch = archiver('zip');
 
@@ -295,16 +555,16 @@ router.get('/accuracyreportdownload', restrict, (req, res) => {
   // create csv
   // ace2
   ace2res = []
-  if(ace2 === 'true' && fs.existsSync(ace2Path)){
+  if (ace2 === 'true' && fs.existsSync(ace2Path)) {
     var array = fs.readFileSync(ace2Path).toString().split("\n");
     // ace2res = []
     array.forEach(function (value, i) {
       // console.log('%d: %s', i, value);
-      if ( i > 4 && i < array.length-2 ){
+      if ( i > 4 && i < array.length-3 ){
         curArray = value.split(" ")
         // console.log(curArray);
         score = curArray[curArray.length-1]
-        ace2res.push(score.substring(1,score.length-1))
+        ace2res.push(score)
       }
     });
   }
@@ -314,16 +574,20 @@ router.get('/accuracyreportdownload', restrict, (req, res) => {
   scliteSub = []
   scliteDel = []
   scliteIns = []
+  scliteWrds = []
   if(sclite === 'true' && fs.existsSync(sclitePath)){
     var array = fs.readFileSync(sclitePath).toString().split("\n");
+    if (hypo.length %2 == 0)
+      k = 1
+    else
+      k = 0
+    console.log("k", k);
+    console.log("hypo", hypo);
 
     array.forEach(function (value, i) {
       console.log('%d: %s', i, value);
-      if (hypo.length %2 == 0)
-        k = 1
-      else
-        k = 0
-      if ( i > 12 + hypo.length && i < array.length-8 && i%2==k){
+
+      if ( parsingtype=="all" && i == 14 ){
         curArray = value.split(" ")
         const result = curArray.filter(function(x) {
             return x !== '';
@@ -333,16 +597,33 @@ router.get('/accuracyreportdownload', restrict, (req, res) => {
         ins = result[result.length-4]
         del = result[result.length-5]
         sub = result[result.length-6]
+        wrd = result[3]
 
-        // if (curArray[curArray.length-2]==0)
-        //   err = curArray[curArray.length-6]
-        //   ins = curArray[curArray.length-10]
-        //   del = curArray[curArray.length-14]
-        //   sub = curArray[curArray.length-18]
         scliteSub.push(sub)
         scliteDel.push(del)
         scliteIns.push(ins)
         scliteErr.push(err)
+        scliteWrds.push(wrd)
+      }
+
+
+      if ( parsingtype=="line" && i > 12 + hypo.length && i < array.length-8 && i%2==k){
+        curArray = value.split(" ")
+        const result = curArray.filter(function (x) {
+          return x !== '';
+        });
+        console.log("sclite res", result);
+        err = result[result.length-3]
+        ins = result[result.length-4]
+        del = result[result.length-5]
+        sub = result[result.length-6]
+        wrd = result[4]
+
+        scliteSub.push(sub)
+        scliteDel.push(del)
+        scliteIns.push(ins)
+        scliteErr.push(err)
+        scliteWrds.push(wrd)
       }
     });
   }
@@ -355,10 +636,10 @@ router.get('/accuracyreportdownload', restrict, (req, res) => {
   wer = [];
   mer = [];
   wil = [];
-  if(jiwer === 'true' && fs.existsSync(jiwerPath)){
+  if (jiwer === 'true' && fs.existsSync(jiwerPath)) {
     array.forEach(function (value, i) {
       console.log('%d: %s', i, value);
-      if ( i > 0 && i < array.length-1){
+      if (i > 0 && i < array.length - 1) {
         curArray = value.split(" ")
         console.log(curArray);
         wer.push(curArray[0])
@@ -370,68 +651,71 @@ router.get('/accuracyreportdownload', restrict, (req, res) => {
 
   // create CSV
 
-  csv = 'id, hypothesis, reference, ACE2, SCLITE SUB, SCLITE DEL, SCLITE INS, SCLITE ERR, JIWER WER, JIWER MER, JIWER WIL \n'
-  console.log("scliteSub ", scliteSub)
-  console.log("scliteDel ", scliteDel)
-  console.log("scliteIns ", scliteIns)
-  console.log("scliteErr ", scliteErr)
+  csv = 'id, reference, hypothesis, ACE2, SCLITE # WRD, SCLITE SUB, SCLITE DEL, SCLITE INS, SCLITE ERR, JIWER WER, JIWER MER, JIWER WIL \n'
+  // console.log("scliteSub ", scliteSub)
+  // console.log("scliteDel ", scliteDel)
+  // console.log("scliteIns ", scliteIns)
+  // console.log("scliteErr ", scliteErr)
   wer.forEach(function (value, i) {
     console.log('%d: %s', i, value);
     aceVal = ace2res[i]
-    if(aceVal == undefined)
+    if (aceVal == undefined)
       aceVal = ' '
+    sclitewrd = scliteWrds[i]
+    if(sclitewrd == undefined)
+      sclitewrd = ' '
     sclitesub = scliteSub[i]
-    if(sclitesub == undefined)
+    if (sclitesub == undefined)
       sclitesub = ' '
     sclitedel = scliteDel[i]
-    if(sclitedel == undefined)
+    if (sclitedel == undefined)
       sclitedel = ' '
     scliteins = scliteIns[i]
-    if(scliteins == undefined)
+    if (scliteins == undefined)
       scliteins = ' '
     scliteVal = scliteErr[i]
-    if(scliteVal == undefined)
+    if (scliteVal == undefined)
       scliteVal = ' '
     werVal = wer[i]
-    if(werVal == undefined)
+    if (werVal == undefined)
       werVal = ' '
     merVal = mer[i]
-    if(merVal == undefined)
+    if (merVal == undefined)
       merVal = ' '
     wilVal = wil[i]
-    if(wilVal == undefined)
+    if (wilVal == undefined)
       wilVal = ' '
 
     if(i==0 && parsingtype=="all"){
-      csv += csvId[i]+','+hypo[i]+','+ref[i]+','+aceVal+','+sclitesub+','+sclitedel+','+scliteins+','+scliteVal+','+wer[0]+','+wer[1]+','+wer[2]+'\n';
+      csv += csvId[i]+','+ref[i]+','+hypo[i]+','+aceVal+','+sclitewrd+','+sclitesub+','+sclitedel+','+scliteins+','+scliteVal+','+wer[0]+','+wer[1]+','+wer[2]+'\n';
       wer[1] = undefined
       wer[2] = undefined
     }
     else
-      csv += csvId[i]+','+hypo[i]+','+ref[i]+','+aceVal+','+sclitesub+','+sclitedel+','+scliteins+','+scliteVal+','+werVal+','+merVal+','+wilVal+'\n';
+      csv += csvId[i]+','+ref[i]+','+hypo[i]+','+aceVal+','+sclitewrd+','+sclitesub+','+sclitedel+','+scliteins+','+scliteVal+','+werVal+','+merVal+','+wilVal+'\n';
   });
   fs.writeFileSync(csvPath, csv);
 
 
-  if(fs.existsSync(refPath))
+  if (fs.existsSync(refPath))
     arch.append(fs.createReadStream(refPath), { name: 'reference.txt' });
 
-  if(fs.existsSync(hypPath))
+  if (fs.existsSync(hypPath))
     arch.append(fs.createReadStream(hypPath), { name: 'hypothesis.txt' });
 
-  if(fs.existsSync(csvPath))
-    arch.append(fs.createReadStream(csvPath), { name: 'output_'+parsingtype+'.csv' });
+  if (fs.existsSync(csvPath))
+    arch.append(fs.createReadStream(csvPath), { name: 'output_' + parsingtype + '.csv' });
 
-  if(ace2 === 'true' && fs.existsSync(ace2Path))
+  if (ace2 === 'true' && fs.existsSync(ace2Path))
     arch.append(fs.createReadStream(ace2Path), { name: 'ace2.txt' });
 
-  if(jiwer === 'true' && fs.existsSync(jiwerPath))
+  if (jiwer === 'true' && fs.existsSync(jiwerPath))
     arch.append(fs.createReadStream(jiwerPath), { name: 'jiwer.txt' });
 
-  if(sclite === 'true' && fs.existsSync(sclitePath))
+  if (sclite === 'true' && fs.existsSync(sclitePath))
     arch.append(fs.createReadStream(sclitePath), { name: 'sclite.txt' });
 
-  res.attachment(filename+'.zip').type('zip');
+  res.attachment(filename + '.zip').type('zip');
   arch.on('end', () => res.end());
   arch.pipe(res);
   arch.finalize();
@@ -478,7 +762,6 @@ router.get('/getResearchData', restrict, (req, res) => {
   let { download } = req.query;
   const { start } = req.query;
   const { end } = req.query;
-  // const { groupId } = req.session;
 
   download = !((typeof download === 'undefined' || download !== 'true'));
 
@@ -486,7 +769,7 @@ router.get('/getResearchData', restrict, (req, res) => {
   let query = `SELECT rd.id, rd.call_start, rd.device_id, rd.extension,
     rd.dest_phone_number, rd.call_duration, rd.stt_engine, rd.scenario_number,
     rd.added_delay, rd.transcription_file, rd.audio_file, rd.notes, rd.translation_engine,
-    rd.source_language, rd.target_language, rd.tts_engine, ds.group_id,
+    rd.source_language, rd.target_language, rd.tts_engine, 
     CASE WHEN rd.video_file IS NULL THEN 'false' ELSE 'true' END AS has_video
     FROM research_data rd
     LEFT JOIN device_settings ds ON rd.extension = ds.extension
@@ -590,7 +873,6 @@ router.get('/getIprelayResearchData', restrict, (req, res) => {
   let { download } = req.query;
   const { start } = req.query;
   const { end } = req.query;
-  // const { groupId } = req.session;
 
   download = !((typeof download === 'undefined' || download !== 'true'));
 
@@ -598,7 +880,7 @@ router.get('/getIprelayResearchData', restrict, (req, res) => {
   let query = `SELECT rd.id, rd.call_start, rd.device_id, rd.extension,
     rd.dest_phone_number, rd.call_duration, rd.stt_engine, rd.scenario_number,
     rd.added_delay, rd.transcription_file, rd.audio_file, rd.notes, rd.translation_engine,
-    rd.source_language, rd.target_language, rd.tts_engine, ds.group_id,
+    rd.source_language, rd.target_language, rd.tts_engine,
     CASE WHEN rd.video_file IS NULL THEN 'false' ELSE 'true' END AS has_video
     FROM research_data rd
     LEFT JOIN device_settings ds ON rd.extension = ds.extension
@@ -1597,7 +1879,7 @@ router.get('/saveACConfig', restrict, (req, res) => {
   let sql = 'UPDATE device_settings SET stt_engine = ?, source_language = ?, stt_show_final_caption = ?, delay = ?, translation_engine = ?, ';
   sql += 'target_language = ?, tts_engine = ?, tts_translate = ?, tts_voice = ?, ARIA_settings = ?, confidence_show_word = ?,confidence_show_phrase = ?, ';
   sql += 'confidence_upper_lim = ?, confidence_lower_lim = ?, confidence_upper_color = ?, confidence_lower_color = ?, ';
-  sql += 'confidence_bold = ?, confidence_italicize = ?, confidence_underline = ?, iprelay = ?, iprelay_scenario = ?, tts_enabled = ?, stt_show_entity_sentiment = ? ';
+  sql += 'confidence_bold = ?, confidence_italicize = ?, confidence_underline = ?, iprelay = ?, iprelay_scenario = ?, tts_enabled = ?, stt_show_entity_sentiment = ?, predefined_id = ? ';
   sql += 'WHERE extension = ?;';
 
   if (data.confidence_lower_lim === '') {
@@ -1607,6 +1889,7 @@ router.get('/saveACConfig', restrict, (req, res) => {
     data.confidence_upper_lim = 0;
   }
 
+  data.predefined_id = data.predefined_id ? data.predefined_id : null;
   const params = [data.stt_engine, data.source_language,
   data.stt_show_final_caption, Number(data.delay),
   data.translation_engine, data.target_language, data.tts_engine,
@@ -1615,7 +1898,7 @@ router.get('/saveACConfig', restrict, (req, res) => {
   data.confidence_upper_lim, data.confidence_lower_lim,
   data.confidence_upper_color, data.confidence_lower_color,
   data.confidence_bold, data.confidence_italicize, data.confidence_underline,
-  data.iprelay, data.iprelay_scenario, data.tts_enabled, data.stt_show_entity_sentiment,
+  data.iprelay, data.iprelay_scenario, data.tts_enabled, data.stt_show_entity_sentiment, data.predefined_id,
   data.extension,
   ];
   for (let i = 0; i < params.length; i += 1) {
@@ -1639,7 +1922,7 @@ router.get('/saveACConfig', restrict, (req, res) => {
 
 router.get('/contacts', restrict, (req, res) => {
   const sql1 = 'SELECT idcontacts, username, cellphone, workphone, homephone, faxphone, personalemail, workemail, favorite, extension FROM contacts;';
-  const sql2 = 'SELECT extension FROM device_settings;'
+  const sql2 = 'SELECT extension FROM device_settings order by extension;'
   async.parallel([
     function (callback) {
       req.dbconn.query(sql1, (err, results) => {
@@ -1680,7 +1963,6 @@ router.post('/UpdateConfig', restrict, (req, res) => {
   var sourceLanguage = req.body.source_language;
   var targetLanguage = req.body.target_language;
   var ariaSettings = req.body.aria_settings;
-  const { groupId } = req.session;
 
   console.log("req.body ", req.body)
   console.log("name ", name)
@@ -1704,8 +1986,8 @@ router.post('/UpdateConfig', restrict, (req, res) => {
     && ariaSettings
   ) {
     const sql = `INSERT INTO device_settings
-      (extension, stt_engine, delay, name, group_id,
-        translation_engine, source_language, target_language, ARIA_settings) VALUES (?,?,?,?,?,?,?,?,?)
+      (extension, stt_engine, delay, name,
+        translation_engine, source_language, target_language, ARIA_settings) VALUES (?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE stt_engine = VALUES(stt_engine),
         name = VALUES(name), delay = VALUES(delay),
         translation_engine = VALUES(translation_engine),
@@ -1717,7 +1999,6 @@ router.post('/UpdateConfig', restrict, (req, res) => {
       sttEngine,
       delay,
       name,
-      groupId,
       translationEngine,
       sourceLanguage,
       targetLanguage,
@@ -1872,7 +2153,7 @@ router.get('/iprelay', restrict, (req, res) => {
   });
 });
 router.get('/configs', restrict, (req, res) => {
-  const sql = 'Select * from device_settings;';
+  const sql = 'Select * from device_settings order by extension;';
   req.dbconn.query(sql, (err, results) => {
     if (err) {
       error.error(`SQL Error: ${err}`);
@@ -1882,13 +2163,21 @@ router.get('/configs', restrict, (req, res) => {
         if (err2) {
           error.error(`SQL Error: ${err2}`);
         } else {
-          error.error('iprelayResults ', iprelayResults);
+          const sql3 = 'Select * from predefined_captions';
+          req.dbconn.query(sql3, (err3, predefinedResults) => {
+          if (err3) {
+              error.error(`SQL Error: ${err2}`);
+            } else {
+         // error.error('iprelayResults ', iprelayResults);
           res.render('pages/advanced_config', {
             extensions: results,
             iprelay: iprelayResults,
             device_setting: results[0] ? JSON.stringify(results[0]) : "{}",
             role: req.session.role,
+            predefined: predefinedResults,
           });
+        }
+      });
         }
       });
     }
@@ -1999,7 +2288,7 @@ router.post('/login', (req, res) => {
     validator.isUsernameValid(username)
     && validator.isPasswordComplex(password)
   ) {
-    const sql = 'SELECT u.*, g.group_name FROM login_credentials u LEFT JOIN groups g ON u.group_id = g.idgroups  WHERE username = ? limit 0,1;';
+    const sql = 'SELECT * FROM login_credentials WHERE username = ? limit 0,1;';
     const params = [username];
     req.dbconn.query(sql, params, (err, user) => {
       if (err) {
@@ -2012,8 +2301,6 @@ router.post('/login', (req, res) => {
             req.session.firstname = user[0].first_name;
             req.session.lastname = user[0].last_name;
             req.session.role = user[0].role;
-            req.session.group_id = user[0].group_id;
-            req.session.group_name = user[0].group_name;
             req.session.error = '';
             req.dbconn.query(
               'UPDATE `login_credentials` SET `last_login` = now() WHERE `idlogin_credentials` = ?',

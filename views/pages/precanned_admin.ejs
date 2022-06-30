@@ -1,0 +1,699 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('./../partials/head') %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <%- include('./../partials/header') %>
+
+            <!-- Left side column. contains the logo and sidebar -->
+            <%- include('./../partials/sidebar') %>
+
+                <div class="content-wrapper">
+                    <!-- Content Header (Page header) -->
+                    <section class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6">
+                                    <h1>Predefined Transcripts</h1>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ol class="breadcrumb float-sm-right">
+                                        <li class="breadcrumb-item"><i class="fa fa-gears"></i>&nbsp;Settings</li>
+                                        <li class="breadcrumb-item active">Predefined Transcripts</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div><!-- /.container-fluid -->
+                    </section>
+
+                    <!-- Main content -->
+                    <section class="content">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card" id="ProfileCard">
+                                    <h5 class="card-header">
+                                        Predefined Transcripts
+                                    </h5>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <button class="btn btn-primary" id="newProfile">New Transcript</button>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table id="profiletable"
+                                                    class="table table-bordered table-hover dataTable no-footer">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Title</th>                                                            
+                                                            <th>Duration</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% profiles.forEach(function(p) { %>
+                                                            <tr>
+                                                                <td>
+                                                                    <%= p.id %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= p.title %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= p.duration %>
+                                                                </td>
+                                                                <td>
+                                                                    <button type="button"
+                                                                        class="btn btn-primary btn-sm dt-edit">
+                                                                        Edit
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-danger btn-sm dt-delete">
+                                                                        Delete
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card" style="display:none;" id="FilterCard">
+                                    <h5 class="card-header">
+                                        Predefined <span id="profileID">NEW</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="basic-addon3">Title</span>
+                                                    </div>
+                                                    <input type="text" class="form-control" id="ProfileNameInput"
+                                                        placeholder="Name required to add phrases">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <button class="btn btn-success" id="saveName">Save Predefined</button>
+                                                <button class="btn btn-primary" id="newFilter" disabled>Add
+                                                    Phrase</button>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table id="filtertable"
+                                                    class="table table-bordered table-hover dataTable no-footer">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Phrase</th>
+                                                            <th>Start Time</th>
+                                                            <th>End Time</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row">
+                                            <div class="col-9">
+                                                <button type="button" class="btn btn-default"
+                                                    onclick='location.reload()'>Back</button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                    </section>
+                    <!-- /.content -->
+                    <div id="snackbar">Saved</div>
+                </div>
+                <!-- /.content - wrapper -->
+
+                <!-- Modals Begin -->
+                <div class="modal fade" id="confirm-delete-profile" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Confirm Profile Delete</h4>
+                                <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p>You are about to delete <b id="profileName">ProfileName</b> , do you want to proceed?
+                                </p>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick='deleteProfile()'>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="confirm-delete-filter" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Confirm Filter Delete</h4>
+                                <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p>You are about to delete <b id="filterNameDelete">Filter Name</b> , do you want to
+                                    proceed?
+                                </p>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick='deleteFilter()'>Remove &
+                                    Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="filter-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Phrase Add/Edit</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <form>
+                                    <div class="form-group">
+                                        <label for="exampleFormControlInput1">Phrase:</label>
+                                        <input type="text" class="form-control" id="phrasename"
+                                            placeholder="Enter Entire Phrase">
+                                        <input type="hidden" class="form-control" id="phraseid">
+                                    </div>
+                                </form>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick='continuePrecanned()'>Continue</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="words-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Word Specification</h4>
+                            </div>
+                            <form onsubmit="savePrecanned(); return false;">
+                            <div class="modal-body">
+                                <div id="wordDurations">
+                                    <!-- <div class="form-inline" id="wordDurations">
+                                        
+                                        
+                                    </div> -->
+
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal" onclick='clearWords()'>Cancel</button>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="edit-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Edit Phrase</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <form id="editDurations">
+                                    <!-- <div class="form-inline" id="wordDurations">
+                                        
+                                        
+                                    </div> -->
+                                </form>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick='saveEdits()'>Save</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal" onclick='clearEdit()'>Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modals End -->
+
+                <footer class="main-footer">
+                    <%- include('./../partials/footer') %>
+                </footer>
+                <audio id='remoteAudio' hidden></audio>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- modals -->
+
+    <!-- ./modals -->
+    <script src='/assets/js/jssip.min.js'></script>
+    <script src='/socket.io/socket.io.js'></script>
+    <!--script src="/javascript/audiocontrols.js"></script-->
+
+    <script type="text/javascript">
+        var wordsArray;
+        var saveData;
+        //var currentId;
+
+        $(document).ready(function () {
+            $('#settings_precanned_treeview').addClass('active');
+        });
+
+        var profileTable = $('#profiletable').DataTable({
+            "searching": true,
+            "paging": true,
+            "lengthChange": false,
+            "bInfo": false,
+            "ordering": false,
+            "autoWidth": true,
+            "order": [],
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 1,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 2,
+                "render": function (data, type, full, meta) {
+                    if (data == "") {
+                        return 0;
+                    } else {
+                        return data;
+                    }
+                }
+            }, 
+        ]
+        });
+
+        var filterTable = $('#filtertable').DataTable({
+            "searching": false,
+            "paging": false,
+            "lengthChange": false,
+            "bInfo": false,
+            "ordering": false,
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 1,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 2,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 3,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 4,
+                "render": function (data) {
+                    return "<button type='button'class='btn btn-primary btn-sm f-edit'>Edit</button>  <button type='button'class='btn btn-danger btn-sm f-delete'>Remove</button>";
+                }
+            }
+        ],
+            "columns": [
+                {data: 'phrase_id'},
+                {data: 'phrase'},
+                {data: 'start_time'},
+                {data: 'end_time'},
+                {data: null},
+            ]
+        });
+
+        $('.dt-edit').each(function () {
+            $(this).on('click', function (evt) {
+                var data = profileTable.row(this.closest('tr')).data();
+                currentId = data[0];
+                loadfiltertabledata(data[0], data[1]);
+                $('#newFilter').prop('disabled', false);
+            });
+        });
+
+
+        function loadfiltertabledata(id, name) {
+            console.log("we're reloading the table");
+            console.log(id,name);
+            $.ajax({
+                url: './precanneddata',
+                data: {"id": id},
+                type: 'GET',
+                success: function (pData) {
+                    $("#profileID").html(id);
+                    $("#ProfileNameInput").val(name)
+                    loadProfileDataInfo(pData)
+
+                    $("#ProfileCard").hide()
+                    $("#FilterCard").show()
+
+                    initFilterEdit()
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+        function initFilterEdit() {
+
+            $('.f-edit').each(function () {
+                $(this).on('click', function (evt) {
+                    var data = filterTable.row(this.closest('tr')).data();
+                    console.log(data)
+                    let editHtml = ``;
+                    $.ajax({
+                        url: './phrasedata',
+                        data: {"id": data.phrase_id},
+                        type: 'GET',
+                        success: function (fData) {
+                            saveData = fData;
+                            for(var i=0; i<fData.filter.length; i++){
+                                var word = fData.filter[i].word;
+                                var id = fData.filter[i].id;
+                                var offset = fData.filter[i].ms;
+                                var idVal = "id" + id;
+                                var wordId = "word" + id;
+                                var offsetId = "offset" + id;
+                                editHtml += `<div class="form-row" id=${i}>
+                                    <div class="col" hidden>
+                                        <label for="exampleFormControlInput1">ID:</label>
+                                        <input readonly type="text" class="form-control" id=${idVal} value=${id}>
+                                    </div>
+                                    <div class="col">
+                                        <label for="exampleFormControlInput1">Word:</label>
+                                        <input type="text" class="form-control" id=${wordId} value=${word}>
+                                    </div>
+                                    <div class="col">
+                                        <label for="exampleFormControlInput1">Offset(ms):</label>
+                                        <input type="integer" class="form-control" id=${offsetId} value=${offset}>
+                                    </div>
+                                </div>`;          
+            }
+                            document.getElementById("editDurations").innerHTML += editHtml;
+                            
+                            $('#edit-modal').modal({backdrop: 'static', keyboard: false})
+
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Something Went Wrong");
+                        }
+                    });
+                });
+            });
+
+            $('.f-delete').each(function () {
+                $(this).on('click', function (evt) {
+                    var data = filterTable.row(this.closest('tr')).data();
+                    deleteFilterConfirm(data.phrase_id, data.phrase);
+                });
+            });
+        }
+
+        var deleteFilterID = -1;
+        function deleteFilterConfirm(id, name) {
+            $("#filterNameDelete").html(name);
+            console.log(id, name)
+            deleteFilterID = id;
+            $('#confirm-delete-filter').modal();
+        }
+
+        function deleteFilter() {
+            $.ajax({
+                url: './phrasedelete',
+                data: {"id": deleteFilterID},
+                type: 'POST',
+                success: function (msg) {
+                    loadfiltertabledata($("#profileID").html())
+                    $('#confirm-delete-filter').modal('hide');
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+        function continuePrecanned() {
+            $('#filter-modal').modal('hide')
+            wordsArray = $('#phrasename').val().split(" ");
+            wordsArray = wordsArray.filter(word => word.length > 0);
+            clearWords();
+            let wordHtml = ``;
+            for(var i=0; i<wordsArray.length; i++){
+                var word = wordsArray[i];
+                var wordId = "word" + i.toString();
+                var offsetId = "offset" + i.toString();
+                wordHtml += `<div class="form-row" id=${i}>
+                                    <div class="col">
+                                    <label for="exampleFormControlInput1">Word:</label>
+                                    <input type="text" class="form-control" id=${wordId} value=${word}>
+                                    </div>
+                                    <div class="col">
+                                        <label for="exampleFormControlInput1">Offset(ms):</label>
+
+                                        <input type="number" class="form-control" id=${offsetId} required >
+                                    </div>
+                                </div>`;          
+            }
+            document.getElementById("wordDurations").innerHTML += wordHtml;
+            $('#words-modal').modal({backdrop: 'static', keyboard: false})
+        }
+
+        function savePrecanned() {
+            let phraseId;
+            let wordId;
+            let offsetId;
+            let final = 0;
+            let currentId = $("#profileID").html();
+            $.ajax({
+                url: './getMaxPhraseId',
+                type: 'GET',
+                success: function (msg) {
+                    phraseId = msg.results + 1;
+                    for (let i=0; i<wordsArray.length; i++) {
+                        wordId = "#word" + i.toString();    
+                        offsetId = "#offset" + i.toString();
+                        if (i==(wordsArray.length-1)) {
+                            final = 1;
+                        }
+                        $.ajax({
+                            url: './precannedphrasesave',
+                            data: {"fk_id": currentId, "word":$(wordId).val(), "offset":$(offsetId).val(),"final":final,"phrase_id":phraseId},
+                            type: 'POST',
+                            success: function (msg) {
+                                loadfiltertabledata($("#profileID").html(), $('#ProfileNameInput').val());
+                                console.log(msg);
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                console.log("Something Went Wrong");
+                            }
+                        });
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+            $('#filter-modal').modal('hide');
+            $('#words-modal').modal('hide');
+        }
+
+        function saveEdits() {
+            let phraseId;
+            let wordIdSave;
+            let offsetIdSave;
+            let final = 0;
+            let currentId = $("#profileID").html();
+                    for (let i=0; i<saveData.filter.length; i++) {
+                        wordIdSave = "#word" + saveData.filter[i].id; 
+                        offsetIdSave = "#offset" + saveData.filter[i].id;
+                        $.ajax({
+                            url: './precannedphraseedit',
+                            data: {"id": saveData.filter[i].id, "word":$(wordIdSave).val(), "offset":$(offsetIdSave).val()},
+                            type: 'POST',
+                            success: function (msg) {
+                                loadfiltertabledata($("#profileID").html(), $('#ProfileNameInput').val())
+                                console.log(msg);
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                console.log("Something Went Wrong");
+                            }
+                        });
+                    }
+            $('#edit-modal').modal('hide');
+            document.getElementById("editDurations").innerHTML = "";
+        }
+
+
+        function loadProfileDataInfo(profile) {
+            for (let i = 0; i < profile.filters.length; i++) {
+                let t = profile.filters[i].type
+                let g = profile.filters[i].gain
+                let f = profile.filters[i].frequency
+                let r = profile.filters[i].rolloff
+                let q = profile.filters[i].q_value
+                let p = profile.filters[i].pitchshift
+
+                t = t ? t + " " : ""
+                g = (g || g == 0) ? g + "dB " : ""
+                f = f ? f + "Hz " : ""
+                q = q ? "Q=" + q + " " : ""
+                r = r ? r + "dB/Oct " : ""
+                p = p ? p + " semitones " : ""
+                profile.filters[i].display = t + g + f + q + r + p
+
+            }
+
+
+
+            filterTable.clear();
+            filterTable.rows.add(profile.filters);
+            filterTable.draw();
+        }
+
+        $('.dt-delete').each(function () {
+            $(this).on('click', function (evt) {
+                var data = profileTable.row(this.closest('tr')).data();
+                deleteProfileConfirm(data[0], data[1]);
+            });
+        });
+        var deleteProfileID = -1;
+        function deleteProfileConfirm(id, name, filters) {
+            $("#profileName").html(name);
+            deleteProfileID = id;
+            $('#confirm-delete-profile').modal();
+        }
+
+        function deleteProfile() {
+            $.ajax({
+                url: './precanneddelete',
+                data: {"id": deleteProfileID},
+                type: 'POST',
+                success: function (msg) {
+                    location.reload()
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+        function clearEdit() {
+            document.getElementById("editDurations").innerHTML = "";
+        }
+
+        function clearWords() {
+            document.getElementById("wordDurations").innerHTML = "";
+        }
+
+        $('#saveName').on('click', () => {
+            $.ajax({
+                url: './precannednamesave',
+                data: {"id": $("#profileID").html(), "name": $('#ProfileNameInput').val()},
+                type: 'POST',
+                success: function (msg) {
+                    $("#profileID").html(msg.id);
+                    $('#snackbar').addClass("show");
+                    $('#newFilter').prop('disabled', false);
+                    setTimeout(function () {
+                        $('#snackbar').removeClass("show");
+                    }, 3000)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        })
+        $('#newFilter').on('click', () => {
+            //resetFilterValues();
+            //hideShowFilterFields($('#filtertype').val())
+            $('#filter-modal').modal({backdrop: 'static', keyboard: false})
+        })
+        $('#newProfile').on('click', () => {
+            $("#profileID").html("NEW");
+            $("#ProfileNameInput").val('')
+
+            $('#newFilter').prop('disabled', true);
+            $("#ProfileCard").hide()
+            $("#FilterCard").show()
+        })
+
+        $('#filtertype').on('change', function () {
+            hideShowFilterFields(this.value)
+        });
+
+    </script>
+</body>
+
+</html>

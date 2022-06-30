@@ -10,13 +10,13 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
 
 <head>
-  <% include ..//partials/head %>
+  <%- include('./../partials/head') %>
 </head>
 
 
@@ -25,10 +25,10 @@ McLean, VA 22102-7539, (703) 983-6000.
   <div class="wrapper">
 
     <!-- Header -->
-    <% include ..//partials/header %>
+    <%- include('./../partials/header') %>
 
     <!-- Left side column. contains the logo and sidebar -->
-    <% include ..//partials/sidebar %>
+    <%- include('./../partials/sidebar') %>
 
     <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
@@ -76,14 +76,29 @@ McLean, VA 22102-7539, (703) 983-6000.
                     <div class="w-25">
                         <h6 class="col-md-auto">Engine</h6>
                         <div class="col-md-auto">
-                        <select class="form-control" id="stt_engine">
+                        <select class="form-control" id="stt_engine" onchange="showPrecanned()">
                             <option value='AZURE' selected="selected">A - Microsoft Azure</option>
                             <option value='GOOGLE'>G - Google</option>
                             <option value='WATSON'>W - IBM Watson</option>
-                            <option value='AMAZON'>AWS - Amazon</option>
+                            <!--option value='AMAZON'>AWS - Amazon</option-->
+                            <option value='PREDEFINED'>P - Predefined</option>
                         </select>
                         </div>
                     </div>
+                    <div class="w-25" id="predefined_transcript">
+                      <h6 class="col-md-auto">Predefined</h6>
+                      <div class="col-md-auto">
+                      <select class="form-control" id="predefined_id">
+                        <% predefined.forEach(function(s) {  %>
+                          <!-- <tr id="scenario_<%= s.extension %>"> -->
+                              <option value="<%= s.id %>">
+                                  <%= s.title %>
+                              </option>
+                          <!-- </tr> -->
+                      <% }) %>
+                      </select>
+                      </div>
+                  </div>
                     <div class="w-25">
                         <h6 class="col-md-auto">Callee Language</h6>
                         <div class="col-md-auto">
@@ -100,8 +115,8 @@ McLean, VA 22102-7539, (703) 983-6000.
                             Show Finalized Captions only
                             </label>
                         </div>
-                    </div>
-                    <div class="w-25">
+                    <!-- </div>
+                    <div class="w-25"> -->
                         <h6 class="col-md-auto" id="delayVar">0s delay</h6>
                         <div class="slidecontainer">
                             <input type="range" min="0" max="100" step="1" value="0" id="delay">
@@ -436,7 +451,7 @@ McLean, VA 22102-7539, (703) 983-6000.
     </div>
     <!-- /.content-wrapper -->
     <footer class="main-footer">
-      <% include ..//partials/footer %>
+      <%- include('./../partials/footer') %>
     </footer>
   </div>
   <!-- ./wrapper -->
@@ -462,6 +477,11 @@ McLean, VA 22102-7539, (703) 983-6000.
     $(document).ready(function () {
         $('#settings_advanced_controls_treeview').addClass('active');
         set_setting(device_setting);
+        if ($('#stt_engine').val() == "PREDEFINED") {
+          $("#predefined_transcript").show();
+        } else {
+          $("#predefined_transcript").hide();
+        }
     });
     socket.on('connect', function (data) {
       socket.emit('get-ac-configs');
@@ -477,7 +497,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                 "extension": ext
             },
             function (data, status) {
-                console.log("here", data);
+                console.log("loading: ", data);
                 set_setting(data);
             });
     }
@@ -501,6 +521,15 @@ McLean, VA 22102-7539, (703) 983-6000.
         var data = {};
         data.extension = $('#curExtension').val();
         load_config(data.extension)
+    }
+
+
+    function showPrecanned(){
+        if ($('#stt_engine').val() == "PREDEFINED") {
+          $("#predefined_transcript").show();
+        } else {
+          $("#predefined_transcript").hide();
+        }
     }
 
     $('#save_btn').on('click', function (e) {
@@ -533,6 +562,9 @@ McLean, VA 22102-7539, (703) 983-6000.
 
       data.iprelay = $('#iprelay').prop('checked');
       data.iprelay_scenario = $('#iprelay_scenario').val();
+
+      data.predefined_id = $('#predefined_id').val();
+      console.log("id is: " + data.predefined_id);
       save_config(data)
     });
 
@@ -576,6 +608,8 @@ McLean, VA 22102-7539, (703) 983-6000.
 
         $('#iprelay').prop('checked', data.iprelay);
         $('#iprelay_scenario').val(data.iprelay_scenario);
+
+        $('#predefined_id').val(data.predefined_id);
     }
 
     function addExtension() {

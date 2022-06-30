@@ -11,6 +11,9 @@
     <script src='/assets/js/bootstrap.js'></script>
     <script src='/assets/js/adminlte.min.js'></script>
 
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src='/assets/js/Tone.js'></script>
+
     <script src='/assets/js/jssip.min.js'></script>
 </head>
 
@@ -31,33 +34,33 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4" aria-hidden="false">
             <div class="sidebar" aria-hidden="false">
                 <div class="dialpadcontainer">
-                    <input type="text" id="output" maxlength="11" size="11" style="width: 200px;"/>
+                    <input type="text" id="output" maxlength="11" size="11" style="width: 200px;" />
                     <br /><br />
                     <div class="row">
                         <div id="one">
-                    	    <button class="digit" type="button">1</button>
-			            </div>
+                            <button class="digit" type="button">1</button>
+                        </div>
                         <div id="two">
-			                <button class="digit" type="button">2</button>
-                                <div class="sub">ABC</div>
+                            <button class="digit" type="button">2</button>
+                            <div class="sub">ABC</div>
                         </div>
                         <div id="three">
-			                <button class="digit" type="button">3</button>
-                                <div class="sub">DEF</div>
+                            <button class="digit" type="button">3</button>
+                            <div class="sub">DEF</div>
                         </div>
                     </div>
                     <div class="row">
                         <div id="four">
                             <button class="digit" type="button">4</button>
-			                    <div class="sub">GHI</div>
+                            <div class="sub">GHI</div>
                         </div>
                         <div id="five">
                             <button class="digit" type="button">5</button>
-                                <div class="sub">JKL</div>
+                            <div class="sub">JKL</div>
                         </div>
                         <div id="six">
                             <button class="digit" type="button">6</button>
-                                <div class="sub">MNO</div>
+                            <div class="sub">MNO</div>
                         </div>
                     </div>
                     <div class="row">
@@ -67,7 +70,7 @@
                         </div>
                         <div id="eight">
                             <button class="digit" type="button">8</button>
-			    <div class="sub">TUV</div>
+                            <div class="sub">TUV</div>
                         </div>
                         <div id="nine">
                             <button class="digit" type="button">9</button>
@@ -87,42 +90,62 @@
                     </div>
                     <div class="botrow">
                         <div>
-				            <button id="call_btn" class="fa fa-phone" aria-hidden="false"></button>
-			            </div>
-			            <div>
+                            <button id="call_btn" class="fa fa-phone" aria-hidden="false"></button>
+                        </div>
+                        <div>
                             <button id="back_btn" class="fa fa-long-arrow-left dig" aria-hidden="false"></button>
-			            </div>
+                        </div>
                     </div>
                 </div>
-                 <!-- call history and favorites -->
-                 <div class="nav-tabs-custom card">
+                <!-- call history and favorites -->
+                <div class="nav-tabs-custom card">
                     <ul class="nav nav-tabs  mb-3">
                         <li class="nav-item"><a href="#tab_history" data-toggle="pill" aria-expanded="false" role="tab"
-                                class="nav-link active"><i class="fa fa-history"></i>&nbsp;History</a>
+                                class="nav-link active"><i class="fa fa-history"></i></a>
                         </li>
                         <li class="nav-item"><a href="#tab_contacts" data-toggle="pill" aria-expanded="false" role="tab"
-                                class="nav-link"><i class="fa fa-address-book"></i>&nbsp;Contacts</a></li>
+                                class="nav-link"><i class="fa fa-address-book"></i></a></li>
+                        <li class="nav-item"><a href="#tab_presets" data-toggle="pill" aria-expanded="false" role="tab"
+                                class="nav-link"><i class="fa fa-volume-control-phone"></i></a></li>
                     </ul>
                     <div class="tab-content ">
                         <div class="tab-pane active" id="tab_history">
                             <div class="col-12"></div>
-                                <ul id="call_history" style="padding-left: 0.5em; padding-right: 0.5em;"
-                                >
-                                </ul>
-                            </div>
-                            <div class="tab-pane" id="tab_contacts">
-                                <div class="col-12"></div>
-                                    <ul id="contacts" style="padding-left: 0.5em; padding-right: 0.5em;" >
-                                    </ul>
+                            <ul id="call_history" style="padding-left: 0.5em; padding-right: 0.5em;">
+                            </ul>
+                        </div>
+                        <div class="tab-pane" id="tab_contacts">
+                            <div class="col-12"></div>
+                            <ul id="contacts" style="padding-left: 0.5em; padding-right: 0.5em;">
+                            </ul>
+                        </div>
+                        <div class="tab-pane" id="tab_presets">
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="profileRadios" id="noFilter"
+                                        value="-1" checked>
+                                    <label class="form-check-label" for="noFilter">
+                                        No Filter
+                                    </label>
+                                </div>
+                                <div id="audioprofileDiv">
+                                    aaaa
+                                </div>
                             </div>
                         </div>
+                    </div>
 
                 </div>
+                <div id="waveform"></div>
+
             </div>
         </aside>
+        
+      
         <div class='content-wrapper'>
-<pre id="terminal">
+            <pre id="terminal">
 <output id="history" aria-hidden="true" aria-live="off">
+
 Welcome to the ACE Quill terminal.
 </output>
 <output id="transcripts" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
@@ -135,7 +158,7 @@ Welcome to the ACE Quill terminal.
                 <div class="row">
                     <!--Grid column-->
                     <div class="col-12">
-                        <form class="input-group"  autocomplete="off" id="ttsForm">
+                        <form class="input-group" autocomplete="off" id="ttsForm">
                             <input type="text" class="form-control form-control-lg" placeholder="Teletype" id='ttsText'>
                             <div class="input-group-append">
                                 <button class="btn btn-lg btn-info" type="submit" id='ttsBtn'>Say it</button>
@@ -196,7 +219,9 @@ Welcome to the ACE Quill terminal.
         </div>
     </div>
 </body>
-<script>JsSIP.debug.enable('JsSIP:*');</script>
+<script>JsSIP.debug.disable('JsSIP:*');</script>
+<script src="/javascript/waveform.js"></script>
+<!--script src="/javascript/audiocontrols.js"></script-->
 <script>
     function fixCert() {
         var asteriskHost = $('#sipServer').val();
@@ -264,10 +289,10 @@ Welcome to the ACE Quill terminal.
     $('#ttsEnabledCheckbox').change(function () {
         localStorage.setItem('ttsEnabled', this.checked);
         if (this.checked) {
-            $('#terminal').css({ height: '89vh' });
+            $('#terminal').css({height: '89vh'});
             $('#ttsFooter').removeAttr("hidden");
         } else {
-            $('#terminal').css({ height: '94vh' });
+            $('#terminal').css({height: '94vh'});
             $('#ttsFooter').attr("hidden", true);
         }
     });
@@ -278,12 +303,12 @@ Welcome to the ACE Quill terminal.
         $.ajax({
             url: './terminal/texttospeech',
             type: 'POST',
-            data: { "text": ttsText, "extension": localStorage.getItem('sipExtension')},
+            data: {"text": ttsText, "extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
                 playTextToSpeech(data)
                 if (data.translation)
-                    ttsText =  data.translation + " ("+ttsText+")";
+                    ttsText = data.translation + " (" + ttsText + ")";
                 writeToConsole('<span class="text-yellow">> ' + ttsText + '</span>');
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -344,10 +369,12 @@ Welcome to the ACE Quill terminal.
     var ua = null;
     var aria = null;
     var remoteStream = document.getElementById('remoteView')
-	var selfStream = document.getElementById("selfView");
+    var selfStream = document.getElementById("selfView");
 
     var sipMessageOne = "";
     var sipMessageWhole = "";
+
+    var mesiaStream;
 
     var jssipConnection = {
         display_name: null,
@@ -390,10 +417,10 @@ Welcome to the ACE Quill terminal.
     var currentSession = null;
 
     function getARIASettings() {
- 	    $.ajax({
+        $.ajax({
             url: './terminal/ariaSettings',
             type: 'POST',
-            data: { "extension": localStorage.getItem('sipExtension') },
+            data: {"extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
                 setARIASettings(data.aria)
@@ -401,24 +428,24 @@ Welcome to the ACE Quill terminal.
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
-	});
+        });
     }
 
 
     function sentenceAnalysis(text, markup) {
- 	    $.ajax({
+        $.ajax({
             url: './terminal/sentenceAnalysis',
             type: 'POST',
-            data: { "text": text },
+            data: {"text": text},
             datatype: 'json',
             success: function (data) {
                 let sentiment = ""
-                if(entitySentimentEnabled == 1){
+                if (entitySentimentEnabled == 1) {
                     data.results.forEach(res => {
                         score = JSON.stringify(res.Score)
-                        if (score > 0){
+                        if (score > 0) {
                             sentiment = '<span class="text-green"> (positive)</span>'
-                        }else if (score < 0){
+                        } else if (score < 0) {
                             sentiment = '<span class="text-red"> (negative)</span>'
                         }
                     });
@@ -430,29 +457,29 @@ Welcome to the ACE Quill terminal.
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
-	    });
+        });
     }
 
     function getEntities() {
- 	    $.ajax({
+        $.ajax({
             url: './terminal/getEntities',
             type: 'POST',
-            data: { "extension": localStorage.getItem('sipExtension') },
+            data: {"extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
-                if(data.results.length != 0)
+                if (data.results.length != 0)
                     writeToConsole("--- Entities ---");
                 data.results.forEach(res => {
                     let name = '<span class="text-yellow">' + JSON.stringify(res.Name) + '</span>'
-                    let salience = '<span class="text-blue">' + JSON.stringify(res.salience).substring(0,5) + '</span>'
+                    let salience = '<span class="text-blue">' + JSON.stringify(res.salience).substring(0, 5) + '</span>'
                     let type = '<span class="text-green">' + JSON.stringify(res.Type) + '</span>'
                     url = ""
-                    if(res.url != null){
+                    if (res.url != null) {
                         url = res.url
                         url = '<a href="' + url + '" target="_blank">Wikipedia</a>'
-                        writeToConsole("Name: "+ name + " Salience: "+salience+ " Type: "+type+ " Link: "+url);
-                    }else{
-                        writeToConsole("Name: "+ name + " Salience: "+salience+ " Type: "+type);
+                        writeToConsole("Name: " + name + " Salience: " + salience + " Type: " + type + " Link: " + url);
+                    } else {
+                        writeToConsole("Name: " + name + " Salience: " + salience + " Type: " + type);
                     }
                     appOutput('');
                 });
@@ -460,34 +487,34 @@ Welcome to the ACE Quill terminal.
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
-	});
+        });
     }
 
     function getClassification() {
- 	    $.ajax({
+        $.ajax({
             url: './terminal/getClassification',
             type: 'POST',
-            data: { "extension": localStorage.getItem('sipExtension') },
+            data: {"extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
-                if(data.results.length != 0)
+                if (data.results.length != 0)
                     writeToConsole("--- Classification ---");
                 data.results.forEach(res => {
                     let name = '<span class="text-yellow">' + JSON.stringify(res.Name) + '</span>'
-                    let salience = '<span class="text-blue">' + JSON.stringify(res.Confidence).substring(0,5) + '</span>'
-                    writeToConsole("Name: "+ name + " Confidence: "+salience);
+                    let salience = '<span class="text-blue">' + JSON.stringify(res.Confidence).substring(0, 5) + '</span>'
+                    writeToConsole("Name: " + name + " Confidence: " + salience);
                     appOutput('');
                 });
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
-	});
+        });
     }
 
     function setARIASettings(data) {
-	   aria = data;
-	}
+        aria = data;
+    }
 
     function registerJsSip() {
 
@@ -554,11 +581,13 @@ Welcome to the ACE Quill terminal.
                     writeToConsole($('#app-output').html());
                     appOutput('');
                     writeToConsole("<span class='text-red'>Call Ended</span>");
-                    if(entitySentimentEnabled){
+                    if (entitySentimentEnabled) {
                         getEntities();
                         getClassification();
                     }
                     $('#call_btn').removeClass('incall_btn')
+                    destroyWaveSurfer()
+                    $("#waveform").html("");
 
                 });
                 currentSession.on('failed', function (e) {
@@ -570,7 +599,9 @@ Welcome to the ACE Quill terminal.
                 if (currentSession.connection) {
                     currentSession.connection.ontrack = function (e) {
                         remoteStream.srcObject = e.streams[0];
-                        remoteStream.play();
+                        mediaStream = e.streams[0];
+                        $('input[name=profileRadios]:checked').trigger('change');
+                        createWaveSurfer(e.streams[0]);
                     }
 
                 }
@@ -578,7 +609,7 @@ Welcome to the ACE Quill terminal.
 
 
             ua.on('newMessage', function (e) {
-                if (e.request.body.slice(0,4) == 'Part') {
+                if (e.request.body.slice(0, 4) == 'Part') {
                     sipMessageWhole += (e.request.body.slice(13));
                     if (e.request.body[5] == e.request.body[10]) {
                         processTranscripts(sipMessageWhole);
@@ -592,22 +623,22 @@ Welcome to the ACE Quill terminal.
         }
 
     }
-    function processTranscripts(body){
+    function processTranscripts(body) {
         try {
-                sipMessageWhole = "";
-                var transcripts = JSON.parse(body);
-                if (transcripts.transcript) {
-                    if( !config.stt_show_final_caption){
-                        appOutput(transcripts.transcript);
-                    }
-                    if (transcripts.final) {
-                        var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
-                        sentenceAnalysis(transcripts.transcript, markup);
-                    }
+            sipMessageWhole = "";
+            var transcripts = JSON.parse(body);
+            if (transcripts.transcript) {
+                if (!config.stt_show_final_caption) {
+                    appOutput(transcripts.transcript);
                 }
-                } catch (err) {
-                    console.log(err);
+                if (transcripts.final) {
+                    var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
+                    sentenceAnalysis(transcripts.transcript, markup);
                 }
+            }
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     function startCall(number) {
@@ -616,7 +647,7 @@ Welcome to the ACE Quill terminal.
         getHistory();
     }
     var count = 0;
-    $(".digit").on('click', function ()  {
+    $(".digit").on('click', function () {
         var num = ($(this).clone().children().remove().end().text());
 
         if (currentSession && !currentSession.isEnded()) {
@@ -641,16 +672,16 @@ Welcome to the ACE Quill terminal.
             $('#call_btn').addClass('incall_btn');
             startCall(dialnum);
         }
-        if(aria == "continuous") {
+        if (aria == "continuous") {
             document.getElementById('app-output').setAttribute('aria-hidden', 'false');
             document.getElementById('history').setAttribute('aria-hidden', 'false');
             document.getElementById('transcripts').setAttribute('aria-hidden', 'true');
-            }
-        if(aria == "final") {
+        }
+        if (aria == "final") {
             document.getElementById('app-output').setAttribute('aria-hidden', 'true');
             document.getElementById('transcripts').setAttribute('aria-hidden', 'false');
- 	        document.getElementById('history').setAttribute('aria-hidden', 'true');
-	}
+            document.getElementById('history').setAttribute('aria-hidden', 'true');
+        }
     });
 
 
@@ -708,33 +739,33 @@ Welcome to the ACE Quill terminal.
         $.ajax({
             url: './iprelay/getHistory',
             type: 'GET',
-            data: { "extension": localStorage.getItem('sipExtension') },
+            data: {"extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
                 $('#call_history').html("");
                 //Loop through the result and populate the table
                 for (var i = 0; i < data.results.length; i++) {
-                  var timeOfDay;
-                  var localDate = new String(new Date(data.results[i].call_start));
-                  var date = localDate.slice(4,7) + " " + localDate.slice(8,10) + ", " + localDate.slice(11,15);
-                  if (parseInt(localDate.slice(16,18)) > 12) {
-                      timeOfDay = "PM"
-                  } else {
-                      timeOfDay = "AM"
-                  }
-                  var time = ((localDate.slice(16,18) + 11) % 12 + 1) + localDate.slice(18,24) + " " + timeOfDay;
-                  var liAttribute = document.createElement('li');
-                  liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
-                  liAttribute.setAttribute("id", "call_hist");
-                  liAttribute.setAttribute("onclick", "reDial(this)");
-                  liAttribute.innerHTML = data.results[i].dest_phone_number + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' + date + ", " + time + "</span>";
- 	              $('#call_history').append(liAttribute);
+                    var timeOfDay;
+                    var localDate = new String(new Date(data.results[i].call_start));
+                    var date = localDate.slice(4, 7) + " " + localDate.slice(8, 10) + ", " + localDate.slice(11, 15);
+                    if (parseInt(localDate.slice(16, 18)) > 12) {
+                        timeOfDay = "PM"
+                    } else {
+                        timeOfDay = "AM"
+                    }
+                    var time = ((localDate.slice(16, 18) + 11) % 12 + 1) + localDate.slice(18, 24) + " " + timeOfDay;
+                    var liAttribute = document.createElement('li');
+                    liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
+                    liAttribute.setAttribute("id", "call_hist");
+                    liAttribute.setAttribute("onclick", "reDial(this)");
+                    liAttribute.innerHTML = data.results[i].dest_phone_number + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' + date + ", " + time + "</span>";
+                    $('#call_history').append(liAttribute);
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
-	    });
+        });
     }
 
 
@@ -742,7 +773,7 @@ Welcome to the ACE Quill terminal.
         $.ajax({
             url: './iprelay/getContacts',
             type: 'GET',
-            data: { "extension": localStorage.getItem('sipExtension') },
+            data: {"extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
                 $('#contacts').html("");
@@ -750,28 +781,28 @@ Welcome to the ACE Quill terminal.
                 for (var i = 0; i < data.results.length; i++) {
                     var username = data.results[i].username;
                     var number = data.results[i].cellphone;
-                  var liAttribute = document.createElement('li');
-                  liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
-                  liAttribute.setAttribute("id", number);
-                  liAttribute.setAttribute("onclick", "callContact(this)");
-                  liAttribute.innerHTML = username + " " + '<span class="pull-right badge bg-blue" style="font-size:x-small">' + number + "</span>";
- 	              $('#contacts').append(liAttribute);
+                    var liAttribute = document.createElement('li');
+                    liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
+                    liAttribute.setAttribute("id", number);
+                    liAttribute.setAttribute("onclick", "callContact(this)");
+                    liAttribute.innerHTML = username + " " + '<span class="pull-right badge bg-blue" style="font-size:x-small">' + number + "</span>";
+                    $('#contacts').append(liAttribute);
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
-	    });
+        });
     }
 
 
-    function reDial(element){
+    function reDial(element) {
         $("#output").val("");
-        let number = element.innerHTML.slice(0,10);
+        let number = element.innerHTML.slice(0, 10);
         $("#output").val(number);
     }
 
-    function callContact(element){
+    function callContact(element) {
         $("#output").val("");
         let number = element.id;
         $("#output").val(number);
@@ -782,10 +813,10 @@ Welcome to the ACE Quill terminal.
         let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
         let divScrollHeight = element.scrollHeight;
         let delta = divCurrentUserScrollPosition - divScrollHeight
-	    if(aria=="final") {
-	        var innerDiv = document.createElement('div');
+        if (aria == "final") {
+            var innerDiv = document.createElement('div');
             innerDiv.innerHTML = text;
-            if ((-5 < delta ) && (delta < 5)) {
+            if ((-5 < delta) && (delta < 5)) {
                 $('#transcripts').append(innerDiv);
                 scrollPage();
                 console.log("scroll");
@@ -793,11 +824,11 @@ Welcome to the ACE Quill terminal.
                 $('#transcripts').append(innerDiv);
                 console.log(" don't scroll");
             }
-	    } else {
-	        var innerDiv = document.createElement('div');
+        } else {
+            var innerDiv = document.createElement('div');
             innerDiv.innerHTML = text;
-            if ((-5 < delta ) && (delta < 5)) {
- 	            $('#history').append(innerDiv);
+            if ((-5 < delta) && (delta < 5)) {
+                $('#history').append(innerDiv);
                 scrollPage();
             } else {
                 $('#history').append(innerDiv);
@@ -810,7 +841,7 @@ Welcome to the ACE Quill terminal.
         let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
         let divScrollHeight = element.scrollHeight;
         let delta = divCurrentUserScrollPosition - divScrollHeight;
-        if ((-5 < delta ) && (delta < 5)) {
+        if ((-5 < delta) && (delta < 5)) {
             $('#app-output').html(text);
             scrollPage();
         } else {
@@ -818,7 +849,7 @@ Welcome to the ACE Quill terminal.
         }
     }
 
-    function setConfidence(data){
+    function setConfidence(data) {
         localStorage.setItem('wordConfidenceEnabled', data.confidence_show_word);
         localStorage.setItem('phraseConfidenceEnabled', data.confidence_show_phrase);
         localStorage.setItem('mediumConfidencePercent', data.confidence_upper_lim);
@@ -830,18 +861,18 @@ Welcome to the ACE Quill terminal.
         localStorage.setItem('wordConfidenceUnderline', data.confidence_underline);
     }
 
-    function setTts(value){
-        if (value==1) {
-            $('#terminal').css({ height: '89vh' });
+    function setTts(value) {
+        if (value == 1) {
+            $('#terminal').css({height: '89vh'});
             $('#ttsFooter').removeAttr("hidden");
         } else {
-            $('#terminal').css({ height: '94vh' });
+            $('#terminal').css({height: '94vh'});
             $('#ttsFooter').attr("hidden", true);
         }
     }
 
-    function setTextAnalysis(val){
-        if(val == "GOOGLE"){
+    function setTextAnalysis(val) {
+        if (val == "GOOGLE") {
             entitySentimentEnabled = 1;
         }
 
@@ -849,9 +880,9 @@ Welcome to the ACE Quill terminal.
 
     var config;
     function loadConfig(ext) {
-            $.get("./loadACConfig", {
-                "extension": ext
-            },
+        $.get("./loadACConfig", {
+            "extension": ext
+        },
             function (data, status) {
                 config = data;
                 // entitySentimentEnabled = data.stt_show_entity_sentiment
@@ -908,6 +939,91 @@ Welcome to the ACE Quill terminal.
         var element3 = document.getElementById("transcripts");
         $('#terminal').scrollTop(element1.scrollHeight + element2.scrollHeight + element3.scrollHeight + 100);
     }
+    getAudioProfiles()
+    function getAudioProfiles() {
+        $.ajax({
+            url: './terminal/audioprofiles',
+            type: 'GET',
+            data: {"extension": localStorage.getItem('sipExtension')},
+            datatype: 'json',
+            success: function (data) {
+                $('#audioprofileDiv').html("");
+                let profiles = data.profiles;
+                let phtml = ''
+                profiles.forEach((p) => {
+                    phtml += '<div class="form-check">'
+                    phtml += '<input class="form-check-input" type="radio" name="profileRadios" id="profile_' + p.id + '" value="' + p.id + '">'
+                    phtml += '<label class="form-check-label" for="profile_' + p.id + '">' + p.name + '</label>'
+                    phtml += '</div>'
+                })
+                $('#audioprofileDiv').html(phtml);
+                $("input[name='profileRadios']").change(function () {
+                    console.log("Detected a change")
+                    if ($(this).val() > 0) {
+                        $.ajax({
+                            url: './terminal/audioprofilefilters',
+                            type: 'GET',
+                            data: {"profileId": $(this).val()},
+                            datatype: 'json',
+                            success: function (data) {
+                                setMultipleFilters(mediaStream, data.filters);
+                            }
+                        })
+                    } else {
+                        setMultipleFilters(mediaStream, {});
+                    }
+                });
+            }
+        });
+    }
+    var mediaStream2
+    function setMultipleFilters(stream, filters) {
+        if (mediaStream) {
+            remoteStream.pause();
+            if (mediaStream2)
+                Tone.disconnect(mediaStream2)
+            mediaStream2 = Tone.context.createMediaStreamSource(stream);
+            //pitchShift = new Tone.PitchShift().toDestination();
+            let tones = []
+            if (filters.length > 0) {
+                for (let i = 0; i < filters.length; i++) {
+                    let f = {}
+                    if (filters[i].type == 'pitch shift') {
+                        
+                    } else {
+                        f.type = filters[i].type
+                        f.gain = filters[i].gain | 0;
+                        f.frequency = filters[i].frequency | 350;
+                        f.rolloff = filters[i].rolloff | -12;
+                        f.Q = filters[i].Q | 1; 
+                    }
+                    console.log(f)
+                    if (i == 0) {
+                        if (filters[i].type == 'pitch shift') {
+                            tones[i] = new Tone.PitchShift({pitch:filters[i].pitchshift}).toDestination();
+                        } else {
+                            tones[i] = new Tone.Filter(f).toDestination();
+                        }
+                    } else {
+                        if (filters[i].type == 'pitch shift') {
+                            tones[i] = new Tone.PitchShift({pitch:filters[i].pitchshift}).connect(tones[i - 1]);
+                        } else {
+                            tones[i] = new Tone.Filter(f).connect(tones[i - 1]);
+                        }
+                    }
+                }
+                Tone.connect(mediaStream2, tones[filters.length - 1])
+
+                Tone.start();
+            } else {
+                console.log("no filter")
+                //Tone.connect(mediaStream2, new Tone.AudioNode(mediaStream2).toDestination());
+                remoteStream.play();
+            }
+        }
+    }
+
+
 </script>
 
 </html>

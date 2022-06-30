@@ -20,13 +20,26 @@ function Amazon() {}
 
 Amazon.prototype.translate = function translation(text, source, target, callback) {
   const config = JSON.parse(fs.readFileSync('./configs/amazon/amazon.json'),);
-    AWS.config.update({
-      region: config.region,
-      credentials:{
-        accessKeyId : config.key,
-        secretAccessKey : config.secret,
-    }
-  });
+  let creds = {};
+  let awsConfig = {
+    region: config.region,
+  };
+  
+  switch (config.auth_type) {
+    case 'credentials': 
+      creds.accessKeyId = config.key;
+      creds.secretAccessKey = config.secret;
+      awsConfig.credentials = creds;
+      break;
+    case 'mfa':
+      creds.accessKeyId = config.credentials.AccessKeyId;
+      creds.secretAccessKey = config.credentials.SecretAccessKey;
+      creds.sessionToken = config.credentials.SessionToken;
+      awsConfig.credentials = creds;
+      break;
+  } 
+  
+  AWS.config.update(awsConfig);
   const translate = new AWS.Translate();
 
   const params = {

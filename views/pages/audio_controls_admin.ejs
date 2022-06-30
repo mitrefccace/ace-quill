@@ -1,0 +1,913 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2018 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('./../partials/head') %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <%- include('./../partials/header') %>
+
+            <!-- Left side column. contains the logo and sidebar -->
+            <%- include('./../partials/sidebar') %>
+
+                <div class="content-wrapper">
+                    <!-- Content Header (Page header) -->
+                    <section class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6">
+                                    <h1>Audio Controls</h1>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ol class="breadcrumb float-sm-right">
+                                        <li class="breadcrumb-item"><i class="fa fa-gears"></i>&nbsp;Settings</li>
+                                        <li class="breadcrumb-item active">Audio Controls</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div><!-- /.container-fluid -->
+                    </section>
+
+                    <!-- Main content -->
+                    <section class="content">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card" id="ProfileCard">
+                                    <h5 class="card-header">
+                                        Call Quality Control Presets
+                                    </h5>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <button class="btn btn-primary" id="newProfile">New Preset</button>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table id="profiletable"
+                                                    class="table table-bordered table-hover dataTable no-footer">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Active</th>
+                                                            <th>ID</th>
+                                                            <th>Title</th>
+                                                            <th># of Filters</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% profiles.forEach(function(p) { %>
+                                                            <tr>
+                                                                <td>
+                                                                    <%= p.active %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= p.id %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= p.name %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= p.freq_num %>
+                                                                        <% if (p.freq_num==1) { %> filter <% } else { %>
+                                                                                filters <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <button type="button"
+                                                                        class="btn btn-primary btn-sm dt-edit">
+                                                                        Edit
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-danger btn-sm dt-delete">
+                                                                        Delete
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            <% }) %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card" style="display:none;" id="FilterCard">
+                                    <h5 class="card-header">
+                                        Preset <span id="profileID">NEW</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-10">
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="basic-addon3">Title</span>
+                                                    </div>
+                                                    <input type="text" class="form-control" id="ProfileNameInput"
+                                                        placeholder="Name required to add filters">
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <button class="btn btn-success" id="saveName">Save Preset</button>
+                                                <button class="btn btn-primary" id="newFilter" disabled>Add
+                                                    Filter</button>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table id="filtertable"
+                                                    class="table table-bordered table-hover dataTable no-footer">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Order</th>
+                                                            <th>Filter Type</th>
+                                                            <th>Parameters</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row">
+                                            <div class="col-9">
+                                                <button type="button" class="btn btn-default"
+                                                    onclick='location.reload()'>Back</button>
+                                            </div>
+                                            <div class="col-3">
+                                                <div class="input-group mb-3 pull-right">
+                                                    <input type="text" class="form-control" placeholder="Phone Number"
+                                                        id="phoneNum" value="">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-outline btn-success" id="call_btn"
+                                                            type="button">Call</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                    </section>
+                    <!-- /.content -->
+                    <div id="snackbar">Saved</div>
+                </div>
+                <!-- /.content - wrapper -->
+
+                <!-- Modals Begin -->
+                <div class="modal fade" id="confirm-delete-profile" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Confirm Profile Delete</h4>
+                                <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p>You are about to delete <b id="profileName">ProfileName</b> , do you want to proceed?
+                                </p>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick='deleteProfile()'>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="confirm-delete-filter" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Confirm Filter Delete</h4>
+                                <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p>You are about to delete <b id="filterNameDelete">Filter Name</b> , do you want to
+                                    proceed?
+                                </p>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick='deleteFilter()'>Remove &
+                                    Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="filter-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel">Filter Add/Edit</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <form>
+                                    <div class="form-group">
+                                        <label for="exampleFormControlInput1">Name:</label>
+                                        <input type="text" class="form-control" id="filtername"
+                                            placeholder="Name for Filter">
+                                        <input type="hidden" class="form-control" id="filterid">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="exampleFormControlSelect1">Type</label>
+                                        <select class="form-control" id="filtertype">
+                                            <option selected>peaking</option>
+                                            <option>highpass</option>
+                                            <option>lowpass</option>
+                                            <option>highshelf</option>
+                                            <option>lowshelf</option>
+                                            <option>pitch shift</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="filterpitchshiftdiv" style="display:none;">
+                                        <span><label for="psRange">Pitch Shift:&nbsp;</label><i id="psVal">0
+                                                half-steps</i></span>
+                                        <input type="range" class="form-control form-range slider" id="psRange"
+                                            name="psRange" value="0" min="-12" max="12" />
+                                    </div>
+                                    <div class="form-group" id="filtergaindiv" style="display:none;">
+                                        <span><label for="formGroupExampleInput">Gain:&nbsp;</label><i id="gainVal">0
+                                                dB</i></span>
+                                        <input type="range" class="form-control form-range slider" id="gainRange"
+                                            name="gainRange" value="0" min="-36" max="36" />
+                                    </div>
+                                    <div class="form-group" id="filterfrequencydiv" style="display:none;">
+                                        <span><label for="frequencyRange">Frequency:&nbsp;</label><i
+                                                id="freqVal">0Hz</i></span>
+                                        <input type="range" class="form-control form-range slider" id="frequencyRange"
+                                            name="frequencyRange" value="0" min="0" max="100" />
+                                    </div>
+                                    <div class="form-group" id="filterqdiv" style="display:none;">
+                                        <span><label for="qRange">Q:&nbsp;</label><i id="qVal">1</i></span>
+                                        <input type="range" class="form-control form-range slider" id="qRange"
+                                            name="qRange" value="50" min="0" max="100" />
+                                    </div>
+                                    <div class="form-group" id="filterrolloffdiv" style="display:none;">
+                                        <label for="rolloffSelect">Roll-Off</label>
+                                        <select class="form-control" id="rolloffSelect">
+                                            <option>-12</option>
+                                            <option>-24</option>
+                                            <option>-48</option>
+                                            <option>-96</option>
+                                        </select>
+                                    </div>
+                                </form>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick='saveFilter()'>Add & Save</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modals End -->
+
+                <footer class="main-footer">
+                    <%- include('./../partials/footer') %>
+                </footer>
+                <audio id='remoteAudio' hidden></audio>
+    </div>
+    <!-- ./wrapper -->
+
+
+    <!-- modals -->
+
+    <!-- ./modals -->
+    <script src='/assets/js/jssip.min.js'></script>
+    <script src='/socket.io/socket.io.js'></script>
+    <!--script src="/javascript/audiocontrols.js"></script-->
+
+    <script type="text/javascript">
+        $('#settings_audiocontrols_treeview').addClass('active');
+
+        var profileTable = $('#profiletable').DataTable({
+            "searching": true,
+            "paging": true,
+            "lengthChange": false,
+            "bInfo": false,
+            "ordering": false,
+            "autoWidth": true,
+            "order": [],
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, full, meta) {
+                    return '<input type="checkbox" class="checkbox p-active" ' + ((data == 1) ? "checked" : "") + ' />';
+                }
+            }]
+        });
+
+        var filterTable = $('#filtertable').DataTable({
+            "searching": false,
+            "paging": false,
+            "lengthChange": false,
+            "bInfo": false,
+            "ordering": false,
+            "columnDefs": [{
+                "targets": 1,
+                "render": function (data, type, full, meta) {
+                    return meta.row + 1;
+                }
+            }, {
+                "targets": 4,
+                "render": function (data) {
+                    return "<button type='button'class='btn btn-primary btn-sm f-edit'>Edit</button>  <button type='button'class='btn btn-danger btn-sm f-delete'>Remove</button>";
+                }
+            }
+            ],
+            "columns": [
+                {data: 'id'},
+                {data: null},
+                {data: 'name'},
+                {data: 'display'},
+                {data: null}
+            ]
+        });
+
+        $('.dt-edit').each(function () {
+            $(this).on('click', function (evt) {
+                var data = profileTable.row(this.closest('tr')).data();
+                loadfiltertabledata(data[1], data[2]);
+                $('#newFilter').prop('disabled', false);
+            });
+        });
+
+        $('.p-active').each(function () {
+            $(this).on('click', function (evt) {
+                var data = profileTable.row(this.closest('tr')).data();
+                $.ajax({
+                    url: './audioprofileactive',
+                    data: {"id": data[1], "active": this.checked},
+                    type: 'POST',
+                    success: function (msg) {
+                        console.log("Active status updated")
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Something Went Wrong");
+                    }
+                });
+            });
+        });
+
+        function loadfiltertabledata(id, name) {
+            $.ajax({
+                url: './audioprofiledata',
+                data: {"id": id},
+                type: 'GET',
+                success: function (pData) {
+                    $("#profileID").html(id);
+                    $("#ProfileNameInput").val(name)
+                    loadProfileDataInfo(pData)
+
+                    $("#ProfileCard").hide()
+                    $("#FilterCard").show()
+
+                    initFilterEdit()
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+        function initFilterEdit() {
+
+            $('.f-edit').each(function () {
+                $(this).on('click', function (evt) {
+                    var data = filterTable.row(this.closest('tr')).data();
+                    console.log(data)
+                    $.ajax({
+                        url: './audiofilterdata',
+                        data: {"id": data.id},
+                        type: 'GET',
+                        success: function (fData) {
+                            resetFilterValues();
+                            $('#filtername').val(fData.filter.name);
+                            $('#filterid').val(fData.filter.id);
+                            $('#filtertype').val(fData.filter.type).trigger('change');
+                            if (fData.filter.pitchshift) $('#psRange').val(fData.filter.pitchshift).trigger('change');
+                            if (fData.filter.frequency) $('#frequencyRange').val(getFrequencyRange(fData.filter.frequency)).trigger('change');
+                            if (fData.filter.gain) $('#gainRange').val(fData.filter.gain).trigger('change');
+                            if (fData.filter.rolloff) $('#rolloffSelect').val(fData.filter.rolloff).trigger('change');
+                            if (fData.filter.q_value) $('#qRange').val(getQRange(fData.filter.q_value)).trigger('change');
+
+                            $('#filter-modal').modal({backdrop: 'static', keyboard: false})
+
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Something Went Wrong");
+                        }
+                    });
+                });
+            });
+
+            $('.f-delete').each(function () {
+                $(this).on('click', function (evt) {
+                    var data = filterTable.row(this.closest('tr')).data();
+                    deleteFilterConfirm(data.id, data.name);
+                });
+            });
+        }
+
+        var deleteFilterID = -1;
+        function deleteFilterConfirm(id, name) {
+            $("#filterNameDelete").html(name);
+            console.log(id, name)
+            deleteFilterID = id;
+            $('#confirm-delete-filter').modal();
+        }
+
+        function deleteFilter() {
+            $.ajax({
+                url: './audiofilterdelete',
+                data: {"id": deleteFilterID},
+                type: 'POST',
+                success: function (msg) {
+                    loadfiltertabledata($("#profileID").html())
+                    $('#confirm-delete-filter').modal('hide');
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+
+        function loadProfileDataInfo(profile) {
+            for (let i = 0; i < profile.filters.length; i++) {
+                let t = profile.filters[i].type
+                let g = profile.filters[i].gain
+                let f = profile.filters[i].frequency
+                let r = profile.filters[i].rolloff
+                let q = profile.filters[i].q_value
+                let p = profile.filters[i].pitchshift
+
+                t = t ? t + " " : ""
+                g = (g || g == 0) ? g + "dB " : ""
+                f = f ? f + "Hz " : ""
+                q = q ? "Q=" + q + " " : ""
+                r = r ? r + "dB/Oct " : ""
+                p = p ? p + " semitones " : ""
+                profile.filters[i].display = t + g + f + q + r + p
+
+            }
+
+
+
+            filterTable.clear();
+            filterTable.rows.add(profile.filters);
+            filterTable.draw();
+        }
+
+        $('.dt-delete').each(function () {
+            $(this).on('click', function (evt) {
+                var data = profileTable.row(this.closest('tr')).data();
+                deleteProfileConfirm(data[1], data[2]);
+            });
+        });
+        var deleteProfileID = -1;
+        function deleteProfileConfirm(id, name, filters) {
+            $("#profileName").html(name);
+            deleteProfileID = id;
+            $('#confirm-delete-profile').modal();
+        }
+
+        function deleteProfile() {
+            $.ajax({
+                url: './audioprofiledelete',
+                data: {"id": deleteProfileID},
+                type: 'POST',
+                success: function (msg) {
+                    location.reload()
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+        $('#saveName').on('click', () => {
+            $.ajax({
+                url: './audioprofilenamesave',
+                data: {"id": $("#profileID").html(), "name": $('#ProfileNameInput').val()},
+                type: 'POST',
+                success: function (msg) {
+                    $("#profileID").html(msg.id);
+                    $('#snackbar').addClass("show");
+                    $('#newFilter').prop('disabled', false);
+                    setTimeout(function () {
+                        $('#snackbar').removeClass("show");
+                    }, 3000)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        })
+        $('#newFilter').on('click', () => {
+            resetFilterValues();
+            hideShowFilterFields($('#filtertype').val())
+            $('#filter-modal').modal({backdrop: 'static', keyboard: false})
+        })
+        $('#newProfile').on('click', () => {
+            $("#profileID").html("NEW");
+            $("#ProfileNameInput").val('')
+
+            $('#newFilter').prop('disabled', true);
+            $("#ProfileCard").hide()
+            $("#FilterCard").show()
+        })
+
+        $('#filtertype').on('change', function () {
+            hideShowFilterFields(this.value)
+        });
+
+        function resetFilterValues() {
+            $('#filtername').val('');
+            $('#filterid').val('');
+            $('#filtertype').val('peaking').trigger('change');
+            $('#psRange').val(0).trigger('change');
+            $('#frequencyRange').val(0).trigger('change');
+            $('#gainRange').val(0).trigger('change');
+            $('#rolloffSelect').val(-12).trigger('change');
+            $('#qRange').val(50).trigger('change');
+        }
+
+        function hideShowFilterFields(type) {
+            console.log("type", type)
+            switch (type) {
+                case 'peaking':
+                    $('#filterpitchshiftdiv').hide();
+                    $('#filterfrequencydiv').show();
+                    $('#filtergaindiv').show();
+                    $('#filterrolloffdiv').hide();
+                    $('#filterqdiv').show();
+                    break;
+                case 'highpass':
+                    $('#filterpitchshiftdiv').hide();
+                    $('#filterfrequencydiv').show();
+                    $('#filtergaindiv').hide();
+                    $('#filterrolloffdiv').show();
+                    $('#filterqdiv').hide();
+                    break;
+                case 'lowpass':
+                    $('#filterpitchshiftdiv').hide();
+                    $('#filterfrequencydiv').show();
+                    $('#filtergaindiv').hide();
+                    $('#filterrolloffdiv').show();
+                    $('#filterqdiv').hide();
+                    break;
+                case 'highshelf':
+                    $('#filterpitchshiftdiv').hide();
+                    $('#filterfrequencydiv').show();
+                    $('#filtergaindiv').show();
+                    $('#filterrolloffdiv').hide();
+                    $('#filterqdiv').show();
+                    break;
+                case 'lowshelf':
+                    $('#filterpitchshiftdiv').hide();
+                    $('#filterfrequencydiv').show();
+                    $('#filtergaindiv').show();
+                    $('#filterrolloffdiv').hide();
+                    $('#filterqdiv').show();
+                    break;
+                case 'pitch shift':
+                    $('#filterpitchshiftdiv').show();
+                    $('#filterfrequencydiv').hide();
+                    $('#filtergaindiv').hide();
+                    $('#filterrolloffdiv').hide();
+                    $('#filterqdiv').hide();
+                    break;
+
+            }
+        }
+
+        $('#freqVal').html(getFrequency(0) + 'Hz')
+        $("#frequencyRange").on("input change", (e) => {
+            let f = getFrequency(e.target.value);
+            $('#freqVal').html(f + 'Hz')
+        });
+
+        function getFrequency(v) {
+            var minv = Math.log(20);
+            var maxv = Math.log(20000);
+            var scale = (maxv - minv) / 100;
+            return Math.round(Math.exp(minv + scale * v));
+        }
+        function getFrequencyRange(v) {
+            var minv = Math.log(20);
+            var maxv = Math.log(20000);
+            var scale = (maxv - minv) / 100;
+            return (Math.log(v) - minv) / scale;
+        }
+
+        $("#gainRange").on("input change", (e) => {
+            let g = e.target.value
+            $('#gainVal').html(g + ' dB')
+        });
+
+        $('#qVal').html(getQ(50))
+        $("#qRange").on("input change", (e) => {
+            let q = getQ(e.target.value);
+            $('#qVal').html(q)
+        });
+
+        function getQ(v) {
+            let minv = Math.log(0.1);
+            let maxv = Math.log(10);
+            let scale = (maxv - minv) / 100;
+            let num = Math.exp(minv + scale * v);
+            return Math.round((num + Number.EPSILON) * 100) / 100
+        }
+
+        function getQRange(v) {
+            let minv = Math.log(0.1);
+            let maxv = Math.log(10);
+            let scale = (maxv - minv) / 100;
+            let num = Math.exp(minv + scale * v);
+            return (Math.log(v) - minv) / scale;
+        }
+
+        $("#psRange").on("input change", (e) => {
+            let ps = e.target.value
+            $('#psVal').html(ps)
+        });
+
+        function saveFilter() {
+            let data = {}
+            data.name = $('#filtername').val();
+            data.id = $('#filterid').val();
+            data.profile_id = $("#profileID").html();
+            data.type = $('#filtertype').val();
+            data.pitchshift = null;
+            data.frequency = null;
+            data.q_value = null;
+            data.rolloff = null;
+            data.gain = null;
+
+            if (data.type == "pitch shift")
+                data.pitchshift = $('#psRange').val();
+            if (["peaking", "highpass", "lowpass", "highshelf", "lowshelf"].includes(data.type))
+                data.frequency = getFrequency($('#frequencyRange').val());
+            if (["peaking", "highshelf", "lowshelf"].includes(data.type)) {
+                data.gain = $('#gainRange').val();
+                data.q_value = getQ($('#qRange').val());
+            }
+            if (["highpass", "lowpass"].includes(data.type))
+                data.rolloff = $('#rolloffSelect').val();
+
+            $.ajax({
+                url: './audiofiltersave',
+                data,
+                type: 'POST',
+                success: function (msg) {
+                    loadfiltertabledata($("#profileID").html(), $('#ProfileNameInput').val())
+
+                    $('#filter-modal').modal('hide')
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+
+        }
+
+        function inCall(incall) {
+            if (incall) {
+                $('#call_btn').removeClass().addClass('btn btn-danger').html('End');
+                $('#sipRegStatus').removeClass().addClass('alert alert-success').html("In Call with " + $("#phoneNum").val());
+            } else {
+                $('#call_btn').removeClass().addClass('btn btn-success').html('Call');
+                $('#sipRegStatus').removeClass().addClass('alert alert-success').html("Registered to Asterisk");
+                //closeAudioControls();
+            }
+        }
+
+        $('#call_btn').on('click', function () {
+            if (currentSession && !currentSession.isEnded()) {
+                currentSession.terminate()
+                inCall(false);
+            } else {
+                let dialnum = $("#phoneNum").val();
+                inCall(true);
+                ua.call(dialnum, {
+                    'mediaConstraints': {
+                        'audio': true,
+                        'video': false
+                    },
+                    'pcConfig': {
+                        'rtcpMuxPolicy': 'negotiate'
+                    }
+                });
+            }
+        });
+
+
+        var jssipConnection = {
+            display_name: '<%=extension%>',
+            uri: '<%=extension%>@<%=host%>',
+            password: '<%=password%>',
+            socket:
+            {
+                uri: 'wss://<%= host %>/ws',
+                via_transport: 'auto',
+            },
+            registrar_server: null,
+            contact_uri: null,
+            authorization_user: null,
+            instance_id: null,
+            session_timers: true,
+            use_preloaded_route: false,
+            pcConfig:
+            {
+                rtcpMuxPolicy: 'negotiate'
+            },
+            callstats:
+            {
+                enabled: false,
+                AppID: null,
+                AppSecret: null
+            }
+        };
+
+        var options = {
+            'mediaConstraints': {
+                'audio': true,
+                'video': false
+            },
+            'pcConfig': {
+                'rtcpMuxPolicy': 'negotiate'
+            }
+        };
+        var remoteAudio = document.getElementById('remoteAudio')
+        var socket = new JsSIP.WebSocketInterface(jssipConnection.socket.uri);
+        jssipConnection.sockets = [socket];
+        var ua = new JsSIP.UA(jssipConnection);
+        var currentSession = null
+        ua.start();
+
+        ua.on('connected', function (e) {
+            if (currentSession == null) {
+                $('#sipRegStatus').removeClass().addClass('alert alert-light').html("Connecting to Asterisk...");
+            }
+        });
+
+        ua.on('registered', function (e) {
+            if (currentSession == null) {
+                $('#sipRegStatus').removeClass().addClass('alert alert-success').html("Registered to Asterisk");
+            }
+        });
+
+        ua.on('registrationFailed', function (e) {
+            $('#sipRegStatus').removeClass().addClass('alert alert-danger').html("Registration Failed");
+            currentSession = null
+        });
+
+        ua.on('newRTCSession', function (e) {
+            currentSession = e.session;
+
+            currentSession.on('accepted', function (e) {
+                inCall(true)
+            });
+
+            currentSession.on('ended', function (e) {
+                inCall(false)
+            });
+            currentSession.on('failed', function (e) {
+                inCall(false)
+            });
+
+            if (currentSession.connection) {
+                currentSession.connection.ontrack = function (e) {
+
+                    remoteAudio.srcObject = e.streams[0];
+                    mediaStream = e.streams[0];
+                    $.ajax({
+                        url: './audioprofiledata',
+                        type: 'GET',
+                        data: {"id": $("#profileID").html()},
+                        datatype: 'json',
+                        success: function (data) {
+                            setMultipleFilters(mediaStream, data.filters);
+                        }
+                    })
+
+                }
+            }
+        });
+
+
+        var mediaStream2
+        function setMultipleFilters(stream, filters) {
+            if (mediaStream) {
+                remoteStream.pause();
+                if (mediaStream2)
+                    Tone.disconnect(mediaStream2)
+                mediaStream2 = Tone.context.createMediaStreamSource(stream);
+                pitchShift = new Tone.PitchShift().toDestination();
+                let tones = []
+                if (filters.length > 0) {
+                    for (let i = 0; i < filters.length; i++) {
+                        if (filters[i].type == 'pitch shift') {
+                            setPS(filters[i].pitchshift);
+                            delete filters[i].type;
+                            delete filters[i].pitchshift;
+                        }
+                        if (i == 0) {
+                            tones[i] = new Tone.Filter(filters[i]).toDestination();
+                        } else {
+                            tones[i] = new Tone.Filter(filters[i]).connect(tones[i - 1]);
+                        }
+                    }
+                    Tone.connect(mediaStream2, tones[filters.length - 1])
+
+                    Tone.start();
+                } else {
+                    console.log("no filter")
+                    //Tone.connect(mediaStream2, new Tone.AudioNode(mediaStream2).toDestination());
+                    remoteStream.play();
+                }
+            }
+        }
+
+        var mediaStream2
+        function setMultipleFilters(stream, filters) {
+            if (mediaStream) {
+                remoteAudio.pause();
+                if (mediaStream2)
+                    Tone.disconnect(mediaStream2)
+                mediaStream2 = Tone.context.createMediaStreamSource(stream);
+                let tones = []
+                if (filters.length > 0) {
+                    for (let i = 0; i < filters.length; i++) {
+                        let f = {}
+                        if (filters[i].type == 'pitch shift') {
+
+                        } else {
+                            f.type = filters[i].type
+                            f.gain = filters[i].gain | 0;
+                            f.frequency = filters[i].frequency | 350;
+                            f.rolloff = filters[i].rolloff | -12;
+                            f.Q = filters[i].q_value | 1;
+                        }
+                        console.log(f)
+                        if (i == 0) {
+                            if (filters[i].type == 'pitch shift') {
+                                tones[i] = new Tone.PitchShift({pitch: filters[i].pitchshift}).toDestination();
+                            } else {
+                                tones[i] = new Tone.Filter(f).toDestination();
+                            }
+                        } else {
+                            if (filters[i].type == 'pitch shift') {
+                                tones[i] = new Tone.PitchShift({pitch: filters[i].pitchshift}).connect(tones[i - 1]);
+                            } else {
+                                tones[i] = new Tone.Filter(f).connect(tones[i - 1]);
+                            }
+                        }
+                    }
+                    Tone.connect(mediaStream2, tones[filters.length - 1])
+
+                    Tone.start();
+                } else {
+                    console.log("no filter")
+                    remoteAudio.play();
+                }
+            }
+
+        }    
+    </script>
+</body>
+
+</html>

@@ -27,7 +27,10 @@
       "port": <asterisk ami port>,
       "host": "<asterisk ip>",
       "user": "<ami username>",
-      "password": "<ami password>"
+      "password": "<ami password>",
+      "ext_admin": "<extention for admin>",
+      "ext_admin_password": "<password for admin extension>",
+      "fqdn": "<fqdn for asterisk>"
     },
     "accuracy" {
       "ace2_repo":"<path to clone ace2 from e.g. https://github.com/YOUR-USERNAME/YOUR-REPOSITORY>",

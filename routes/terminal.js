@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 */
 
 const express = require('express');
@@ -59,6 +59,10 @@ router.get('/terminal', (_req, res) => {
 
 router.get('/iprelay', (_req, res) => {
   res.render('pages/terminal_iprelay', {});
+});
+
+router.get('/audiocontrols', (_req, res) => {
+  res.render('pages/audio_control', {});
 });
 
 router.get('/iprelay/getHistory', (req, res) => {
@@ -366,6 +370,30 @@ router.get('/terminal/playTextToSpeech', (req, res) => {
     error.error(error);
     res.send('No results');
   }
+});
+
+router.get('/terminal/audioprofiles', (req, res) => {
+  const { extension } = req.query;
+  const sql = 'SELECT * FROM audio_profiles where active=1;';
+  req.dbconn.query(sql, (err, results) => {
+    if(err){
+      res.status(500).send({ status: 'Error' });
+    } else {
+      res.status(200).send({ status: 'Success', profiles: results });
+    }
+  });
+});
+
+router.get('/terminal/audioprofilefilters', (req, res) => {
+  const { profileId } = req.query;
+  const sql = 'SELECT gain, frequency, type, rolloff, q_value as Q, pitchshift FROM audio_filters WHERE profile_id = ?;';
+  req.dbconn.query(sql, profileId, (err, results) => {
+    if(err){
+      res.status(500).send({ status: 'Error' });
+    } else {
+      res.status(200).send({ status: 'Success', filters: results });
+    }
+  });
 });
 
 router.get('/iprelay/playScenarioSpeech', (req, res) => {

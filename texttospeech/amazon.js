@@ -27,14 +27,25 @@ Amazon.prototype.textToSpeech = function texttospeech(text, language, voice, cal
   const config = JSON.parse(
             fs.readFileSync('./configs/amazon/amazon.json'),
           );
-
-  AWS.config.update({
+  let creds = {};
+  let awsConfig = {
     region: config.region,
-    credentials:{
-      accessKeyId : config.key,
-      secretAccessKey : config.secret,
-    }
-   });
+  };
+  
+  switch (config.auth_type) {
+    case 'credentials': 
+      creds.accessKeyId = config.key;
+      creds.secretAccessKey = config.secret;
+      awsConfig.credentials = creds;
+      break;
+    case 'mfa':
+      creds.accessKeyId = config.credentials.AccessKeyId;
+      creds.secretAccessKey = config.credentials.SecretAccessKey;
+      creds.sessionToken = config.credentials.SessionToken;
+      awsConfig.credentials = creds;
+      break;
+  } 
+  AWS.config.update(awsConfig);
 
   const Polly = new AWS.Polly({
     signatureVersion: 'v4',

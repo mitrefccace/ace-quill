@@ -10,23 +10,23 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
 
 <head>
-  <% include ..//partials/head %>
+  <%- include('./../partials/head') %>
 </head>
 
 <body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
   <div class="wrapper">
 
     <!-- Header -->
-    <% include ..//partials/header %>
+    <%- include('./../partials/header') %>
 
     <!-- Left side column. contains the logo and sidebar -->
-    <% include ..//partials/sidebar %>
+    <%- include('./../partials/sidebar') %>
 
     <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
@@ -35,7 +35,7 @@ McLean, VA 22102-7539, (703) 983-6000.
         <div class="container-fluid">
           <div class="row mb-2">
             <div class="col-sm-6">
-              <h1>Amazon Account</h1>
+              <h1>Amazon Account</h1> <h5 id="mfaStatus"></h5>
             </div>
             <div class="col-sm-6">
               <ol class="breadcrumb float-sm-right">
@@ -56,6 +56,14 @@ McLean, VA 22102-7539, (703) 983-6000.
             <div class="card">
               <div class="card-body">
                 <div class="form-group">
+                  <label for="inputAmazonAuthType">Authentication Type</label>
+                  <select class="form-control" id="amazon_authtype">
+                    <option disabled selected value> -- select type -- </option>
+                    <option value='server'>Server Account</option>
+                    <option value='credentials'>Credentials</option>
+                    <option value='mfa'>Credentials with MFA</option>
+                </select>
+                <div class="form-group">
                   <label for="inputAmazonAPIKey">API Key</label>
                   <input type="text" class="form-control" id="amazon_apiKey">
                 </div>
@@ -69,7 +77,9 @@ McLean, VA 22102-7539, (703) 983-6000.
                 </div>
               </div>
               <div class="card-footer">
-                <button type="button" class="btn btn-primary" id="save_amazon_btn">Save</button>
+                <button type="button" class="btn btn-primary" id="save_amazon_btn">Save</button> 
+                <input type="text" id="amazon_token" placeholder="MFA Token" style="display:none;">
+              </div>
               </div>
             </div>
           </div>
@@ -83,7 +93,7 @@ McLean, VA 22102-7539, (703) 983-6000.
     </div>
     <!-- /.content-wrapper -->
     <footer class="main-footer">
-      <% include ..//partials/footer %>
+      <%- include('./../partials/footer') %>
     </footer>
   </div>
   <!-- ./wrapper -->
@@ -101,29 +111,62 @@ McLean, VA 22102-7539, (703) 983-6000.
     socket.on('connect', function (data) {
       socket.emit('get-configs-amazon');
     }).on('load-amazon-configs', function (data) {
+      $('#amazon_authtype').val(data.auth_type);
       $('#amazon_apiKey').val(data.key);
       $('#amazon_secret').val(data.secret);
       $('#amazon_region').val(data.region);
+      if(data.auth_type == 'mfa'){
+        checkMFASession()
+      $('#amazon_token').show();
+      }
     }).on('save-stt-success', function (service) {
       $('#snackbar').html(service + " Account Saved")
       $('#snackbar').addClass("show");
       setTimeout(function () {
         $('#snackbar').removeClass("show");
       }, 3000);
+    }).on('save-stt-fail', function (service) { 
+      $('#snackbar').html(service + " failed to create MFA session")
+      $('#snackbar').addClass("show");
+      setTimeout(function () {
+        $('#snackbar').removeClass("show");
+      }, 3000);
+    }).on('amazon-mfa-status', function (data) { 
+      console.log(data)
+      if(data.status == "valid") {
+        $('#mfaStatus').addClass("text-success").html("Current Valid MFA Session")
+      } else {
+        $('#mfaStatus').addClass("text-danger").html("MFA Session Unknown")
+      }
     });
 
 
     $('#save_amazon_btn').on('click', function (e) {
       e.preventDefault();
       var data = {};
+      data.auth_type = $('#amazon_authtype').val();
+      data.token = $('#amazon_token').val();
       data.key = $('#amazon_apiKey').val();
       data.secret = $('#amazon_secret').val();
       data.region = $('#amazon_region').val();
       socket.emit('update-amazon-configs', data);
     });
 
+    $('#amazon_authtype').on("change", function (e){
+      if (this.value == "mfa"){
+        $('#amazon_token').show()
+        checkMFASession()
+      } else {
+        $('#amazon_token').hide()
+        $('#mfaStatus').html("")
+      }
+    });
+  
+    function checkMFASession(){
+      socket.emit('check-amazon-mfa');
+    }
 
-
+   
   </script>
 </body>
 

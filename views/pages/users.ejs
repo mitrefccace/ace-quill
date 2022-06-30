@@ -10,23 +10,23 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
 
 <head>
-    <% include ..//partials/head %>
+    <%- include('./../partials/head') %>
 </head>
 
 <body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
     <div class="wrapper">
 
         <!-- Header -->
-        <% include ..//partials/header %>
+        <%- include('./../partials/header') %>
 
         <!-- Left side column. contains the logo and sidebar -->
-        <% include ..//partials/sidebar %>
+        <%- include('./../partials/sidebar') %>
 
         <div class="content-wrapper">
             <!-- Content Header (Page header) -->
@@ -79,7 +79,6 @@ McLean, VA 22102-7539, (703) 983-6000.
                                             <th class="text">First Name</th>
                                             <th class="text">Last Name</th>
                                             <th class="text">Username</th>
-                                            <th class="text">Group</th>
                                             <th class="text">Last Login</th>
                                         </tr>
                                     </thead>
@@ -98,9 +97,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                             <td>
                                                 <%= user.username %>
                                             </td>
-                                            <td>
-                                                <%= user.group_name %>
-                                            </td>
+                                            
                                             <td>
                                                 <%= user.last_login %>
                                             </td>
@@ -124,7 +121,7 @@ McLean, VA 22102-7539, (703) 983-6000.
         <!-- /.content - wrapper -->
 
         <footer class="main-footer">
-            <% include ..//partials/footer %>
+            <%- include('./../partials/footer') %>
         </footer>
     </div>
     <!-- ./wrapper -->
@@ -181,18 +178,6 @@ McLean, VA 22102-7539, (703) 983-6000.
                                     data-validation-length="max25">
                             </div>
                         </div>
-                        <div class="form-group row">
-                            <label for="selectGroup" class="col-sm-2 control-label">Group</label>
-                            <div class="col-sm-10">
-                                <select class="form-control" id="selectGroup">
-                                    <% groups.forEach(function(group) {  %>
-                                    <option value='<%= group.idgroups %>'>
-                                        <%= group.group_name %>
-                                    </option>
-                                    <% }) %>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -225,28 +210,7 @@ McLean, VA 22102-7539, (703) 983-6000.
             </div>
         </div>
     </div>
-    <% if(groups.length == 0) {  %>
-    <div class="modal show" id="nogroups-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel">No Groups Exist</h4>
-                </div>
-
-                <div class="modal-body">
-                    <p>You must first create groups before you can add users.</p>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="window.location.href='./groups'">Create
-                        Groups</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <% } %>
-
+    
     <script type="text/javascript">
         var selectedUser = 0;
         $(document).ready(function () {
@@ -260,7 +224,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                     "visible": false,
                     "searchable": false
                 }, {
-                    "targets": [5],
+                    "targets": [4],
                     "render": function (data, type, row) {
                         if (data.length == 0) {
                             return "Never";
@@ -284,8 +248,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                     "username": $('#inputUsername').val(),
                     "password": $('#inputPassword').val(),
                     "firstname": $('#inputFirstname').val(),
-                    "lastname": $('#inputLastname').val(),
-                    "group_id": $('#selectGroup').val()
+                    "lastname": $('#inputLastname').val()
                 },
                     function (data, status) {
                         console.log("Saved!!!!")

@@ -12,7 +12,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 */
 
 /**
@@ -45,9 +45,9 @@ try {
     info.info('Valid JSON config file');
   }
 } catch (ex) {
-  error.error(`Error in ${cfile}`);
-  error.error('Exiting...');
-  error.error(ex);
+  info.error(`Error in ${cfile}`);
+  info.error('Exiting...');
+  info.error(ex);
   process.exit(1);
 }
 
@@ -55,9 +55,10 @@ nconf.file({
   file: cfile,
 });
 
-log4js.loadAppender('file');
+// log4js.loadAppender('file');
 log4js.configure({
-  appenders: [{
+  appenders: {
+    admin: {
     type: 'dateFile',
     category: 'admin',
     filename: 'logs/admin.log',
@@ -65,7 +66,8 @@ log4js.configure({
     alwaysIncludePattern: false,
     maxLogSize: 20480,
     backups: 10,
-  }, {
+  }, 
+  caller: {
     type: 'dateFile',
     category: 'caller',
     filename: 'logs/caller.log',
@@ -73,7 +75,8 @@ log4js.configure({
     alwaysIncludePattern: false,
     maxLogSize: 20480,
     backups: 10,
-  }, {
+  }, 
+  asterisk: {
     type: 'dateFile',
     category: 'asterisk',
     filename: 'logs/asterisk.log',
@@ -81,9 +84,12 @@ log4js.configure({
     alwaysIncludePattern: false,
     maxLogSize: 20480,
     backups: 10,
-  }],
+  }
+  },
+    categories: {
+    default: { appenders: [ 'admin' ], level: 'info' },
+    }
 });
-
 /**
  * Get port from environment and store in Express.
  */
@@ -135,11 +141,11 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      error.error(`${bind} requires elevated privileges`);
+      info.error(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      error.error(`${bind} is already in use`);
+      info.error(`${bind} is already in use`);
       process.exit(1);
       break;
     default:

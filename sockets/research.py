@@ -9,7 +9,7 @@ def read_in():
 
 def main():
     lines = read_in()
-    # print(lines)
+    #print(lines)
     parseType = sys.argv[1]
 
     ground_truth = lines[0]
@@ -20,9 +20,11 @@ def main():
             jiwer.RemoveMultipleSpaces(),
             jiwer.Strip(),
             jiwer.RemovePunctuation(),
-            jiwer.SentencesToListOfWords(),
+            #jiwer.SentencesToListOfWords(),
             jiwer.RemoveEmptyStrings(),
             jiwer.ToLowerCase(),
+            jiwer.ReduceToSingleSentence(),
+            jiwer.ReduceToListOfListOfWords()
         ])
 
         measures = jiwer.compute_measures(
@@ -42,10 +44,11 @@ def main():
         transformation = jiwer.Compose([
             jiwer.RemoveMultipleSpaces(),
             jiwer.Strip(),
-            jiwer.RemovePunctuation(),
+            #jiwer.RemovePunctuation(),
             jiwer.SentencesToListOfWords(),
             jiwer.RemoveEmptyStrings(),
             jiwer.ToLowerCase(),
+            jiwer.ReduceToSingleSentence(),
         ])
 
 

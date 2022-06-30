@@ -82,7 +82,7 @@ pre {
   margin: 0 auto;
   /*width: 250px;*/
   clear: both;
-  text-align: center;
+  /*text-align: center;*/
   font-family: 'Exo';
 }
 
@@ -170,4 +170,15 @@ pre {
   margin: 10px;
   width: 30px;
   cursor: pointer;
+}
+.slider.slider-horizontal{
+  width:1400px; /* sample value - set it as you like*/
+}
+
+.slider.slider-vertical{
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* Chromium */
+  width: 8px;
+  height: 175px;
+  padding: 0 5px;
 }

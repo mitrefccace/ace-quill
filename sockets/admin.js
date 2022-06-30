@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2022 The MITRE Corporation.
+                        ©2018 The MITRE Corporation.
 */
 
 // const https = require('https');
@@ -24,6 +24,7 @@ const mysql = require('mysql');
 const { spawn } = require('child_process');
 const { exec } = require('child_process');
 const decode = require('../utils/decode');
+const awsMFA = require('../utils/aws-mfa');
 const nconf = require('nconf');
 
 const Azure = require('../transcription/azure');
@@ -145,26 +146,31 @@ module.exports = function mod(io, nconf) {
 
       const py = spawn('python3', [`${__dirname}/research.py`, parseType]);
       const data = [gTruth, transc];
-      const dataString = [];
+      var dataString = [];
 
-      info.info('transcript  :', transcript);
+      info.info('transcript  :'+ transcript);
       info.info('');
-      info.info('groundtruth :', groundTruth);
+      info.info('groundtruth :'+ groundTruth);
 
       py.stdout.on('data', (data2) => {
-        info.info('here', data.toString());
+        info.info('here'+ data.toString());
         dataString.push(data2.toString().split(/\r?\n/));
       });
       py.stdout.on('end', () => {
-        info.info(dataString);
-        const wrapper = {};
-        wrapper.engine = engine;
-        const index = 0;
-        wrapper.finding = dataString[index];
-        wrapper.translation = transc;
-        accuracyResults(wrapper);
-        accuracyPageResults(wrapper, timestamp, parseType);
+        info.info("datastring: |" + dataString.length+"|");
+	if(dataString.length > 0) {
+         const wrapper = {};
+         wrapper.engine = engine;
+         const index = 0;
+         wrapper.finding = dataString[index];
+         wrapper.translation = transc;
+         accuracyResults(wrapper);
+         accuracyPageResults(wrapper, timestamp, parseType);
+	} else {
+	 info.info("no datastring")
+	}
       });
+      console.log(JSON.stringify(data))
       py.stdin.write(JSON.stringify(data));
       py.stdin.end();
     }
@@ -282,9 +288,10 @@ module.exports = function mod(io, nconf) {
       adminLogger.debug('Incoming Socket.IO:update-amazon-configs');
       adminLogger.debug(JSON.stringify(data));
       const amazon = {};
+      amazon.auth_type = data.auth_type;
       amazon.key = data.key;
       amazon.secret = data.secret;
-      amazon.region = data.region;
+      amazon.region = data.region; 
       fs.writeFile(
         './configs/amazon/amazon.json',
         JSON.stringify(amazon, null, 2),
@@ -299,11 +306,37 @@ module.exports = function mod(io, nconf) {
           adminLogger.debug(
             'Azure config saveed to ./configs/amazon/amazon.json',
           );
-          io.to(socket.id).emit('save-stt-success', 'Amazon');
-          io.to(socket.id).emit('save-tts-success', 'Amazon');
-          io.to(socket.id).emit('save-translation-success', 'Amazon');
+          if (amazon.auth_type == "mfa") {
+            awsMFA.createMFASession(data.token).then((success)=>{
+              console.log(success)
+              if(success){
+                io.to(socket.id).emit('save-stt-success', 'Amazon');
+                io.to(socket.id).emit('save-tts-success', 'Amazon');
+                io.to(socket.id).emit('save-translation-success', 'Amazon');
+              } else {
+                io.to(socket.id).emit('save-stt-fail', 'Amazon');
+              }
+            })
+    
+          } else {
+            io.to(socket.id).emit('save-stt-success', 'Amazon');
+            io.to(socket.id).emit('save-tts-success', 'Amazon');
+            io.to(socket.id).emit('save-translation-success', 'Amazon');
+          }
         },
       );
+    });
+
+    socket.on('check-amazon-mfa', () => {
+      awsMFA.validateSession().then((isValid)=>{
+        if(isValid){
+          io.to(socket.id).emit('amazon-mfa-status', {status:"valid"});
+        }else{
+          io.to(socket.id).emit('amazon-mfa-status', {status:"unknown"});
+        }
+      }).catch(()=>{
+        io.to(socket.id).emit('amazon-mfa-status', {status:"error"});
+      })
     });
 
     socket.on('update-azure-cognitive-configs', (data) => {
@@ -734,24 +767,8 @@ module.exports = function mod(io, nconf) {
         });
       }
       var ace2Data = ""
-      // python3.6 ./resources/ace-code-master/importance.py --file ./resources/ace-code-master/test/ref.txt --model simp
-      // python3.6 ./resources/ace-code-master/ace.py --rfile ./resources/ace-code-master/test/ref.txt --hfile ./resources/ace-code-master/test/hyp.txt --ace
       if (config.accuracy.ace2 == 'true') {
-        exec("python3.6 ./resources/ace-code-master/importance.py --file ./resources/reference.txt --model simp", (error, stdout, stderr) => {
-            if (error) {
-                console.log(`error: ${error.message}`);
-                return;
-            }
-            if (stderr) {
-                console.log(`stderr: ${stderr}`);
-                return;
-            }
-            console.log(`stdout: ${stdout}`);
-            // fs.writeFileSync('./uploads/accuracy/ace2_'+timestamp+'.txt', stdout);
-            ace2Data = stdout
-            io.to(socket.id).emit('accuracy-report', {library:'ace2', status: 'success', report:ace2Data});
-        });
-        exec("python3.6 ./resources/ace-code-master/ace.py --rfile ./resources/reference.txt --hfile ./resources/hypothesis.txt --ace"+" --alpha "+parseFloat(alpha), (error, stdout, stderr) => {
+        exec("python3.6 ace-code-master/ace.py --rfile ace-code-master/test/reference.txt --hfile ace-code-master/test/hypothesis.txt --ace"+" --alpha "+parseFloat(alpha), (error, stdout, stderr) => {
             if (error) {
                 console.log(`error: ${error.message}`);
                 return;

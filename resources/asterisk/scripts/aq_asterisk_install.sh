@@ -20,6 +20,8 @@ TWILIO_FQDN='insert twilio fqdn'
 AMI_USER='insert ami user'
 AMI_PASS='insert ami password'
 EXT_PASS='insert extension password'
+MYSQL_USER='insert mysql user'
+MYSQL_PASS='insert mysql user password'
 
 # Specify Asterisk version
 AST_VERSION=16.19.0
@@ -97,7 +99,7 @@ do
                       "") print_args ;;
                       *) AMI_USER=$2; shift 2 ;;
                 esac ;;
-        --ami_password)
+        --ami-password)
                 case "$2" in
                       "") print_args ;;
                       *) AMI_PASS=$2; shift 2 ;;
@@ -107,8 +109,16 @@ do
                       "") print_args ;;
                       *) EXT_PASS=$2; shift 2 ;;
                 esac ;;
-
-
+        --mysql-user)
+                case "$2" in
+                      "") print_args ;;
+                      *) MYSQL_USER=$2; shift 2 ;;
+                esac ;;
+        --mysql-password)
+                case "$2" in
+                      "") print_args ;;
+                      *) MYSQL_PASS=$2; shift 2 ;;
+                esac ;;
         --) shift ; break ;;
         *) echo "Error parsing args"; print_args;;
     esac
@@ -213,7 +223,7 @@ echo -e "Generating the Asterisk self-signed certificates. You will be prompted 
 sleep 2
 mkdir /etc/asterisk/keys
 #generate TIS certificates
-./contrib/scripts/ast_tls_cert -C $PUBLIC_IP -O "IP CTS" -d /etc/asterisk/keys
+./contrib/scripts/ast_tls_cert -C $PUBLIC_IP -O "ACE Quill" -d /etc/asterisk/keys
 
 # pull down confi/media files and add to /etc/asterisk and /var/lib/asterisk/sounds, respectively
 #cd ~
@@ -237,6 +247,8 @@ echo "STUN_PORT: $STUN_PORT"
 echo "EXT_PASS: $EXT_PASS"
 echo "AMI_USER: $AMI_USER"
 echo "AMI_PASS: $AMI_PASS"
+echo "MYSQL_USER: $MYSQL_USER"
+echo "MYSQL_PASS: $MYSQL_PASS"
 
 # Modify configs with named params
 echo "Modifiying /etc/asterisk config files"
@@ -255,6 +267,8 @@ sed -i -e "s|<stun_server_port>|$STUN_SERVER:$STUN_PORT|g" res_stun_monitor.conf
 sed -i -e "s|<stun_server_port>|$STUN_SERVER:$STUN_PORT|g" rtp.conf
 sed -i -e "s|<ami_user>|$AMI_USER|g" manager.conf
 sed -i -e "s|<ami_password>|$AMI_PASS|g" manager.conf
+sed -i -e "s|<mysql_user>|$MYSQL_USER|g" cdr_mysql.conf res_odbc.conf
+sed -i -e "s|<mysql_password>|$MYSQL_PASS|g" cdr_mysql.conf res_odbc.conf
 
 echo ""
 echo "NOTE: View the conf files in /etc/asterisk for more info."

@@ -24,6 +24,8 @@ installation script:
 * AMI user
 * AMI password
 * Asterisk extension passwords
+* MySQL user
+* MySQL password
 
 To run the script:
 
@@ -31,7 +33,7 @@ To run the script:
 
 `chmod 777 aq_asterisk_install.sh`
 
-`./aq_asterisk_install.sh –public-ip <public IP address> --local-ip <local IP address> --local-ip-mask <local IP netmask> --twilio-fqdn <twilio_fqdn> --crt-file <path to certificate> --crt-key <path to key> --stun-server <stun fqdn> --stun-port <stun port> --ami-user <ami user> --ami-password <ami password> --extension-password <extension password>`
+`./aq_asterisk_install.sh –public-ip <public IP address> --local-ip <local IP address> --local-ip-mask <local IP netmask> --twilio-fqdn <twilio_fqdn> --crt-file <path to certificate> --crt-key <path to key> --stun-server <stun fqdn> --stun-port <stun port> --ami-user <ami user> --ami-password <ami password> --extension-password <extension password>  --mysql-user ace-quill --mysql-password <mysql password>`
 
 By default extensions 5001 thru 5020 will be created in /etc/asterisk/pjsip.conf all using the extension password supplied to the installation script. If each extension requires a unique password, edit the /etc/asterisk/pjsip.conf file then restart asterisk.
 

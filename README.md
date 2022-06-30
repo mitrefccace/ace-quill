@@ -13,18 +13,49 @@ ACE Quill is composed of two main components:
 
 ## Installation
 
-### MySQL Database
-This section provides an overview of the MySQL server along with installation and setup documentation.
-
-#### Installation
-
-
+## Preinstallation Server Requirements
 Install dependent packages:
 
 ```
 sudo yum install unixODBC unixODBC-devel libtool-ltdl libtool-ltdl-devel
-mysql-connector-odbc
+mysql-connector-odbc python3-devel git libevent-devel
 ```
+
+Install [Node.js](https://nodejs.org/en/) version 14.19.3 
+```
+curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
+sudo yum install nodejs
+node --version
+```
+
+## ACE Quill Software Installation
+Clone the ACE Quill repository:
+```
+git clone https://github.com/FCC/ace_quill/ace_quill_server.git`
+```
+Type
+```
+cd ace-quill
+```
+Install the required Node.js modules: from the ace-quill directory, run
+```
+npm install
+```
+Build ACE Quill: from the ace-quill directory, run
+```
+npm run build
+```
+Install [PM2](https://www.npmjs.com/package/pm2) >= v4.5.6 by running
+```
+npm install -g pm2
+```
+
+
+### MySQL Database
+This section provides an overview of the MySQL server along with installation and setup documentation.
+
+#### Local Installation (Optional, remote database supported)
+
 
 Download the Yum repository configuration file:
 
@@ -71,7 +102,7 @@ sudo systemctl stop mysqld
 ```
 
 
-####Configuration
+#### Configuration
 The ACE Quill prototype requires the user to create two MySQL databases and user accounts.
 
 Enter the MySQL shell, enter the root password when prompted:
@@ -106,10 +137,14 @@ The next step is to instantiate the databases. The asterisk_schema.txt and ace_q
 From the command prompt (not the MySQL prompt) type the following and enter the password when prompted:
 
 ```
-mysql -uace_quill -p asterisk < asterisk_schema.txt`
+cd ~/ace-quill/resources/asterisk
+mysql -uace_quill -p asterisk < asterisk.sql`
 
-mysql -uace_quill -p ace_quill < ace_quill_schema.txt`
+cd ~/ace-quill
+mysql -uace_quill -p ace_quill < ace_quill.sql`
 ```
+*NOTE: If using a remote database specify the host -h*
+
 ### Asterisk
 See [Asterisk README](./resources/asterisk/README.md) for instructions for Asterisk installation and configuration.
 
@@ -143,33 +178,6 @@ usually located in /etc/nginx/nginx.conf.
   }
 ```
 
-## ACE Quill Software Installation
-Clone the ACE Quill repository:
-```
-git clone https://github.com/FCC/ace_quill/ace_quill_server.git`
-```
-Install [Node.js](https://nodejs.org/en/) >= version 14.16.0
-```
-curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
-sudo yum install nodejs
-node --version
-```
-Type
-```
-cd ace-quill
-```
-Install the required Node.js modules: from the ace-quill directory, run
-```
-npm install
-```
-Build ACE Quill: from the ace-quill directory, run
-```
-npm run build
-```
-Install [PM2](https://www.npmjs.com/package/pm2) >= v4.5.6 by running
-```
-npm install -g pm2
-```
 
 
 ###	Server Software Configuration
@@ -179,6 +187,7 @@ The `config` directory contains a file named acequill.json_TEMPLATE that contain
 | ------------- |---------| --------|-------------|
 | cleartext     | Boolean | "true" | Indicates if configs are encoded in Base64 or plain text |
 | debuglevel      | ALL<br>TRACE<br>DEBUG<br>INFO<br>WARN<br>ERROR<br>FATAL<br>OFF | "ERROR" | The debug level for the logger |
+| sttService | Enabled<br>Disabled | "enabled" | Toggles speech to text services on or off|
 | port | Number | "3000" | Listen TCP port for the server|
 | version | Number | "1.0" | The version of the service, appears in the footer of the website|
 | nginxlocation | location from nginx | "/ACEQuill" | The location directive within NGINX server block allows to route request to correct location within the file system|
@@ -187,7 +196,6 @@ The `config` directory contains a file named acequill.json_TEMPLATE that contain
 | ssl > cert | File path | "/etc/ssl/certs/server.crt" | The path to the SSL certificate|
 | session > name | String | "acequillsession" | Name used to identify the session|
 | session > secret | String | "SecretPhrase123%" | Password used by the session|
-| sttService | Enabled<br>Disabled | "enabled" | Toggles speech to text services on or off|
 | transcriptFilePath | File path | "/tmp/transcripts/" | The path to the directory that will contain the transcript files|
 | wavFilePath | File path | "/tmp/wavFiles/" | The path to the directory that will contain the WAV files|
 | videoFilePath | File path | "/tmp/videoUploads/" | The path to the directory that will contain the video file uploads|
@@ -199,6 +207,10 @@ The `config` directory contains a file named acequill.json_TEMPLATE that contain
 | asterisk > host | IP address | "127.0.0.1" | Asterisk hostname <br> Note that Asterisk must reside on the same Linux instance as the ACE Quill server|
 | asterisk > user | String | "asteriskAQ" | The Asterisk username for authentication |
 | asterisk > password | String | "AQaccount123%" | Asterisk password for the Asterisk username|
+| accuracy > ace2_repo | String | "https://github.com/YOUR-USERNAME/YOUR-REPOSITORY%" | Repository for the ACE2 library|
+| accuracy > ace2 | Boolean | "false" | Use the ACE 2 accuracy library|
+| accuracy > sclite | Boolean | "true" | Use the SCLite accuracy library|
+| accuracy > jiwer | Boolean | "true" | Use the Jiwer accuracy library|
 
 The following is an sample of a valid config/acequill.json file:
 
@@ -208,6 +220,7 @@ The following is an sample of a valid config/acequill.json file:
     "debuglevel": "ERROR",
     "port": "3000",
     "version": "1.0",
+    "sttService": "enabled",
     "nginxlocation":"/ACEQuill",
     "proxy":"http://127.0.0.1:8442",
     "ssl" : {
@@ -218,7 +231,6 @@ The following is an sample of a valid config/acequill.json file:
       "name":"acequillsession",
       "secret": "SecretPhrase123%"
     },
-    "sttService": "enabled",
     "transcriptFilePath": "/tmp/transcripts/",
     "wavFilePath": "/tmp/wavFiles/",
     "videoFilePath":"/tmp/videoUploads/",
@@ -233,6 +245,12 @@ The following is an sample of a valid config/acequill.json file:
       "host": "127.0.0.1",
       "user": "asteriskAQ",
       "password": "AQaccount123%"
+    },
+    "accuracy" {
+      "ace2_repo":"https://github.com/YOUR-USERNAME/YOUR-REPOSITORY",
+      "ace2": "false",
+      "sclite": "true",
+      "jiwer": "true"
     }
 }
 ```
