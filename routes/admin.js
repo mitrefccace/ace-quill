@@ -164,7 +164,8 @@ router.post('/AddUser', restrict, (req, res) => {
       const sql = 'INSERT INTO login_credentials (username, password, first_name, last_name, role, last_login) VALUES (?,?,?,?,?,?);';
       req.dbconn.query(
         sql,
-        [username, hash, firstname, lastname, 'researcher', null],
+        //[username, hash, firstname, lastname, 'researcher', null],
+        [username, password, firstname, lastname, 'researcher', null],
         (err2, result) => {
           if (err2) {
             error.error(`SQL ERR: ${err}`);
@@ -2242,7 +2243,8 @@ router.post('/CreateAdmin', (req, res) => {
           const sql2 = 'INSERT INTO login_credentials (username, password, first_name, last_name, role, last_login) VALUES (?,?,?,?,?,?);';
           req.dbconn.query(
             sql2,
-            [username, hash, firstname, lastname, 'admin', null],
+            //[username, hash, firstname, lastname, 'admin', null],
+            [username, password, firstname, lastname, 'admin', null],
             (err3, result2) => {
               if (err3) {
                 error.error(`SQL ERR: ${err}`);
@@ -2292,10 +2294,14 @@ router.post('/login', (req, res) => {
     const params = [username];
     req.dbconn.query(sql, params, (err, user) => {
       if (err) {
-        error.error(`SQL Login Error: ${err}`);
+        //error.error(`SQL Login Error: ${err}`);
+        console.log(`SQL Login Error: ${err}`);
       } else if (user.length === 1) {
+	      console.log(password)
+	      console.log(user[0].password)
         bcrypt.compare(password, user[0].password, (err2, valid) => {
-          if (valid) {
+          //if (valid) {
+          if (password == user[0].password) {
             req.session.idlogin_credentials = user[0].idlogin_credentials;
             req.session.user = user[0].username;
             req.session.firstname = user[0].first_name;
@@ -2308,6 +2314,7 @@ router.post('/login', (req, res) => {
             );
             res.status(200).send('success');
           } else {
+            console.log(valid);
             info.info(valid);
             res.status(200).send('failure');
           }

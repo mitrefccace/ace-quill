@@ -23,7 +23,8 @@ Predefined.prototype.start = function start(callback) {
 
 function sendPhrase(phrase, final, ms, callback){
   setTimeout(()=>{
-    callback({"transcript":phrase, final});
+    let timestamp = new Date();	  
+    callback({"transcript":phrase, final, timestamp});
   },ms)
 }
 

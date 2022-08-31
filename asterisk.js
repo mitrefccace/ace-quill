@@ -79,9 +79,11 @@ function openMySqlConnection() {
 const mySqlConnection = openMySqlConnection();
 
 function sendAmiAction(obj) {
+  console.log(JSON.stringify(obj))	
   ami.action(obj, (err) => {
     if (err) {
       error.error(`AMI Action error ${JSON.stringify(err)}`);
+	    console.log("AMI ACTION ERROR", err)
     }
   });
 }
@@ -730,7 +732,7 @@ function handleManagerEvent(evt) {
                             destSettings,
                             evt.destchannel,
                             ext,
-                            result2,
+                            result3,
                           );
                         }
                       }

@@ -20,7 +20,7 @@ McLean, VA 22102-7539, (703) 983-6000.
  */
 // const debug = require('debug')('init:server');
 const https = require('https');
-// const http = require('http');
+//const http = require('http');
 const fs = require('fs');
 const nconf = require('nconf');
 let io = require('socket.io');
@@ -102,16 +102,17 @@ app.set('port', port);
 /**
  * Create HTTP server.
 * */
+
 info.info('Listening for HTTPS connections');
 const credentials = {
   key: fs.readFileSync(decode(nconf.get('ssl:key'))),
   cert: fs.readFileSync(decode(nconf.get('ssl:cert'))),
 };
 const server = https.createServer(credentials, app);
-/*
-console.log("Listening for HTTP connections");
-var server = http.createServer(app);
-*/
+
+//console.log("Listening for HTTP connections");
+//var server = http.createServer(app);
+
 
 io = require('socket.io')(server);
 require('../sockets/admin')(io.of('/admin'), nconf);

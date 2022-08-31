@@ -45,6 +45,8 @@ Azure.prototype.translate = function translation(text, source, target, callback)
 
   request(options, (err, res, body) => {
     if (err) error.error(err);
+    if (err) console.log(err);
+    console.log(JSON.stringify(body))
     info.info(JSON.stringify(body[0].translations[0].text, null, 4));
     callback(err, body[0].translations[0].text);
   });
