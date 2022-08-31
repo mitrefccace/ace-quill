@@ -1,6 +1,6 @@
 {
 	"apps": [{
-		"name": "ACE Quill Server: 8005",
+		"name": "ACE Quill Server",
 		"script": "bin/www",
                 "autorestart": true,
 		"error_file": "logs/pm2-error.log",
