@@ -1,0 +1,299 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Audio Recording with Audiogram</title>
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="/assets/css/bootstrap.min.css"
+    />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="/assets/css/adminlte.min.css"
+    />
+
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/bootstrap.js"></script>
+    <style>
+      #audiogramCanvas {
+        border: 1px solid #000;
+        margin-bottom: 20px;
+      }
+      #audiogramCanvas.recording {
+        border-color: red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <br /><br />
+      <div class="row">
+        <div class="col-8 col-8 offset-2">
+          <ul class="list-group">
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div><strong>Step 1</strong></div>
+                Enter your Recording ID <br />
+                <i
+                  >(you will find this ID in the email containing the link to
+                  this page)</i
+                >
+              </div>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div><strong>Step 2</strong></div>
+                Click 'Start Recording' When Ready
+              </div>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div><strong>Step 3</strong></div>
+                Please state your Recording ID
+              </div>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div><strong>Step 4</strong></div>
+                Please read the following paragraph: <br /><br />
+                <p style="font-size: 20px; white-space: pre-wrap" id="recordingText"><%- recordingText %></p>
+                
+              </div>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-start"
+            >
+              <div class="ms-2 me-auto">
+                <div><strong>Step 5</strong></div>
+                Click Stop Recording when finished. <br />
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <br />
+      <div class="row">
+        <div class="col-8 col-8 offset-2">
+          <form>
+            <div class="form-row">
+              <div class="col">
+                <input
+                  id="recordingId"
+                  type="text"
+                  class="form-control"
+                  placeholder="Recording ID"
+                />
+              </div>
+              <div class="col">
+                <button
+                  id="recordButton"
+                  class="btn btn-success"
+                  type="button"
+                  onclick="toggleRecording()"
+                >
+                  Start Recording
+                </button>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="col">
+                <br />
+
+                <canvas
+                  id="audiogramCanvas"
+                  style="width: 80%; height: 100px"
+                ></canvas>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let recordingId = null;
+      let mediaRecorder;
+      let chunks = [];
+      let isRecording = false;
+      const canvas = document.getElementById('audiogramCanvas');
+      const context = canvas.getContext('2d');
+      context.fillStyle = 'rgb(0, 0, 0)';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      function toggleRecording() {
+        if (!isRecording) {
+          startRecording();
+        } else {
+          stopRecording();
+        }
+      }
+
+      function startRecording() {
+        recordingId = $('#recordingId').val();
+        if (recordingId) {
+          $('#recordingId').attr('readonly', true);
+          isRecording = true;
+          $('#recordButton').removeClass('btn-success');
+          $('#recordButton').addClass('btn-danger');
+          $('#recordButton').html('Stop Recording');
+
+          navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then(function (stream) {
+              mediaRecorder = new MediaRecorder(stream);
+              mediaRecorder.start();
+
+              const audioContext = new AudioContext();
+              const source = audioContext.createMediaStreamSource(stream);
+              const analyser = audioContext.createAnalyser();
+
+              source.connect(analyser);
+
+              analyser.fftSize = 2048;
+              const bufferLength = analyser.frequencyBinCount;
+              const dataArray = new Uint8Array(bufferLength);
+
+              function draw() {
+                const WIDTH = canvas.width;
+                const HEIGHT = canvas.height;
+
+                requestAnimationFrame(draw);
+
+                analyser.getByteTimeDomainData(dataArray);
+
+                context.fillStyle = 'rgb(0, 0, 0)';
+                context.fillRect(0, 0, WIDTH, HEIGHT);
+
+                context.lineWidth = 2;
+                context.strokeStyle = 'rgb(255, 255, 255)';
+
+                context.beginPath();
+
+                const sliceWidth = (WIDTH * 1.0) / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                  const v = dataArray[i] / 128.0;
+                  const y = (v * HEIGHT) / 2;
+
+                  if (i === 0) {
+                    context.moveTo(x, y);
+                  } else {
+                    context.lineTo(x, y);
+                  }
+
+                  x += sliceWidth;
+                }
+
+                context.lineTo(canvas.width, canvas.height / 2);
+                context.stroke();
+              }
+
+              draw();
+
+              mediaRecorder.addEventListener('dataavailable', function (e) {
+                chunks.push(e.data);
+              });
+
+              mediaRecorder.addEventListener('stop', function () {
+                const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+                if (audioBlob.size > 0) {
+                  const filename = 'rec_' + new Date().getTime() + '.wav';
+                  const file = new File([audioBlob], filename, {
+                    type: 'audio/wav'
+                  });
+
+                  xhr(
+                    './uploadAudioRecording',
+                    file,
+                    function (responseText) {
+                      console.info('FileUploaded: ' + responseText);
+                      //TODO: Base reload on successful upload
+                      alert("Upload Successful");
+                      window.location.reload();
+                    }
+                  );
+                } else {
+                  console.log('no data in video record');
+                }
+
+                /*
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            const downloadLink = document.createElement('a');
+            downloadLink.href = audioUrl;
+            downloadLink.download = 'recorded_audio.wav';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+
+            chunks = [];
+            */
+              });
+            })
+            .catch(function (err) {
+              console.log('Error accessing the microphone: ' + err);
+            });
+        } else {
+          alert('Recording ID Input field does not contain a value.');
+        }
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          console.log('stopping recording');
+          mediaRecorder.stop();
+          $('#recordButton').removeClass('btn-danger');
+          $('#recordButton').addClass('btn-warning');
+          $('#recordButton').attr('disabled', true)
+          $('#recordButton').html('Uploading Recording');
+        } else {
+          console.log('Something went wrong... nothing recording');
+        }
+      }
+
+      function xhr(url, data, callback) {
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+          if (request.readyState == 4 && request.status == 200) {
+            callback(request.responseText);
+          }
+        };
+
+        request.open('POST', url);
+        console.log('URL is: ' + url);
+        var formData = new FormData();
+        formData.append('file', data);
+        formData.append('recordingId', recordingId);
+        formData.append('text', $('#recordingText').html());
+        request.send(formData);
+      }
+    </script>
+  </body>
+</html>
+
+

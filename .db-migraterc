@@ -1,0 +1,5 @@
+{
+  "sql-file": true,
+  "defaultEnv": "mysql",
+  "configFile": "configs/acequill.json"
+}

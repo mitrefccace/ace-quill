@@ -1,0 +1,1 @@
+ALTER TABLE `device_settings` DROP COLUMN `steno_enabled`;

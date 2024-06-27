@@ -1,0 +1,5 @@
+- This directory contains database migration files.
+-- Run migrations after an `npm install` with the db-migrate command: `node node_modules/db-migrate/bin/db-migrate up`
+-- Downgrade with the downgrade command `node node_modules/db-migrate/bin/db-migrate down`
+-- DB credentials are automatically read from the configs/acequill.json file
+-- Create a new migration with the command `node node_modules/db-migrate/bin/db-migrate create migration_name_here` , then edit the resulting sql files found in migrations/sqls

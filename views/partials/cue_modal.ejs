@@ -1,0 +1,58 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
+<% const upper_type = cue_type[0].toUpperCase() + cue_type.slice(1) %>
+<div class="modal fade" id="add<%= upper_type %>Modal" tabindex="-1" role="dialog" aria-labelledby="add<%= upper_type %>ModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="configModalLabel">New <%= cue_title %> Cue</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                id="add<%= upper_type %>Form">
+                <div class="modal-body">
+                    <div class="form-group row">
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="<%= cue_type %>Title"
+                                placeholder="Title (defaults to filename if empty)" data-maxlength="100" data-validation="length">
+                        </div>
+                    </div>
+                    <div class="form-group row" style="margin-left: 0.75px;">
+                        <div class="custom-file" id="custom<%= upper_type %>File" lang="es">
+                            <input type="file" accept=".wav" class="custom-file-input" id="<%= cue_type %>FileUpload" onchange="fileUploadChange(this);">
+                            <label class="custom-file-label" for="<%= cue_type %>FileUpload">
+                                Choose File
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-10">
+                            <textarea class="form-control" id="<%= cue_type %>Transcript"
+                                placeholder="Transcript of file" data-maxlength="500" data-validation="length"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="loader" hidden id="loader"></div>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id='create<%=upper_type %>Button'>Create <%= cue_title %> Cue</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,297 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./../partials/head') %>
+  </head>
+
+  <body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+      <!-- Header -->
+      <%- include('./../partials/header') %>
+
+      <!-- Left side column. contains the logo and sidebar -->
+
+      <%- include('./../partials/sidebar') %>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <div class="container-fluid">
+            <div class="row mb-2">
+              <div class="col-sm-6">
+                <h1>Recordings</h1>
+              </div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                  <li class="breadcrumb-item">
+                    <i class="fa fa-gears"></i>&nbsp;Tools
+                  </li>
+                  <li class="breadcrumb-item active">Recordings</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <!-- /.container-fluid -->
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card" id="ProfileCard">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-12">
+                      <button
+                        class="btn btn-primary"
+                        id="RecordingText"
+                        onclick="changeRecordingTextModal()"
+                      >
+                        Recording Text
+                      </button>
+                      <a
+                        class="btn btn-success"
+                        href="/audiorecorder"
+                        target="_blank"
+                        >Open Audio Recording Page</a
+                      >
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12" class="card-body table-responsive">
+                      <table
+                        id="recordingtable"
+                        class="table table-bordered table-hover dataTable no-footer"
+                      >
+                        <thead>
+                          <tr>
+                            <th class="text-center">ID</th>
+                            <th class="text-center">Date</th>
+                            <th class="text-center">Recording ID</th>
+                            <th class="text-center">Text</th>
+                            <th class="text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% recordings.forEach(function(r) { %>
+                          <tr>
+                            <td><%= r.id %></td>
+                            <td><%= r.timestamp %></td>
+                            <td><%= r.recording_id %></td>
+                            <td><%= r.text %></td>
+                            <td>
+                              <button
+                                type="button"
+                                class="btn btn-primary btn-sm dt-download"
+                                id="downloadAudioBtn"
+                              >
+                                Download
+                              </button>
+                              <button
+                                type="button"
+                                class="btn btn-danger btn-sm dt-delete"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                          <% }) %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Modal -->
+        <div
+          class="modal fade"
+          id="updateRecordingModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="updateRecordingModalLabel"
+        >
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title" id="configModalLabel">
+                  Recording Text
+                </h4>
+                <button
+                  type="button"
+                  class="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <form
+                class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                id="updateRecordingTextForm"
+              >
+                <div class="modal-body">
+                  <div class="form-group row">
+                    <div class="col-12">
+                      <textarea
+                        type="text"
+                        class="form-control"
+                        id="recordingText"
+                        rows="12"
+                        cols="100"
+                      >
+<%- text %></textarea
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <div class="loader" hidden id="loader"></div>
+                  <button
+                    type="button"
+                    class="btn btn-default"
+                    data-dismiss="modal"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="updateRecordingTextBtn"
+                  >
+                    Update Text
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="main-footer">
+        <%- include('./../partials/footer') %>
+      </footer>
+
+      <!-- /.content-wrapper -->
+    </div>
+
+    <script type="text/javascript">
+      $('#reports_recordings_treeview').addClass('active');
+
+      var recordingTable = $('#recordingtable').DataTable({
+        searching: true,
+        paging: true,
+        lengthChange: false,
+        bInfo: false,
+        autoWidth: true,
+        order: [[1, 'desc']],
+        columnDefs: [
+          {
+            targets: 0,
+            visible: false,
+            render: function (data, type, full, meta) {
+              return data;
+            }
+          },
+
+          {
+            targets: 1,
+            render: function (data, type, full, meta) {
+              return (
+                "<span style='display:none;'>" +
+                data +
+                '</span><span>' +
+                moment.utc(data).local().format('MMM D YYYY h:mm a') +
+                '</span>'
+              );
+            }
+          },
+          {
+            targets: 2,
+            render: function (data, type, full, meta) {
+              return data;
+            }
+          },
+          {
+            targets: 3,
+            render: function (data, type, full, meta) {
+              let text =
+                data.length > 100 ? data.substring(0, 100) + '...' : data;
+              return "<span title='" + data + "'>" + text + '</span>';
+            }
+          },
+          { orderable: false, targets: 4 }
+        ]
+      });
+
+      $(document).on('click', '.dt-download', function () {
+        $(this).on('click', function (evt) {
+          var data = recordingTable.row(this.closest('tr')).data();
+          window.location = './recordingdownload?id=' + data[0];
+        });
+      });
+
+      $(document).on('click', '.dt-delete', function () {
+        $(this).on('click', function (evt) {
+          var data = recordingTable.row(this.closest('tr')).data();
+
+          if (confirm('Click OK to delete:\n' + data[2]) == true) {
+            deleteRecording(data[0]);
+          } else {
+            console.log('do nothing');
+          }
+        });
+      });
+
+      function deleteRecording(id) {
+        $.ajax({
+          url: './recordingdelete',
+          data: { id: id },
+          type: 'POST',
+          success: function (msg) {
+            location.reload();
+          },
+          error: function (XMLHttpRequest, textStatus, errorThrown) {
+            console.log('Something Went Wrong');
+          }
+        });
+      }
+
+      $('#updateRecordingTextBtn').on('click', function (e) {
+        $.ajax({
+          url: './recordingtextupdate',
+          data: { text: $('#recordingText').val() },
+          type: 'POST',
+          success: function (msg) {
+            location.reload();
+          },
+          error: function (XMLHttpRequest, textStatus, errorThrown) {
+            console.log('Something Went Wrong');
+          }
+        });
+      });
+
+      function changeRecordingTextModal() {
+        $('#updateRecordingModal').modal();
+      }
+    </script>
+  </body>
+</html>

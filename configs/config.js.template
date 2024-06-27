@@ -1,0 +1,63 @@
+var config = {};
+
+config.port = 8000;
+config.loglevel = 6;
+config.version = "1.0";
+config.nginxlocation = "/";
+config.proxy = ""
+config.transcriptFilePath = "";
+config.wavFilePath = "";
+config.videoFilePath = "uploads/"; 
+config.defaultEnv = "mysql"; //???
+config.sttServices = true;
+config.isIprelay = false;
+
+config.ssl = {};
+config.ssl.enabled = true;
+config.ssl.key = "";
+config.ssl.cert = "";
+
+config.session = {};//Check old config for values that should be hard coded
+config.session.name = "acequillSession";
+config.session.secret = "";
+
+config.asterisk = {};
+config.asterisk.port = 5038;
+config.asterisk.host = "";
+config.asterisk.user = "";
+config.asterisk.password = "";
+config.asterisk.fqdn = "";
+config.asterisk.ext_admin = "4001";
+config.asterisk.ext_admin_password = "";
+
+config.mysql = {};
+config.mysql.host = "localhost";
+config.mysql.user = "";
+config.mysql.password = "";
+config.mysql.database = "ace_quill";
+config.mysql.driver = "mysql";  
+config.mysql.multipleStatements = true; 
+
+config.accuracy = {};
+config.accuracy.ace2_repo = "";
+config.accuracy.ace2server = "<ip address>";
+config.accuracy.ace2 = false;
+config.accuracy.sclite = false;
+config.accuracy.jiwer = false;
+
+if (!isNaN(config.loglevel)) {
+    let methods = ["error", "warn", "info", "debug", "trace"]; //1,2,3,4,5
+    if (config.loglevel == -1){ // -1 disable console.log and all other logs
+        console["log"] = function(){};
+        config.loglevel = 0;
+    }
+
+    for(let i=0; i < methods.length; i++){
+        let j = i + config.loglevel;
+        if(0 <= j < methods.length) {
+            console[methods[j]] = function(){};
+        }
+    }
+}
+
+module.exports = config;

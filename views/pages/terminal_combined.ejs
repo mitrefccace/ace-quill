@@ -1,0 +1,2021 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
+<html>
+    <head>
+        <title>ACE Quill Terminal</title>
+        <link rel="icon" type="image/png" href="/favicon.ico" />
+        <link type="text/css" rel="stylesheet" href="/stylesheets/terminal_combined.css" />
+        <link type="text/css" rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+        <link type="text/css" rel="stylesheet" href="/assets/css/adminlte.min.css" />
+        <link type="text/css" rel="stylesheet" href="/assets/css/font-awesome.min.css" />
+
+        <script src="/javascript/jssip.min.js"></script>
+        <script src="/assets/js/jquery.min.js"></script>
+        <script src="/assets/js/bootstrap.js"></script>
+        <script src="/assets/js/adminlte.min.js"></script>
+        <script src="/assets/js/Tone.js"></script>
+        <script src="/assets/js/moment.js"></script>
+        <script src="/assets/js/RecordRTC.js"></script>
+        <script src="/assets/js/wavesurfer.min.js"></script>
+        <script src="/javascript/waveform.js"></script>
+    </head>
+    <body class="hold-transition">
+        <div id="toRecord">
+            <div class="main-container">
+                <aside class="sidebar-hide sidebar-dark-primary elevation-4" aria-hidden="false" >
+                    <div aria-hidden="false">
+                        <div class="dialpadcontainer">
+                            <input type="text" class="dialoutput" id="output" maxlength="11" size="11" />
+                            <br />
+                            <br />
+                            <div class="row">
+                                <div id="one">
+                                    <button class="digit" type="button">1</button>
+                                </div>
+                                <div id="two">
+                                    <button class="digit" type="button">2</button>
+                                    <div class="sub">ABC</div>
+                                </div>
+                                <div id="three">
+                                    <button class="digit" type="button">3</button>
+                                    <div class="sub">DEF</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div id="four">
+                                    <button class="digit" type="button">4</button>
+                                    <div class="sub">GHI</div>
+                                </div>
+                                <div id="five">
+                                    <button class="digit" type="button">5</button>
+                                    <div class="sub">JKL</div>
+                                </div>
+                                <div id="six">
+                                    <button class="digit" type="button">6</button>
+                                    <div class="sub">MNO</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div id="seven">
+                                    <button class="digit" type="button">7</button>
+                                    <div class="sub">PQRS</div>
+                                </div>
+                                <div id="eight">
+                                    <button class="digit" type="button">8</button>
+                                    <div class="sub">TUV</div>
+                                </div>
+                                <div id="nine">
+                                    <button class="digit" type="button">9</button>
+                                    <div class="sub">WXYZ</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div>
+                                    <button class="digit" type="button">*</button>
+                                </div>
+                                <div>
+                                    <button class="digit" type="button">0</button>
+                                </div>
+                                <div>
+                                    <button class="digit" type="button">#</button>
+                                </div>
+                            </div>
+                            <div class="botrow">
+                                <div>
+                                    <button id="call_btn" class="fa fa-phone" aria-hidden="false"></button>
+                                </div>
+                                <div>
+                                    <button id="back_btn" class="fa fa-long-arrow-left dig" aria-hidden="false"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nav-tabs-custom card">
+                            <ul class="nav nav-tabs mb-3">
+                                <li class="nav-item">
+                                    <a href="#tab_history" data-toggle="pill" aria-expanded="false" role="tab" class="nav-link active" data-toggle="tooltip" title="History"><i class="fa fa-history"></i></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#tab_contacts" data-toggle="pill" aria-expanded="false" role="tab" class="nav-link" data-toggle="tooltip" title="Contacts"><i class="fa fa-address-book"></i></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#tab_presets" data-toggle="pill" aria-expanded="false" role="tab" class="nav-link" data-toggle="tooltip" title="Controls"><i class="fa fa-volume-control-phone"></i></a>
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="tab_history">
+                                    <div class="col-12"></div>
+                                    <ul id="call_history" class="tab_list"></ul>
+                                </div>
+                                <div class="tab-pane" id="tab_contacts">
+                                    <div class="col-12"></div>
+                                    <ul id="contacts" class="tab_list"></ul>
+                                </div>
+                                <div class="tab-pane" id="tab_presets">
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="profileRadios" id="noFilter" value="-1" checked />
+                                            <label class="form-check-label" for="noFilter">
+                                            No Filter
+                                            </label>
+                                        </div>
+                                        <div id="audioprofileDiv"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="waveform"></div>
+                    </div>
+                </aside>
+                <div class="terminal-content">
+                    <nav class="main-header navbar navbar-expand navbar-white navbar-light ml-0 d-flex" aria-hidden="true">
+                        <div class="extension-info" aria-hidden="true">
+                            <span id="extensionInfo"><i class="fa fa-circle text-gray"></i> No Registered Extension</span>
+                        </div>
+                        <div id="aws-cred-warning" class="alert alert-danger aws-cred-warning" style="display: none;">
+                            Warning, AWS services in use but AWS credentials are expired or invalid. STT, TTS, and translation may not work.
+                        </div>
+                        <ul class="navbar-nav ml-auto" aria-hidden="true">
+                            <% if (!iprelayMode) { %>
+                            <span class="collapse multi-collapse" id="customNameInput"><input type="text" name="customName" placeholder="Call Name (optional)" class="form-control" id="customName" oninput="customNameOnChange()" /></span>
+                            <li class="nav-item" aria-hidden="true" data-toggle="tooltip" title="Edit Call Name">
+                                <a class="nav-link" onclick="" href="#" aria-hidden="true" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="customeNameInput">
+                                <i id="editCustomName" class="fa fa-pencil"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown keep-open" data-toggle="tooltip" title="Direct Chat">
+                                <a class="nav-link" data-toggle="dropdown" href="#" id="chatMenu" onclick="resetNotifs()">
+                                <i class="fa fa-comments"></i> 
+                                <span class="badge badge-danger navbar-badge" id="notifications"></span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-xl dropdown-menu-right">
+                                    <div class="card card-danger direct-chat direct-chat-danger">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Direct Chat</h3>
+                                        </div>
+                                        <div class="card-body" id="notifications">
+                                            <div class="direct-chat-messages" id="directChat"></div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <form onsubmit="return false;">
+                                                <div class="input-group">
+                                                    <input type="text" name="message" placeholder="Type Message ..." class="form-control" id="toSend" />
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-primary" type="button" id="sendButton" onclick="addOutgoingChatBubble()" disabled>Send</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <% } %>
+                            <li class="nav-item" aria-hidden="true" data-toggle="tooltip" title="Mute Microphone">
+                                <a class="nav-link" onclick="muteMic()" href="#" aria-hidden="true"> <i id="mic" class="fa fa-microphone"></i></a>
+                            </li>
+                            <% if (iprelayMode) { %>
+                            <li class="nav-item dropdown messages-menu">
+                                <a class="nav-link" data-toggle="dropdown" href="#">
+                                <i id="recordOptions" class="fa fa-video-camera" title=""></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <div class="container pt-1 pb-1">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="recordCamera" checked />
+                                            <label class="form-check-label" for="recordCamera">Record Camera</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="recordScreen" checked />
+                                            <label class="form-check-label" for="recordScreen">Record Screen</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" data-toggle="dropdown" href="#"> <i id="keyboardConnected" class="fa fa-keyboard-o" title=""></i></a>
+                                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                                    <div class="container text-center pt-1 pb-1">
+                                        The ACE Quill Keyboard uses a self-signed certificate which may block the browser from communicating with it. Click the button below to accept the certificate. Test will send some text to the ACE Quill
+                                        Keyboard application.
+                                        <br />
+                                        <button type="button" id="kbCert_btn" class="btn btn-sm btn-danger">Accept Cert.</button>
+                                        <button type="button" id="kbTest_btn" class="btn btn-sm btn-success">Test</button>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="refreshTest();"> <i class="fa fa-repeat"></i></a>
+                            </li>
+                            <% } %>      
+                            <li class="nav-item" aria-hidden="true" title="Settings">
+                                <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" aria-hidden="true"> <i class="fa fa-gears"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <% if (!iprelayMode) { %>
+<!-- any whitespace here will affect the history output -->
+<pre class="terminal" id="terminal">
+<output id="history" aria-hidden="true" aria-live="off">
+Welcome to the ACE Quill terminal.
+</output>
+<output id="transcripts" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
+<output id="app-output" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
+<output id="app-output-outgoing" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
+</pre>
+                    <footer class="page-footer font-small special-color-dark" id="ttsFooter" hidden>
+                        <form class="input-group mb-0" autocomplete="off" id="ttsForm">
+                            <input type="text" class="form-control form-control-lg" placeholder="Teletype" id="ttsText" />
+                            <div class="input-group-append">
+                                <button class="btn btn-lg btn-info" type="submit" id="ttsBtn">Say it</button>
+                            </div>
+                        </form>
+                    </footer>
+                    <% } %>
+                    <% if (iprelayMode) { %>
+                    <div class="col-container">
+                        <div class="left-col">
+                            <div class="card">
+                                <div class="card-body d-flex">
+                                    <div class="w-40">
+                                        <p class="h6">
+                                            <span class="text-bold">Time:&nbsp;&nbsp;</span><span id="timenow"></span>
+                                        </p>
+                                        <p class="h6">
+                                            <span class="text-bold">Call Answered:&nbsp;&nbsp;</span><span id="callAnswerTime"></span>
+                                        </p>
+                                        <p class="h6">
+                                            <span class="text-bold">Call End:&nbsp;&nbsp;</span><span id="callEndTime"></span>
+                                        </p>
+                                        <p class="h6">
+                                            <span class="text-bold">Duration:&nbsp;&nbsp;</span><span id="minutes">00</span>:<span id="seconds">00</span>
+                                        </p>
+                                    </div>
+                                    <div class="w-60">
+                                        <textarea class="call-notes" id="callNotes" placeholder="Notes..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+<div class="iprelay-terminal-container" >
+<pre id="terminal" class="terminal-iprelay">
+<output id="history">
+Welcome to the ACE Quill terminal.
+</output>
+<output id="app-output"></output>
+</pre>
+</div>
+                        </div>
+                        <div class="right-col" >
+                            <div class="h-50" >
+                                <video autoplay="true" width="100%" height="100%" id="webCamElement"></video>
+                            </div>
+                            <div class="card h-50 mb-0" >
+                                <div class="card-header">
+                                    Scenario 
+                                    <a onclick="mute_scenario_toggle();return false;" href="#" aria-hidden="true">
+                                    <i id="mute-scenario" class="fa fa-volume-up text-success"></i>
+                                    </a>
+                                </div>
+                                <div class="card-body ">
+                                    <div class="direct-chat-messages" id="scenarioChat"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+
+                <aside class="control-sidebar control-sidebar-dark sidebar-popout" aria-hidden="true">
+                    <div class="sidebar-form">
+                        <form role="form">
+                            <div class="form-group">
+                                <label>Extension</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Extension" id="sipExtension" />
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" class="form-control form-control-sm" placeholder="Password" id="sipPassword" />
+                            </div>
+                            <div class="form-group">
+                                <label>Server</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="servername:port" id="sipServer" />
+                            </div>
+                            <div class="form-group">
+                                <label>STUN Server (optional)</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="servername:port" id="stunServer" />
+                            </div>
+                            <% if (!iprelayMode) { %>
+                            <div class="form-group">
+                                <input class="form-check-input" type="checkbox" id="recordWebcamOption" />
+                                <label class="form-check-label" for="recordWebcamOption">Record Webcam</label>
+                            </div>
+                            <% } %>
+                            <div class="form-group text-center">
+                                <button type="button" class="btn btn-success btn-sm" id="registerBtn">Register</button>
+                                <button type="button" class="btn btn-danger btn-sm" id="logoutBtn">Log Out</button>
+                            </div>
+                            <div class="form-group text-center">
+                                <button type="button" class="btn btn-default btn-sm" id="clearBtn">Clear Terminal</button>
+                            </div>
+                        </form>
+                    </div>
+                </aside>
+            </div>
+            <div class="modal fade" tabindex="-1" role="dialog" id="incomingCallModal" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Incoming Call</h5>
+                            <img src="/images/phoneRinging.gif" width="50" />
+                        </div>
+                        <div class="modal-body">Caller ID: <span id="callerId">7001</span></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" id="answerBtn">Answer</button>
+                            <button type="button" class="btn btn-danger" id="ignoreBtn">Ignore</button>
+                        </div>
+                    </div>
+                </div>
+                <audio id="ringing" autoplay loop>
+                    <source src="/sounds/ring.mp3" type="audio/mpeg" />
+                </audio>
+            </div>
+        </div>
+
+        <audio id="remoteView" hidden></audio>
+        <audio id="incomingBackgroundNoiseAudio" preload="none" hidden></audio>
+        <audio id="outgoingBackgroundNoiseAudio" preload="none" hidden></audio>
+        <audio id="ttsAudio" preload="none" hidden></audio>
+        <audio id="typingAudio" preload="auto" hidden></audio>
+        <audio id="greetingAudio" preload="none" hidden></audio>
+        <audio id="scenarioAudio" preload="none" hidden></audio>
+
+    </body>
+
+<% if (iprelayMode) { %>
+    <script>
+        var iprelayMode = true;
+    </script>
+<% } else { %>
+    <script>
+        var iprelayMode = false;
+    </script>
+<% } %>
+    <script>
+        // Globals and setup
+        JsSIP.debug.disable("JsSIP:*");
+        $(this).scrollTop();
+        var mediaStream;
+        var mediaStream2;
+        var config = {};
+        var ua = null;
+        var aria = null;
+        var micTrack = null;
+        var currentSession = null;
+        var currentCallID = null;
+        var callActive = false;
+        var incomingCall = false;
+        var entitySentimentEnabled = false;
+        var notifs = 0;
+        var sipMessageWhole = "";
+        var customNameChangeTimeout = null;
+        var durationSetInterval = null;
+        var incomingDropoutSetInterval = null;
+        var outgoingDropoutSetInterval = null;
+        var recorderCamera = null;
+        var recorderScreen = null;
+        var isRecording = false;
+        var isMicMuted = false;
+        var elementToShare = document.getElementById("toRecord");
+        var totalDurationSeconds = 0;
+        var minutesLabel = document.getElementById("minutes");
+        var secondsLabel = document.getElementById("seconds");
+
+        var remoteStream = document.getElementById("remoteView");
+        // Creating the contexts and sources now to avoid lag when the call is accepted
+        var incomingAudioContext = new AudioContext();
+        var outgoingAudioContext = new AudioContext();
+
+        var scenarioStream = document.getElementById("scenarioAudio");
+        scenarioStream.type = 'type="audio/wav"';
+        scenarioStream.loop = false;
+        
+        var ttsStream = document.getElementById("ttsAudio");
+        ttsStream.type = 'type="audio/wav"';
+        ttsStream.loop = false;
+
+        var greetingFile = null;
+        var greetingTranscript = null;
+        var greetingStream = document.getElementById("greetingAudio");
+        greetingStream.type = 'type="audio/wav"';
+        greetingStream.loop = false;
+
+        var typingTranscript = null;
+        var typingStream = document.getElementById("typingAudio");
+        typingStream.type = 'type="audio/wav"';
+        typingStream.loop = false;
+        var typingLastEnded = 0;
+        typingStream.onended = function () {
+            typingLastEnded = Date.now();
+        };
+
+        var incomingBackgroundNoiseStream = document.getElementById("incomingBackgroundNoiseAudio");
+        incomingBackgroundNoiseStream.type = 'type="audio/wav"';
+        incomingBackgroundNoiseStream.loop = true;
+        var incomingNoiseSource = incomingAudioContext.createMediaElementSource(incomingBackgroundNoiseStream);
+        incomingNoiseSource.connect(incomingAudioContext.destination);
+    
+        var outgoingBackgroundNoiseStream = document.getElementById("outgoingBackgroundNoiseAudio");
+        outgoingBackgroundNoiseStream.type = 'type="audio/wav"';
+        outgoingBackgroundNoiseStream.loop = true;
+
+        // These will get mixed together into one stream later
+        var outgoingAudioPlayNodes = [];
+        outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(ttsStream));
+        outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(typingStream));
+        outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(greetingStream));
+        outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(outgoingBackgroundNoiseStream));
+        
+        // We will pipe scenario audio into this gain node so we can mute it separately from the outgoing audio
+        var scenarioStreamSource = outgoingAudioContext.createMediaElementSource(scenarioStream);
+        var scenarioLoopbackNode = outgoingAudioContext.createGain();
+        scenarioStreamSource.connect(scenarioLoopbackNode);
+        scenarioLoopbackNode.connect(outgoingAudioContext.destination);
+        outgoingAudioPlayNodes.push(scenarioStreamSource);
+
+        var jssipConnection = {
+            display_name: null,
+            uri: null,
+            password: null,
+            socket: {
+                uri: null,
+                via_transport: "auto",
+            },
+            registrar_server: null,
+            contact_uri: null,
+            authorization_user: null,
+            instance_id: null,
+            session_timers: true,
+            use_preloaded_route: false,
+            pcConfig: {
+                rtcpMuxPolicy: "negotiate",
+            },
+            callstats: {
+                enabled: false,
+                AppID: null,
+                AppSecret: null,
+            },
+        };
+
+        var callOptions = {
+            mediaConstraints: {
+                audio: true,
+                video: false,
+            },
+            pcConfig: {
+                rtcpMuxPolicy: "negotiate",
+            },
+        };
+
+        // Iprelay screen sharing setup
+        var canvas2d = document.createElement("canvas");
+        canvas2d.style.display = "none";
+        canvas2d.width = elementToShare.clientWidth;
+        canvas2d.height = elementToShare.clientHeight;
+        canvas2d.style.top = 0;
+        canvas2d.style.left = 0;
+        canvas2d.style.zIndex = -1;
+        var recordingContext = canvas2d.getContext("2d");
+        (document.body || document.documentElement).appendChild(canvas2d);
+
+        // Iprelay webcam mirroring setup
+        var webCamVideo = document.querySelector("#webCamElement");
+        var webCamRect = null;
+        if (webCamVideo && navigator.mediaDevices.getUserMedia) {
+            webCamRect = webCamVideo.getBoundingClientRect();
+            navigator.mediaDevices
+                .getUserMedia({ video: true })
+                .then(function (stream) {
+                    webCamVideo.srcObject = stream;
+                })
+                .catch(function (vidErr) {
+                    console.log(vidErr);
+                });
+        }
+        
+        $("#webCamElement").on('play', function () {
+            var $this = this; //cache
+            (function loop() {
+                if (!$this.paused && !$this.ended) {
+                    recordingContext.drawImage($this, webCamRect.left, webCamRect.top, webCamRect.right - webCamRect.left, webCamRect.bottom - webCamRect.top);
+                    setTimeout(loop, 1000 / 30); // drawing at 30fps
+                }
+            })();
+        });
+
+        // Iprelay remote keyboard setup
+        var kbElement = $("#keyboardConnected");
+        if(kbElement.length > 0){
+            $("#kbCert_btn").on("click", function () {
+                window.open("https://127.0.0.1:6298", "", "width=400,height=200");
+            });
+
+            $("#kbTest_btn").on("click", function () {
+                sendTextToKeyboard("This is a test of the ACE Quill Keyboard.");
+            });
+            setInterval(function () {
+                $.get("https://127.0.0.1:6298", function (data, status) {
+                    if (status == "success") {
+                        kbElement.removeClass("text-danger");
+                        kbElement.addClass("text-success");
+                        kbElement.attr("title", "Connected");
+                    } else {
+                        kbElement.removeClass("text-success");
+                        kbElement.addClass("text-danger");
+                        kbElement.attr("title", "Error");
+                    }
+                }).fail(function () {
+                    kbElement.removeClass("text-success");
+                    kbElement.addClass("text-danger");
+                    kbElement.attr("title", "Error");
+                });
+            }, 1000);
+        }
+
+        $("#chat-pane-toggle").DirectChat("toggle");
+
+        $("#recordScreen").on("change", function () {
+            localStorage.setItem("recordScreen", this.checked);
+        });
+
+        $("#recordCamera").on("change", function () {
+            localStorage.setItem("recordCamera", this.checked);
+        });
+
+        $("#recordWebcamOption").on("change", function () {
+            localStorage.setItem("recordWebcam", this.checked);
+        });
+
+        $("#ttsText").on("input", function () {
+            if (config.typing_id && config.typing_id >= 0) {
+                playTyping();
+            }
+        });
+
+        $("#ttsForm").on("submit", function (e) {
+            e.preventDefault();
+            stopTyping();
+            var ttsText = $("#ttsText").val();
+            $.ajax({
+                url: "./terminal/texttospeech",
+                type: "POST",
+                data: { text: ttsText, extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    playTextToSpeech(data);
+                    if (data.translation) {
+                        ttsText = data.translation + " (" + ttsText + ")";
+                    }
+                    writeToConsole(ttsText, 'yellow');
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("TTS error" + errorThrown);
+                },
+            });
+            $("#ttsForm").trigger("reset");
+        });
+        
+        $("#callNotes").on('input', function () {
+            document.getElementById("callNotes").placeholder = document.getElementById("callNotes").value;
+        });
+
+        $(".digit").on("click", function () {
+            var num = $(this).clone().children().remove().end().text();
+
+            if (currentSession && !currentSession.isEnded()) {
+                currentSession.sendDTMF(num.trim());
+                writeToConsole(`Pressed ${num.trim()}`, 'yellow');
+            } 
+            else {
+                var currentValue = $("#output").val();
+                var newValue = currentValue + num;
+                if(newValue.length < 11){
+                    $("#output").val(newValue);
+                }
+            }
+        });
+
+        $("#call_btn").on("click", function () {
+            loadConfig(localStorage.getItem("sipExtension"));
+            if (currentSession && !currentSession.isEnded()) {
+                currentSession.terminate();
+                $("#call_btn").removeClass("incall_btn");
+            } else {
+                let dialnum = $("#output").val();
+                $("#call_btn").addClass("incall_btn");
+                startCall(dialnum);
+            }
+            if (aria == "continuous") {
+                document.getElementById("app-output").setAttribute("aria-hidden", "false");
+                document.getElementById("app-output-outgoing").setAttribute("aria-hidden", "false");
+                document.getElementById("history").setAttribute("aria-hidden", "false");
+                document.getElementById("transcripts").setAttribute("aria-hidden", "true");
+            }
+            if (aria == "final") {
+                document.getElementById("app-output").setAttribute("aria-hidden", "true");
+                document.getElementById("app-output-outgoing").setAttribute("aria-hidden", "false");
+                document.getElementById("transcripts").setAttribute("aria-hidden", "false");
+                document.getElementById("history").setAttribute("aria-hidden", "true");
+            }
+        });
+
+        $("#back_btn").on("click", function () {
+            var currentValue = $("#output").val();
+            var newValue = currentValue.substring(0, currentValue.length - 1);
+            $("#output").val(newValue);
+            phoneNumber = newValue;
+        });
+
+        $("#registerBtn").on("click", function () {
+            localStorage.setItem("sipExtension", $("#sipExtension").val());
+            localStorage.setItem("sipPassword", $("#sipPassword").val());
+            localStorage.setItem("sipServer", $("#sipServer").val());
+            localStorage.setItem("stunServer", $("#stunServer").val());
+            registerJsSip();
+            updateCallOptions();
+        });
+
+        $("#logoutBtn").on("click", function () {
+            localStorage.clear();
+            location.reload();
+        });
+
+        $("#clearBtn").on("click", function () {
+            $("#history").html("");
+            $("#app-output").html("");
+            $("#app-output-outgoing").html("");
+            scrollPage();
+        });
+
+        $("#answerBtn").on("click", function () {
+            if (currentSession && !currentSession.isEnded()) {
+                currentSession.answer(callOptions);
+                $("#call_btn").addClass("incall_btn");
+                $("#incomingCallModal").modal("hide");
+                document.getElementById("ringing").pause();
+                if (currentSession.connection) {
+                    currentSession.connection.ontrack = function (e) {
+                        remoteStream.srcObject = e.streams[0];
+                        remoteStream.play();
+                    };
+                }
+            }
+        });
+
+        $("#ignoreBtn").on("click", function () {
+            if (currentSession && !currentSession.isEnded()) {
+                currentSession.terminate();
+                $("#call_btn").removeClass("incall_btn");
+                $("#incomingCallModal").modal("hide");
+                document.getElementById("ringing").pause();
+            }
+        });
+
+        $("#incomingCallModal").on("shown.bs.modal", function () {
+            document.getElementById("ringing").play();
+        });
+
+        $("#incomingCallModal").on("hidden.bs.modal", function () {
+            document.getElementById("ringing").pause();
+        });
+
+        $(".dropdown.keep-open").on({
+            "shown.bs.dropdown": function () {
+                this.closable = false;
+            },
+            click: function () {
+                this.closable = true;
+            },
+            "hide.bs.dropdown": function () {
+                return this.closable;
+            },
+        });
+        
+        $(document).ready(function () {
+            loadConfig(localStorage.getItem("sipExtension"));
+            document.getElementById("ringing").pause();
+            // Iprelay defaults these to true?
+            if (!localStorage.recordScreen) { localStorage.setItem("recordScreen", true); }
+            if (!localStorage.recordCamera) { localStorage.setItem("recordCamera", true); }
+            $("#sipExtension").val(localStorage.getItem("sipExtension"));
+            $("#sipPassword").val(localStorage.getItem("sipPassword"));
+            $("#sipServer").val(localStorage.getItem("sipServer"));
+            $("#stunServer").val(localStorage.getItem("stunServer"));
+            $("#recordWebcamOption").prop("checked", localStorage.getItem("recordWebcam") == "true");
+            $("#recordScreen").prop("checked", localStorage.getItem("recordScreen") == "true");
+            $("#recordCamera").prop("checked", localStorage.getItem("recordCamera") == "true");
+
+            if (localStorage.getItem("sipServer") != null){ registerJsSip(); }
+            if (localStorage.getItem("stunServer") != null){ updateCallOptions(); }
+            if(document.getElementById("timenow")){
+                updateClock();
+                setInterval(() => {
+                    updateClock();
+                }, 1000);
+            }
+            if(iprelayMode){
+                loadIPRelayScenario();
+            }
+        });
+    </script>
+    <script>
+        // Shared and regular Terminal code
+        function playTyping() {
+            if (!typingStream.paused) {
+                // Already playing
+                return;
+            }
+            if (config.typing_repeat) {
+                // Play if enough time has passed since the last play
+                var lastPlayed = Date.now() - typingLastEnded;
+                if (lastPlayed > config.typing_repeat_delay) {
+                    typingStream.play()
+                        .then(function () {})
+                        .catch(function (error) {
+                            writeToConsole('[Typing] Typing sound not played because of an error', 'yellow');
+                            console.log(error);
+                        });
+                }
+                return;
+            }
+            if (typingLastEnded == 0) {
+                // Either the first play or we've hit 'send' since last play
+                typingStream.play()
+                    .then(function () {
+                        if (config.typing_show_transcript) {
+                            writeToConsole(`[Typing] ${typingTranscript}`, 'green');
+                        }
+                    })
+                    .catch(function (error) {
+                        writeToConsole('[Typing] Typing sound not played because of an error', 'yellow');
+                        console.log(error);
+                    });
+            }
+        }
+
+        function stopTyping() {
+            typingStream.pause();
+            typingStream.currentTime = 0;
+            typingLastEnded = 0;
+        }
+
+        function playGreeting() {
+            if (config.greeting_id && config.greeting_id >= 0) {
+                setTimeout(function () {
+                    greetingStream.play()
+                        .then(function () {
+                            if (config.greeting_show_transcript) {
+                                writeToConsole(`[Greeting] ${greetingTranscript}`, 'green');
+                            }
+                        })
+                        .catch(function (error) {
+                            writeToConsole('[Greeting] Greeting not played because of an error', 'yellow');
+                            console.log(error);
+                        });
+                }, config.greeting_delay);
+            }
+        }
+
+        function playBackgroundNoise() {
+            if (config.background_noise_incoming_enabled) {
+                incomingAudioContext.resume();
+                incomingBackgroundNoiseStream.play();
+            }
+            if (config.background_noise_outgoing_enabled) {
+                outgoingAudioContext.resume();
+                outgoingBackgroundNoiseStream.play();
+            }
+        }
+
+        function stopBackgroundNoise() {
+            incomingBackgroundNoiseStream.pause();
+            outgoingBackgroundNoiseStream.pause();
+        }
+
+        function playTextToSpeech(data) {
+            ttsStream.src = "./terminal/playTextToSpeech?audiofile=" + data.audiofile;
+            ttsStream.play();
+        }
+
+        function mergeOutgoingAudioStreams(session, context, audioNodes) {
+            // Resume in case Chrome paused the context because of autoplay rules
+            context.resume();
+            var combinedSourceNode = context.createChannelMerger();
+            for (const node of audioNodes) {
+                node.connect(combinedSourceNode);
+            }
+            var combinedDestNode = context.createMediaStreamDestination();
+            combinedSourceNode.connect(combinedDestNode);
+            var sender = session.connection.getSenders()[0];
+            micTrack = sender.track;
+            var mic_source_stream = new MediaStream();
+            mic_source_stream.addTrack(micTrack);
+            var micSourceNode = context.createMediaStreamSource(mic_source_stream);
+            micSourceNode.connect(combinedSourceNode);
+            sender.replaceTrack(combinedDestNode.stream.getAudioTracks()[0]);
+            if(isMicMuted){
+                micTrack.enabled = false;
+            }
+        }
+
+        function clearSimulationSetIntervals() {
+            clearInterval(incomingDropoutSetInterval);
+            clearInterval(outgoingDropoutSetInterval);
+        }
+
+        function setupOutgoingDropoutSimulator(session) {
+            if (!config.dropout_outgoing_enabled) {
+                return;
+            }
+            var waiting = false;
+            var delayRangeMax = config.dropout_outgoing_interval_max - config.dropout_outgoing_interval_min;
+            var dropoutRangeMax = config.dropout_outgoing_length_max - config.dropout_outgoing_length_min;
+            var micSender = session.connection.getSenders()[0];
+            clearInterval(outgoingDropoutSetInterval);
+            outgoingDropoutSetInterval = setInterval(() => {
+                if (waiting) {
+                    return;
+                }
+                waiting = true;
+                var delayMs = Math.floor(Math.random() * delayRangeMax);
+                setTimeout(() => {
+                    micSender.track.enabled = false;
+                }, delayMs);
+                // Dont forget to wait the random delay length milliseconds PLUS delayMs to unmute
+                var dropoutMs = delayMs + config.dropout_outgoing_length_min + Math.floor(Math.random() * dropoutRangeMax);
+                setTimeout(() => {
+                    micSender.track.enabled = true;
+                    waiting = false;
+                }, dropoutMs);
+            }, config.dropout_outgoing_interval_min);
+        }
+
+        function setupIncomingDropoutSimulator(session) {
+            if (!config.dropout_incoming_enabled) {
+                return;
+            }
+            var waiting = false;
+            var delayRangeMax = config.dropout_incoming_interval_max - config.dropout_incoming_interval_min;
+            var dropoutRangeMax = config.dropout_incoming_length_max - config.dropout_incoming_length_min;
+            clearInterval(incomingDropoutSetInterval);
+            incomingDropoutSetInterval = setInterval(() => {
+                if (waiting) {
+                    return;
+                }
+                waiting = true;
+                var delayMs = Math.floor(Math.random() * delayRangeMax);
+                setTimeout(() => {
+                    remoteStream.volume = 0;
+                }, delayMs);
+                // Dont forget to wait the random delay length milliseconds PLUS delayMs to unmute
+                var dropoutMs = delayMs + config.dropout_incoming_length_min + Math.floor(Math.random() * dropoutRangeMax);
+                setTimeout(() => {
+                    remoteStream.volume = 1;
+                    waiting = false;
+                }, dropoutMs);
+            }, config.dropout_incoming_interval_min);
+        }
+
+        function customNameOnChange() {
+            // Can't save unless we're in a call
+            if (currentSession == null || !callActive) {
+                return;
+            }
+            $("#customName").removeClass("bg-success").addClass("bg-warning");
+            clearTimeout(customNameChangeTimeout);
+            customNameChangeTimeout = setTimeout(() => {
+                saveCustomName();
+            }, 600);
+        }
+
+        function saveCustomName() {
+            var customName = $("#customName").val();
+            if (!customName || customName.trim().length < 1 || currentSession == null || !callActive) {
+                return;
+            }
+            customName = customName.trim();
+            $.ajax({
+                url: "./terminal/saveCustomName",
+                type: "POST",
+                data: { customName: customName, extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    writeToConsole(`Call saved under name: ${customName}`, 'yellow');
+                    $("#customName").removeClass("bg-warning").addClass("bg-success");
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    writeToConsole(`Call name: ${customName} has NOT been saved, please try again.`, 'red');
+                },
+            });
+        }
+
+        function clearCustomName() {
+            $("#customNameInput").collapse("hide");
+            $("#customName").val("");
+            $("#customName").removeClass("bg-warning").removeClass("bg-success");
+        }
+
+        function getARIASettings() {
+            $.ajax({
+                url: "./terminal/ariaSettings",
+                type: "POST",
+                data: { extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    aria = data.aria;
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("Error fetching aria settings");
+                },
+            });
+        }
+
+        function sentenceAnalysis(text, markup) {
+            $.ajax({
+                url: "./terminal/sentenceAnalysis",
+                type: "POST",
+                data: { text: text },
+                datatype: "json",
+                success: function (data) {
+                    let sentiment = "";
+                    data.results.forEach((res) => {
+                        if (res.Score == 0) {
+                            writeToConsole(`${markup} <span>(neutral)</span>`);
+                        }
+                        else if (res.Score > 0) {
+                            writeToConsole(`${markup} <span class="text-green">(positive)</span>`);
+                        }
+                        else if (res.Score < 0) {
+                            writeToConsole(`${markup} <span class="text-red">(negative)</span>`);
+                        }
+                    });
+                    appOutput("");
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("error getting sentence analysis" + errorThrown);
+                },
+            });
+        }
+
+        function getEntities() {
+            $.ajax({
+                url: "./terminal/getEntities",
+                type: "POST",
+                data: { extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    if (data.results.length != 0) writeToConsole("--- Entities ---");
+                    data.results.forEach((res) => {
+                        let name = '<span class="text-yellow">' + JSON.stringify(res.Name) + "</span>";
+                        let salience = '<span class="text-blue">' + JSON.stringify(res.salience).substring(0, 5) + "</span>";
+                        let type = '<span class="text-green">' + JSON.stringify(res.Type) + "</span>";
+                        url = "";
+                        if (res.url != null) {
+                            url = res.url;
+                            url = '<a href="' + url + '" target="_blank">Wikipedia</a>';
+                            writeToConsole("Name: " + name + " Salience: " + salience + " Type: " + type + " Link: " + url);
+                        } else {
+                            writeToConsole("Name: " + name + " Salience: " + salience + " Type: " + type);
+                        }
+                        appOutput("");
+                    });
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("error");
+                },
+            });
+        }
+
+        function getClassification() {
+            $.ajax({
+                url: "./terminal/getClassification",
+                type: "POST",
+                data: { extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    if (data.results.length != 0) writeToConsole("--- Classification ---");
+                    data.results.forEach((res) => {
+                        let name = '<span class="text-yellow">' + JSON.stringify(res.Name) + "</span>";
+                        let salience = '<span class="text-blue">' + JSON.stringify(res.Confidence).substring(0, 5) + "</span>";
+                        writeToConsole("Name: " + name + " Confidence: " + salience);
+                        appOutput("");
+                    });
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("error");
+                },
+            });
+        }
+
+        function updateCallOptions() {
+            var stunServer = localStorage.getItem("stunServer");
+            if (stunServer) {
+                callOptions.pcConfig.iceServers = [{ urls: ["stun:" + stunServer] }];
+            }
+        }
+
+        function recordWebCam() {
+            if (localStorage.getItem("recordWebcam") == "true") {
+                navigator.mediaDevices
+                    .getUserMedia({
+                        video: true,
+                        audio: true,
+                    })
+                    .then(async function (stream) {
+                        window.localStream = stream;
+                        recorderCamera = RecordRTC(stream, {
+                            type: "video",
+                            mimeType: "video/webm",
+                        });
+                        recorderCamera.startRecording();
+                    });
+            }
+        }
+
+        function stopRecordingWebCam() {
+            if (recorderCamera) {
+                let timestamp = new Date().getTime();
+                // stop both video and audio
+                localStream.getTracks().forEach((track) => {
+                    track.stop();
+                });
+                recorderCamera.stopRecording(function () {
+                    let blob = recorderCamera.getBlob();
+                    let name = "camera_" + timestamp + ".webm";
+                    postRecording(blob, name, "camera");
+                    recorderCamera = null;
+                });
+            }
+        }
+
+        // XHR2/FormData
+        function xhr(url, data, source, callback) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                if (request.readyState == 4 && request.status == 200) {
+                    callback(request.responseText);
+                }
+            };
+
+            request.open("POST", url);
+            console.log("URL is: " + url);
+            var formData = new FormData();
+            formData.append("file", data);
+            formData.append("source", source);
+            if (incomingCall) {
+                formData.append("extension", $("#callerId").html());
+            } else {
+                formData.append("extension", localStorage.getItem("sipExtension"));
+            }
+
+            request.send(formData);
+        }
+
+        function registerJsSip() {
+            getARIASettings();
+            getHistory();
+            getContacts();
+
+            jssipConnection.display_name = localStorage.getItem("sipExtension");
+            jssipConnection.uri = localStorage.getItem("sipExtension") + "@" + localStorage.getItem("sipServer");
+            jssipConnection.password = localStorage.getItem("sipPassword");
+            jssipConnection.socket.uri = "wss://" + localStorage.getItem("sipServer") + "/ws";
+
+            $("#extensionInfo").html(`<i class="fa fa-circle text-gray"></i> ${jssipConnection.uri}`);
+            try {
+                var socket = new JsSIP.WebSocketInterface(jssipConnection.socket.uri);
+                jssipConnection.sockets = [socket];
+                ua = new JsSIP.UA(jssipConnection);
+                ua.start();
+
+                ua.on("connected", function (e) {
+                    if (currentSession == null) {
+                        writeToConsole(`Connected to ${jssipConnection.socket.uri}`);
+                        $("#extensionInfo").html(`<i class="fa fa-circle text-red"></i>${jssipConnection.uri}`);
+                    }
+                });
+
+                ua.on("registered", function (e) {
+                    if (currentSession == null) {
+                        writeToConsole(`${jssipConnection.uri} Registered`);
+                        $("#extensionInfo").html(`<i class="fa fa-circle text-green"></i>${jssipConnection.uri}`);
+                    }
+                });
+
+                ua.on("registrationFailed", function (e) {
+                    writeToConsole("Unknown Registration");
+                    $("#extensionInfo").html('<i class="fa fa-circle text-red"></i> Unknown Registration');
+                    currentSession = null;
+                });
+
+                ua.on("newRTCSession", function (e) {
+                    currentSession = e.session;
+                    console.log(currentSession);
+
+                    if (currentSession.direction === "incoming") {
+                        incomingCall = true;
+                        writeToConsole(`Incoming Call From: ${e.request.from._display_name}`);
+                        $("#callerId").html(e.request.from._display_name);
+                        $("#incomingCallModal").modal();
+                    } else {
+                        incomingCall = false;
+                    }
+
+                    currentSession.on("accepted", function (e) {
+                        createWaveSurfer(remoteStream.srcObject);
+                        recordWebCam();
+                        try {
+                            mergeOutgoingAudioStreams(currentSession, outgoingAudioContext, outgoingAudioPlayNodes);
+                            setupOutgoingDropoutSimulator(currentSession);
+                            setupIncomingDropoutSimulator(currentSession);
+                        } catch (err) {
+                            console.log(err);
+                        }
+                        callActive = true;
+                        $("#call_btn").addClass("incall_btn");
+                        let button = document.getElementById("sendButton");
+                        button.disabled = false; //setting button state to disabled
+                        writeToConsole('Call Answered', 'green');
+                        playGreeting();
+                        playBackgroundNoise();
+                        saveCustomName();
+                        if(iprelayMode){
+                            $.post("./iprelay/updateIprelay", { isIprelay: "true" }).done(function (msg) {});
+                            document.getElementById("callAnswerTime").innerHTML = new Date().toLocaleString();
+                            totalDurationSeconds = 0;
+                            durationSetInterval = setInterval(setTime, 1000);
+                            postNotes();
+                        }
+                    });
+
+                    currentSession.on("ended", function (e) {
+                        callActive = false;
+                        clearSimulationSetIntervals();
+                        stopRecordingWebCam();
+                        stopBackgroundNoise();
+                        writeToConsole($("#app-output").html());
+                        writeToConsole($("#app-output-outgoing").html());
+                        appOutput("");
+                        let button = document.getElementById("sendButton");
+                        button.disabled = true; //setting button state to disabled
+                        writeToConsole('Call Ended', 'red');
+                        if (entitySentimentEnabled) {
+                            getEntities();
+                            getClassification();
+                        }
+                        $("#call_btn").removeClass("incall_btn");
+                        destroyWaveSurfer();
+                        $("#waveform").html("");
+                        document.getElementById("directChat").innerHTML = "";
+                        clearCustomName();
+                        if(iprelayMode){
+                            document.getElementById("callEndTime").innerHTML = new Date().toLocaleString();
+                            clearInterval(durationSetInterval);
+                            $.post("./iprelay/updateIprelay", { isIprelay: "false" }).done(function (msg) {});
+                            stopRecording();
+                        }
+                    });
+
+                    currentSession.on("failed", function (e) {
+                        clearSimulationSetIntervals();
+                        stopBackgroundNoise();
+                        writeToConsole('Error', 'red');
+                        $("#call_btn").removeClass("incall_btn");
+                        if(iprelayMode){
+                            stopRecording();
+                        }
+                    });
+
+                    if (currentSession.connection) {
+                        currentSession.connection.ontrack = function (e) {
+                            mediaStream = e.streams[0];
+                            remoteStream.srcObject = mediaStream;
+                            $("input[name=profileRadios]:checked").trigger("change");
+                        };
+                    }
+                });
+
+                // Iprelay page doesnt have chat stuff
+                if(iprelayMode){
+                    ua.on("newMessage", function (e) {
+                        try {
+                            var transcripts = JSON.parse(e.request.body);
+                            if (transcripts.transcript) {
+                                appOutput(transcripts.transcript);
+                                if (transcripts.final) {
+                                    var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence);
+                                    writeToConsole(markup);
+                                    appOutput("");
+                                }
+                                if (transcripts.callId) {
+                                    currentCallID = transcripts.callId;
+                                }
+                            }
+                        } catch (msgErr) {
+                            console.log(msgErr);
+                        }
+                    });
+                }
+                else{
+                    ua.on("newMessage", function (e) {
+                        if (e.request.body.slice(0, 4) == "Part") {
+                            sipMessageWhole += e.request.body.slice(13);
+                            if (e.request.body[5] == e.request.body[10]) {
+                                processTranscripts(sipMessageWhole);
+                            }
+                        } else if (e.request.body.slice(0, 11) == "DIRECTCHAT:" && e.originator == "remote") {
+                            message = e.request.body.slice(11);
+                            addIncomingChatBubble(message);
+                        } else {
+                            processTranscripts(e.request.body);
+                        }
+                    });
+                }
+
+            } catch (err) {
+                $("#extensionInfo").html('<i class="fa fa-circle text-gray"></i> Unknown Registration');
+                console.log(err);
+            }
+        }
+
+        function processTranscripts(body) {
+            try {
+                sipMessageWhole = "";
+                var transcripts = JSON.parse(body);
+                var markup = "";
+                if (transcripts.transcript) {
+                    if (!config.stt_show_final_caption) {
+                        if (transcripts.isOutgoing && localStorage.getItem("dualEnabled") == "1") {
+                            appOutputOutgoing(transcripts.transcript);
+                        } else if (transcripts.isIncoming) {
+                            if (localStorage.getItem("callerEnabled") == "1") {
+                                appOutput(transcripts.transcript);
+                            }
+                        }
+                    }
+                    if (transcripts.final) {
+                        if (transcripts.isOutgoing && localStorage.getItem("dualEnabled") == "1") {
+                            markup = markUpOutgoing(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence);
+                        } else if (transcripts.isIncoming) {
+                            if (localStorage.getItem("callerEnabled") == "1" || transcripts.type == "info") {
+                                markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence);
+                            }
+                        }
+                        if (entitySentimentEnabled) {
+                            sentenceAnalysis(transcripts.transcript, markup);
+                        } else if (markup.length > 0) {
+                            writeToConsole(markup);
+                            appOutput("");
+                            appOutputOutgoing("");
+                        }
+                    }
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        function startCall(number) {
+            writeToConsole(`Calling: ${number}`);
+            ua.call(number, callOptions);
+            getHistory();
+            if(iprelayMode){
+                startRecording();
+            }
+        }
+
+        function getHistory() {
+            $.ajax({
+                url: "./iprelay/getHistory",
+                type: "GET",
+                data: { extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    $("#call_history").html("");
+                    //Loop through the result and populate the table
+                    for (var i = 0; i < data.results.length; i++) {
+                        var liAttribute = document.createElement("li");
+                        liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
+                        liAttribute.setAttribute("id", "call_hist");
+                        liAttribute.setAttribute("onclick", "reDial(this)");
+                        liAttribute.innerHTML =
+                            data.results[i].dest_phone_number +
+                            '<span class="pull-right badge bg-blue" style="font-size:xx-small">' +
+                            moment.utc(data.results[i].call_start, moment.ISO_8601).local().format("MMM D, YYYY, h:mm:ss A") +
+                            "</span>";
+                        $("#call_history").append(liAttribute);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("error");
+                },
+            });
+        }
+
+        function getContacts() {
+            $.ajax({
+                url: "./iprelay/getContacts",
+                type: "GET",
+                data: { extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    $("#contacts").html("");
+                    //Loop through the result and populate the table
+                    for (var i = 0; i < data.results.length; i++) {
+                        var username = data.results[i].username;
+                        var number = data.results[i].cellphone;
+                        var liAttribute = document.createElement("li");
+                        liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
+                        liAttribute.setAttribute("id", number);
+                        liAttribute.setAttribute("onclick", "callContact(this)");
+                        liAttribute.innerHTML = `${username} <span class="pull-right badge bg-blue" style="font-size:x-small">${number}</span>`;
+                        $("#contacts").append(liAttribute);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("error");
+                },
+            });
+        }
+
+        function callContact(element) {
+            $("#output").val("");
+            let number = element.id;
+            $("#output").val(number);
+        }
+
+        function reDial(element) {
+            $("#output").val("");
+            let number = element.innerHTML.split("<")[0];
+            $("#output").val(number);
+        }
+
+        function muteMic() {
+            isMicMuted = !isMicMuted;
+            document.getElementById("mic").className = isMicMuted ? "fa fa-microphone-slash" : "fa fa-microphone";
+            if (micTrack) {
+                micTrack.enabled = !isMicMuted;
+            }            
+        }
+
+        function scrollPage() {
+            var totalHeight = document.getElementById("history").scrollHeight + document.getElementById("app-output").scrollHeight;
+            // These elements aren't always there
+            var transcriptElement = document.getElementById("transcripts");
+            if(transcriptElement){ totalHeight += transcriptElement.scrollHeight; }
+
+            var outputElement = document.getElementById("app-output-outgoing");
+            if(outputElement){ totalHeight += outputElement.scrollHeight; }
+
+            $("#terminal").scrollTop(totalHeight + 100);
+        }
+
+        function scrollTerminalIfNeeded(){
+            let element = document.getElementById("terminal");
+            let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
+            let delta = divCurrentUserScrollPosition - element.scrollHeight;
+            if (-5 < delta && delta < 5) {
+                scrollPage();
+            }
+        }
+
+        // textColor is optional, if set will make a colored text span
+        function writeToConsole(text, textColor) {
+            var innerDiv = document.createElement("div");
+            if(textColor){
+                innerDiv.innerHTML = `<span class='text-${textColor}'>${text}</span>`;
+            }
+            else{
+                innerDiv.innerHTML = text;
+            }
+            if (aria == "final") {
+                $("#transcripts").append(innerDiv);
+            } else {
+                $("#history").append(innerDiv);
+            }
+            scrollTerminalIfNeeded();
+        }
+
+        function appOutput(text) {
+            $("#app-output").html(text);
+            scrollTerminalIfNeeded();
+        }
+
+        function appOutputOutgoing(text) {
+            document.getElementById("app-output-outgoing").style.color = localStorage.getItem("dualColor");
+            $("#app-output-outgoing").html(text);
+            scrollTerminalIfNeeded();
+        }
+
+        // TODO remove this and use config values directly?
+        function setConfidence(data) {
+            localStorage.setItem("wordConfidenceEnabled", data.confidence_show_word);
+            localStorage.setItem("phraseConfidenceEnabled", data.confidence_show_phrase);
+            localStorage.setItem("mediumConfidencePercent", data.confidence_upper_lim);
+            localStorage.setItem("lowConfidencePercent", data.confidence_lower_lim);
+            localStorage.setItem("mediumConfidenceColor", data.confidence_upper_color);
+            localStorage.setItem("lowConfidenceColor", data.confidence_lower_color);
+            localStorage.setItem("wordConfidenceBold", data.confidence_bold);
+            localStorage.setItem("wordConfidenceItalic", data.confidence_italicize);
+            localStorage.setItem("wordConfidenceUnderline", data.confidence_underline);
+        }
+
+        // TODO remove this and use config values directly?
+        function setDual(data) {
+            localStorage.setItem("dualEnabled", data.dual_enabled);
+            localStorage.setItem("callerEnabled", data.caller_captions_enabled);
+            localStorage.setItem("dualColor", data.dual_font_color);
+            localStorage.setItem("wordCallerConfidenceEnabled", data.caller_confidence_show_word);
+            localStorage.setItem("phraseCallerConfidenceEnabled", data.caller_confidence_show_phrase);
+            localStorage.setItem("mediumCallerConfidencePercent", data.caller_confidence_upper_lim);
+            localStorage.setItem("lowCallerConfidencePercent", data.caller_confidence_lower_lim);
+            localStorage.setItem("mediumCallerConfidenceColor", data.caller_confidence_upper_color);
+            localStorage.setItem("lowCallerConfidenceColor", data.caller_confidence_lower_color);
+            localStorage.setItem("wordCallerConfidenceBold", data.caller_confidence_bold);
+            localStorage.setItem("wordCallerConfidenceItalic", data.caller_confidence_italicize);
+            localStorage.setItem("wordCallerConfidenceUnderline", data.caller_confidence_underline);
+        }
+
+        function setTts(value) {
+            if (value == 1) {
+                $("#terminal").css({ height: "89vh" });
+                $("#ttsFooter").removeAttr("hidden");
+            } else {
+                $("#terminal").css({ height: "94vh" });
+                $("#ttsFooter").attr("hidden", true);
+            }
+        }
+
+        function setTextAnalysis(val) {
+            entitySentimentEnabled = val == "GOOGLE";
+        }
+
+        function setTypingSounds(cfg) {
+            if (!cfg.typing_id || cfg.typing_id < 0) {
+                return;
+            }
+            if (cfg.typing_repeat_delay) {
+                cfg.typing_repeat_delay = cfg.typing_repeat_delay * 1000;
+            }
+            cfg.typing_repeat = cfg.typing_repeat == 1;
+            cfg.typing_show_transcript = cfg.typing_show_transcript == 1;
+            $.get("./terminal/getAudibleCue", { id: cfg.typing_id },
+                function (data, status) {
+                    var cue = data.cue;
+                    typingStream.src = `./terminal/playAudibleCue?audiofile=${cue.id}_${cue.audio_file_name}.wav`;
+                    typingTranscript = cue.transcript;
+                }
+            );
+        }
+
+        function setGreeting(cfg) {
+            if (!cfg.greeting_id || cfg.greeting_id < 0) {
+                return;
+            }
+            if (cfg.greeting_delay) {
+                cfg.greeting_delay = cfg.greeting_delay * 1000;
+            }
+            cfg.greeting_show_transcript = cfg.greeting_show_transcript == 1;
+            $.get("./terminal/getAudibleCue", { id: cfg.greeting_id },
+                function (data, status) {
+                    var cue = data.cue;
+                    greetingStream.src = `./terminal/playAudibleCue?audiofile=${cue.id}_${cue.audio_file_name}.wav`;
+                    greetingTranscript = cue.transcript;
+                }
+            );
+        }
+
+        function setBackgroundNoise(cfg) {
+            if (cfg.background_noise_incoming_enabled && cfg.background_noise_incoming_id) {
+                $.get("./terminal/getAudibleCue", { id: cfg.background_noise_incoming_id }, function (data, status) {
+                    incomingBackgroundNoiseStream.src = `./terminal/playAudibleCue?audiofile=${cue.id}_${cue.audio_file_name}.wav`;
+                });
+            }
+
+            if (cfg.background_noise_outgoing_enabled && cfg.background_noise_outgoing_id) {
+                $.get("./terminal/getAudibleCue", { id: cfg.background_noise_outgoing_id }, function (data, status) {
+                    outgoingBackgroundNoiseStream.src = `./terminal/playAudibleCue?audiofile=${cue.id}_${cue.audio_file_name}.wav`;
+                });
+            }
+        }
+
+        function showCSPWarning(cfg) {
+            if(cfg.stt_engine === 'AMAZON'
+                || cfg.translation_engine === 'AMAZON'
+                || (cfg.tts_enabled && cfg.tts_engine ==='AMAZON' )
+            ) {
+                $.get("amazon-mfa-status", {},
+                    function (resp, status) {
+                        if(resp === 'invalid'){
+                            $("#aws-cred-warning").show()
+                        }
+                    }
+                );
+            }
+        }
+
+        function loadConfig(ext) {
+            // TODO Have configuration affect the iprelay page?
+            if(iprelayMode){
+                return;
+            }
+            $.get("./loadACConfig", { extension: ext },
+                function (data, status) {
+                    config = data;
+                    setTextAnalysis(data.stt_show_entity_sentiment);
+                    setTts(config.tts_enabled);
+                    setConfidence(data);
+                    setDual(data);
+                    setGreeting(data);
+                    setTypingSounds(data);
+                    setBackgroundNoise(data);
+                    showCSPWarning(data);
+                }
+            );
+        }
+
+        function markUpTranscripts(text, wC, tC) {
+            var textArray = text.split(" ");
+            if (localStorage.getItem("wordConfidenceEnabled") == "1") {
+                var mConfPercent = localStorage.getItem("mediumConfidencePercent");
+                var mConfColor = localStorage.getItem("mediumConfidenceColor");
+                var lConfPercent = localStorage.getItem("lowConfidencePercent");
+                var lConfColor = localStorage.getItem("lowConfidenceColor");
+                var underline = localStorage.getItem("wordConfidenceUnderline");
+                var bold = localStorage.getItem("wordConfidenceBold");
+                var italic = localStorage.getItem("wordConfidenceItalic");
+                var font = "";
+                if (underline || bold || italic) {
+                    font += bold ? "font-weight: 900;" : "";
+                    font += italic ? "font-style: italic;" : "";
+                    font += underline ? " text-decoration: underline;" : "";
+                }
+                lConfFontString = lConfColor != "none" ? "color:" + lConfColor + ";" : "";
+                lConfFontString += font;
+                mConfFontString = mConfColor != "none" ? "color:" + mConfColor + ";" : "";
+                mConfFontString += font;
+
+                if (wC != null) {
+                    for (var i = 0; i < wC.length; i++) {
+                        var p = parseInt(wC[i] * 100);
+                        if (p < lConfPercent) {
+                            textArray[i] = '<span style="' + lConfFontString + '" title="' + p + '%">' + textArray[i] + "</span>";
+                        } else if (p < mConfPercent) {
+                            textArray[i] = '<span style="' + mConfFontString + '" title="' + p + '%">' + textArray[i] + "</span>";
+                        }
+                    }
+                }
+            }
+
+            if (localStorage.getItem("phraseConfidenceEnabled") == "1") {
+                if (tC != null) {
+                    tC = parseInt(tC * 100);
+                    textArray[textArray.length - 1] = textArray[textArray.length - 1] + "(" + tC + "%)";
+                }
+            }
+            return textArray.join(" ");
+        }
+
+        function markUpOutgoing(text, wC, tC) {
+            var textArray = text.split(" ");
+            if (localStorage.getItem("dualEnabled") == "1") {
+                var fColor = localStorage.getItem("dualColor");
+                var mConfPercent = localStorage.getItem("mediumCallerConfidencePercent");
+                var mConfColor = localStorage.getItem("mediumCallerConfidenceColor");
+                var lConfPercent = localStorage.getItem("lowCallerConfidencePercent");
+                var lConfColor = localStorage.getItem("lowCallerConfidenceColor");
+                var underline = localStorage.getItem("wordCallerConfidenceUnderline");
+                var bold = localStorage.getItem("wordCallerConfidenceBold");
+                var italic = localStorage.getItem("wordCallerConfidenceItalic");
+                var font = "";
+                if (underline || bold || italic) {
+                    font += bold ? "font-weight: 900;" : "";
+                    font += italic ? "font-style: italic;" : "";
+                    font += underline ? " text-decoration: underline;" : "";
+                }
+                lConfFontString = lConfColor != "none" ? "color:" + lConfColor + ";" : "";
+                lConfFontString += font;
+                mConfFontString = mConfColor != "none" ? "color:" + mConfColor + ";" : "";
+                mConfFontString += font;
+                fColorFontString = fColor != "none" ? "color:" + fColor + ";" : "";
+
+                if (wC != null && localStorage.getItem("wordCallerConfidenceEnabled") == "1") {
+                    for (var i = 0; i < wC.length; i++) {
+                        var p = parseInt(wC[i] * 100);
+                        if (p < lConfPercent) {
+                            textArray[i] = '<span style="' + lConfFontString + '" title="' + p + '%">' + textArray[i] + "</span>";
+                        } else if (p < mConfPercent) {
+                            textArray[i] = '<span style="' + mConfFontString + '" title="' + p + '%">' + textArray[i] + "</span>";
+                        } else {
+                            textArray[i] = '<span style="' + fColorFontString + '" title="' + p + '%">' + textArray[i] + "</span>";
+                        }
+                    }
+                } else {
+                    for (var i = 0; i < textArray.length; i++) {
+                        if (fColor) {
+                            textArray[i] = '<span style="' + fColorFontString + '" title="' + p + '%">' + textArray[i] + "</span>";
+                        }
+                    }
+                }
+            }
+
+            if (localStorage.getItem("phraseCallerConfidenceEnabled") == "1") {
+                if (tC != null) {
+                    tC = parseInt(tC * 100);
+                    textArray[textArray.length - 1] = textArray[textArray.length - 1] + "(" + tC + "%)";
+                }
+            }
+            return textArray.join(" ");
+        }
+
+        function getAudioProfiles() {
+            $.ajax({
+                url: "./terminal/audioprofiles",
+                type: "GET",
+                data: { extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    $("#audioprofileDiv").html("");
+                    let profiles = data.profiles;
+                    let phtml = "";
+                    profiles.forEach((p) => {
+                        phtml += '<div class="form-check">';
+                        phtml += '<input class="form-check-input" type="radio" name="profileRadios" id="profile_' + p.id + '" value="' + p.id + '">';
+                        phtml += '<label class="form-check-label" for="profile_' + p.id + '">' + p.name + "</label>";
+                        phtml += "</div>";
+                    });
+                    $("#audioprofileDiv").html(phtml);
+                    $("input[name='profileRadios']").on("change", function () {
+                        if ($(this).val() > 0) {
+                            $.ajax({
+                                url: "./terminal/audioprofilefilters",
+                                type: "GET",
+                                data: { profileId: $(this).val() },
+                                datatype: "json",
+                                success: function (data) {
+                                    setMultipleFilters(mediaStream, data.filters);
+                                },
+                            });
+                        } else {
+                            setMultipleFilters(mediaStream, {});
+                        }
+                    });
+                },
+            });
+        }
+
+        function setMultipleFilters(stream, filters) {
+            if (mediaStream) {
+                remoteStream.pause();
+                if (mediaStream2) Tone.disconnect(mediaStream2);
+                mediaStream2 = Tone.context.createMediaStreamSource(stream);
+                let tones = [];
+                if (filters.length > 0) {
+                    for (let i = 0; i < filters.length; i++) {
+                        let f = {};
+                        if (filters[i].type == "pitch shift") {
+                        } else {
+                            f.type = filters[i].type;
+                            f.gain = filters[i].gain | 0;
+                            f.frequency = filters[i].frequency | 350;
+                            f.rolloff = filters[i].rolloff | -12;
+                            f.Q = filters[i].Q | 1;
+                        }
+                        console.log(f);
+                        if (i == 0) {
+                            if (filters[i].type == "pitch shift") {
+                                tones[i] = new Tone.PitchShift({ pitch: filters[i].pitchshift }).toDestination();
+                            } else {
+                                tones[i] = new Tone.Filter(f).toDestination();
+                            }
+                        } else {
+                            if (filters[i].type == "pitch shift") {
+                                tones[i] = new Tone.PitchShift({ pitch: filters[i].pitchshift }).connect(tones[i - 1]);
+                            } else {
+                                tones[i] = new Tone.Filter(f).connect(tones[i - 1]);
+                            }
+                        }
+                    }
+                    Tone.connect(mediaStream2, tones[filters.length - 1]);
+                    Tone.start();
+                } else {
+                    console.log("no filter");
+                    remoteStream.play();
+                }
+            }
+        }
+
+        function resetNotifs() {
+            $("#notifications").text("");
+            notifs = 0;
+        }
+
+        function addOutgoingChatBubble() {
+            msg = $("#toSend").val();
+
+            let msgblock = document.createElement("div");
+            let msgimage = document.createElement("img");
+            let msginfo = document.createElement("div");
+            let msgsender = document.createElement("span");
+            let msgclicktime = document.createElement("span");
+            let msgtext = document.createElement("div");
+
+            $(msgsender).addClass("direct-chat-name pull-right").html("ACE Quill").appendTo(msginfo);
+            $(msgclicktime).addClass("direct-chat-timestamp pull-left").appendTo(msginfo);
+            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+            $(msgimage).addClass("direct-chat-img").attr("src", "./images/acequill.png").appendTo(msgblock);
+            $(msgtext).addClass("direct-chat-text").html(msg).appendTo(msgblock);
+            $(msgblock).addClass("direct-chat-msg right").appendTo($("#directChat"));
+
+            text = "DIRECTCHAT:" + msg;
+            var sendAddress = currentSession.remote_identity.uri.user + "@" + localStorage.getItem("sipServer");;
+            ua.sendMessage(sendAddress, text);
+
+            $("#toSend").val("");
+            var objDiv = document.getElementById("directChat");
+            objDiv.scrollTop = objDiv.scrollHeight;
+        }
+
+        function addIncomingChatBubble(msg) {
+            let msgblock = document.createElement("div");
+            let msgimage = document.createElement("img");
+            let msginfo = document.createElement("div");
+            let msgsender = document.createElement("span");
+            let msgclicktime = document.createElement("span");
+            let msgtext = document.createElement("div");
+
+            $(msgsender).addClass("direct-chat-name pull-left").html(currentSession.remote_identity.uri.user).appendTo(msginfo);
+            $(msgclicktime).addClass("direct-chat-timestamp pull-right").appendTo(msginfo);
+            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+            $(msgimage).addClass("direct-chat-img").attr("src", "./images/iprelay_icon.png").appendTo(msgblock);
+            $(msgtext).addClass("direct-chat-text").html(msg).appendTo(msgblock);
+            $(msgblock).addClass("direct-chat-msg").appendTo($("#directChat"));
+
+            var objDiv = document.getElementById("directChat");
+            objDiv.scrollTop = objDiv.scrollHeight;
+
+            writeToConsole('<span class="text-green"> ' + "---NEW MESSAGE---" + "</span>");
+            let menu = $(document.getElementById("chatMenu"));
+            if ($(menu).attr("aria-expanded") !== "true") {
+                console.log($(menu).attr("aria-expanded"));
+                notifs += 1;
+                $("#notifications").text(notifs);
+            }
+
+            if ($(menu).attr("aria-expanded") == true) {
+                $("#notifications").text("");
+            }
+        }
+    </script>
+
+    <script>
+        // IPrelay specific code
+        function refreshTest() {
+            $("#history").html("");
+            $("#app-output").html("");
+            $("#scenarioChat").html("");
+            scrollPage();
+            writeToConsole("Welcome to the ACE Quill terminal.");
+            registerJsSip();
+            loadIPRelayScenario();
+
+            totalDurationSeconds = -1;
+            setTime();
+            document.getElementById("callAnswerTime").innerHTML = "";
+            document.getElementById("callEndTime").innerHTML = "";
+            document.getElementById("callNotes").value = "";
+        }
+        
+        function updateClock() {
+            let dt = new Date();
+            document.getElementById("timenow").innerHTML = dt.toLocaleString();
+        };
+
+        function setTime() {
+            ++totalDurationSeconds;
+            secondsLabel.innerHTML = pad(totalDurationSeconds % 60);
+            minutesLabel.innerHTML = pad(parseInt(totalDurationSeconds / 60));
+        }
+
+        function pad(val) {
+            var valString = val + "";
+            if (valString.length < 2) {
+                return "0" + valString;
+            } else {
+                return valString;
+            }
+        }
+
+        function playScenarioSpeech(audioId) {
+            scenarioStream.src = `./iprelay/playScenarioSpeech?audioId=${audioId}`;
+            scenarioStream.play();
+        }
+
+        function postNotes() {
+            let notes = $("#callNotes");
+            if (notes.length < 1){
+                return;
+            }
+            let notesVals = notes.val();
+            if (notesVals.length < 1) {
+                return;
+            }
+            $.ajax({
+                url: "./iprelay/savenotes",
+                type: "POST",
+                data: { notes: notes, extension: localStorage.getItem("sipExtension") },
+                datatype: "json",
+                success: function (data) {
+                    console.log("success", data.callID);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log("error");
+                },
+            });
+        }
+        
+        function loadIPRelayScenario() {
+            $("#scenarioChat").html("");
+            //TODO build get function to get scenario for call. below is testing data
+            $.get("./iprelayscenario",
+                {
+                    extension: localStorage.getItem("sipExtension"),
+                },
+                function (data, status) {
+                    data.forEach((bubble) => {
+                        console.log(JSON.stringify(bubble));
+                        if (bubble.isDUT) {
+                            addDUTChatBubble(bubble.id, bubble.bubbleText, bubble.rawText);
+                        } else {
+                            addAQChatBubble(bubble.id, bubble.bubbleText);
+                        }
+                    });
+                }
+            );
+        }
+    
+        function addAQChatBubble(audioId, msg) {
+            let msgblock = document.createElement("div");
+            let msgimage = document.createElement("img");
+            let msginfo = document.createElement("div");
+            let msgsender = document.createElement("span");
+            let msgclicktime = document.createElement("span");
+            let msgtext = document.createElement("div");
+
+            $(msgblock).on("click", function () {
+                $(msgblock).addClass("chatClicked");
+                let dt = new Date();
+                $(msgclicktime).html(dt.toLocaleString());
+                playScenarioSpeech(audioId);
+                writeToConsole(msg, 'yellow');
+                $.post("./iprelay/logIPRelay", { text: msg, isDUT: false }).done(function (msg) {});
+            });
+
+            $(msgsender).addClass("direct-chat-name pull-right").html("ACE Quill").appendTo(msginfo);
+            $(msgclicktime).addClass("direct-chat-timestamp pull-left").appendTo(msginfo);
+            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+            $(msgimage).addClass("direct-chat-img").attr("src", "./images/acequill.png").appendTo(msgblock);
+            $(msgtext).addClass("direct-chat-text").html(msg).appendTo(msgblock);
+            $(msgblock).addClass("direct-chat-msg right").appendTo($("#scenarioChat"));
+        }
+    
+        function addDUTChatBubble(textId, msg, msgEncoded) {
+            let msgblock = document.createElement("div");
+            let msgimage = document.createElement("img");
+            let msginfo = document.createElement("div");
+            let msgsender = document.createElement("span");
+            let msgclicktime = document.createElement("span");
+            let msgtext = document.createElement("div");
+
+            $(msgblock).on("click", function () {
+                $(msgblock).addClass("chatClicked");
+                let dt = new Date();
+                $(msgclicktime).html(dt.toLocaleString());
+                msgEncoded ? sendTextToKeyboard(msgEncoded) : sendTextToKeyboard(msg);
+            });
+
+            $(msgsender).addClass("direct-chat-name pull-left").html("Device Under Test").appendTo(msginfo);
+            $(msgclicktime).addClass("direct-chat-timestamp pull-right").appendTo(msginfo);
+            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+            $(msgimage).addClass("direct-chat-img").attr("src", "./images/iprelay_icon.png").appendTo(msgblock);
+            $(msgtext).addClass("direct-chat-text").html(msg).appendTo(msgblock);
+            $(msgblock).addClass("direct-chat-msg").appendTo($("#scenarioChat"));
+        }
+
+        function screenRecordingLooper() {
+            html2canvas(elementToShare, { grabMouse: true, foreignObjectRendering: true })
+                .then(function (canvas) {
+                    recordingContext.clearRect(0, 0, canvas2d.width, canvas2d.height);
+                    recordingContext.drawImage(canvas, 0, 0, canvas2d.width, canvas2d.height);
+                    if (!recordingStarted) {
+                        return;
+                    }
+                    setTimeout(screenRecordingLooper, 1);
+            });
+        }
+
+        function startRecording() {
+            let recordScreen = $("#recordScreen").is(":checked");
+            let recordCamera = $("#recordCamera").is(":checked");
+            if (recordCamera || recordScreen) {
+                $("#recordOptions").addClass("recording");
+            }
+            if (recordCamera) {
+                navigator.mediaDevices
+                    .getUserMedia({
+                        video: true,
+                        audio: true,
+                    })
+                    .then(async function (stream) {
+                        recorderCamera = RecordRTC(stream, {
+                            type: "video",
+                            mimeType: "video/webm",
+                        });
+                        recorderCamera.startRecording();
+                    });
+            }
+
+            if (recordScreen) {
+                console.log("Record Screen");
+                recordingStarted = true;
+                screenRecordingLooper();
+                recorderScreen = new RecordRTC(canvas2d, {
+                    type: "canvas",
+                    mimeType: "video/webm",
+                });
+                recorderScreen.startRecording();
+            }
+        }
+
+        function stopRecording() {
+            $("#recordOptions").removeClass("recording");
+            let timestamp = new Date().getTime();
+            if (recorderCamera) {
+                recorderCamera.stopRecording(function () {
+                    let blob = recorderCamera.getBlob();
+                    let name = "camera_" + timestamp + ".webm";
+                    postRecording(blob, name, "camera");
+                    recorderCamera = null;
+                });
+            }
+            if (recorderScreen) {
+                recordingStarted = false;
+                recorderScreen.stopRecording(function () {
+                    let blob = recorderScreen.getBlob();
+                    let name = "screen_" + timestamp + ".webm";
+                    postRecording(blob, name, "screen");
+                    recorderScreen = null;
+                });
+            }
+        }
+
+        function postRecording(blob, filename, source) {
+            if (blob.size > 0) {
+                var file = new File([blob], filename, {
+                    type: "video/webm",
+                });
+                xhr("./iprelay/uploadRecording", file, source, function (responseText) {
+                    console.info("FileUploaded: " + responseText);
+                });
+            } else {
+                console.log("no data in video record");
+            }
+        }
+    
+        function muteScenarioToggle(e) {
+            if (scenarioLoopbackNode.gain.value < 1) {
+                scenarioLoopbackNode.gain.value = 1;
+                document.getElementById("mute-scenario").className = "fa fa-volume-up text-success";
+            } else {
+                scenarioLoopbackNode.gain.value = 0;
+                document.getElementById("mute-scenario").className = "fa fa-volume-off text-danger";
+            }
+        }
+        
+        function sendTextToKeyboard(message, pacing) {
+            $.post("https://127.0.0.1:6298/type", { message, pacing }).done(function (msg) {});
+            $.post("./iprelay/logIPRelay", { callID: currentCallID, text: message, isDUT: true }).done(function (msg) {});
+        }
+
+    </script>
+</html>

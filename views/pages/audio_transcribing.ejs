@@ -1,0 +1,394 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('./../partials/head') %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <%- include('./../partials/header') %>
+
+            <!-- Left side column. contains the logo and sidebar -->
+            <%- include('./../partials/sidebar') %>
+
+                <div class="content-wrapper">
+                    <!-- Content Header (Page header) -->
+                    <section class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6">
+                                    <h1>Audio Transcribing</h1>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ol class="breadcrumb float-sm-right">
+                                        <li class="breadcrumb-item"><i class="fa fa-wrench"></i>&nbsp;Tools</li>
+                                        <li class="breadcrumb-item active">Audio Transcribing</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div><!-- /.container-fluid -->
+                    </section>
+            <!-- Main content -->
+            <section class="content">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card" id="ProfileCard">
+                           
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button class="btn btn-primary" id="newTranscription" onclick='addTranscriptionModal()' >New</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12" class="card-body table-responsive">
+                                        <table id="transcriptiontable"
+                                            class="table table-bordered table-hover dataTable no-footer">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center">ID</th>
+                                                    <th class="text-center">Title</th>                                                            
+                                                    <th class="text-center">Date</th>
+                                                    <th class="text-center">Status</th>
+                                                    <th class="text-center"></th> 
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% transcription.forEach(function(p) { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%= p.id %>
+                                                        </td>
+                                                        <td>
+                                                            <%= p.title %>
+                                                        </td>
+                                                        <td>
+                                                            <%= p.date %>
+                                                        </td>
+                                                        <td>
+                                                            <%= p.status %>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button"
+                                                                class="btn btn-primary btn-sm dt-download" id="downloadtranscriptsBtn">
+                                                                Transcripts
+                                                            </button>                                                            
+                                                            <button type="button"
+                                                                class="btn btn-danger btn-sm dt-delete">
+                                                                Delete
+                                                            </button>
+                                                            <% if(p.audio_file_name) { %>
+                                                                <button type="button"
+                                                                    class="btn btn-success btn-primary btn-sm" id="downloadAudioFileBtn">
+                                                                    Audio File
+                                                                </button>
+                                                            <% } %>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    
+            </section>
+
+                 
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <%- include('./../partials/footer') %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->                <!-- /.content - wrapper -->
+
+    <!-- modals -->
+
+    <div class="modal fade" id="addTranscriptionModal" tabindex="-1" role="dialog" aria-labelledby="addTranscriptionModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Transcribe New Audio File</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="addTranscriptionForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="transcriptionTitle"
+                                    placeholder="Title (defaults to filename if empty)" data-maxlength="100" data-validation="length">
+                            </div>
+                        </div>
+                        <div class="form-group row" style="margin-left: 0.75px;">
+                                <h6 class="col-md-auto">Engine: </h6>
+                                <select class="form-control col-sm-10" id="transcription_engine">
+                                    <option value='AZURE' selected="selected">A - Microsoft Azure</option>
+                                    <option value='WATSON'>W - IBM Watson</option>
+                                </select>
+                        </div>
+                        <div class="form-group row" style="margin-left: 0.75px;">
+                            <div class="custom-file" id="customFile" lang="es">
+                                <input type="file" accept=".wav" class="custom-file-input"
+                                    id="audioFileUpload">
+                                <label class="custom-file-label" for="audioFileUpload">
+                                    Choose File
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group row" style="margin-left: 0.75px;">
+                                <input type="checkbox" id="deleteAudioFile">
+                                <label class="form-check-label" for="deleteAudioFile" style="margin-left: 5px">
+                                    Delete audio file after transcription
+                                </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="loader" hidden id="loader"></div>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id='startTranscriptionButton'>Start Transcription</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+        });
+    </script>
+    <script type="text/javascript">
+        $('#tools_audio_transcribe_treeview').addClass('active');
+        $('[data-toggle="popover"]').popover();
+
+        var theFile;
+        var data = {};
+
+        var socket = io('/admin', {
+            path: '/socket.io'
+        });
+
+
+        $('.dt-download').each(function () {
+            $(this).on('click', function (evt) {
+                var data = transcriptionTable.row(this.closest('tr')).data();
+                //window.location = "./getTranscriptFile?id=" + data[0];
+                $.ajax({
+                url: './checkTranscriptFile',
+                data: {"id": data[0]},
+                type: 'GET',
+                success: function (msg) {
+                    console.log(msg);
+                    if (msg.message=="no file") {
+                        alert("No transcript file for this record");
+                    } else {
+                        window.location = "./getTranscriptFile?id=" + data[0];
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+            });
+        });
+
+        $('.btn-success').each(function () {
+            $(this).on('click', function (evt) {
+                var data = transcriptionTable.row(this.closest('tr')).data();
+                $.ajax({
+                url: './getTranscriptFileName',
+                data: {"id": data[0]},
+                type: 'GET',
+                success: function (msg) {
+                    console.log(msg);
+                    if (msg.filename==null) {
+                        alert("No audio file saved for this record");
+                    } else {
+                        window.location = "./getTranscriptAudioFile?id=" + data[0];
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+            });
+        });
+
+        $('.dt-delete').each(function () {
+                $(this).on('click', function (evt) {
+                    var data = transcriptionTable.row(this.closest('tr')).data();
+                    deleteFile(data[0]);
+                });
+            });
+
+    
+        var transcriptionTable = $('#transcriptiontable').DataTable({
+            "searching": true,
+            "paging": true,
+            "lengthChange": false,
+            "bInfo": false,
+            "autoWidth": true,
+            "order": [[0, "desc"]],
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, full, meta) {
+                    return data;
+                },
+            }, 
+            {
+                "targets": 1,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 2,
+                "render": function (data, type, full, meta) {
+                    return moment.utc(data, moment.ISO_8601).local().format("YYYY-MM-DD HH:mm:ss");
+                }
+            }, 
+            {
+                "targets": 3,
+                "render": function (data, type, full, meta) {
+                        return data;
+                }
+            }, 
+            { orderable: false, targets: 4 }
+        ]
+        });
+
+
+        function addTranscriptionModal() {
+            $('#addTranscriptionModal').modal();
+        }
+
+        function deleteFile(id) {
+            console.log(id);
+            $.ajax({
+                url: './DeleteTranscription',
+                data: {"id": id},
+                type: 'POST',
+                success: function (msg) {
+                    location.reload();
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+
+        $('#audioFileUpload').bind("change", function () {
+            var filename = $(this).val();
+            filename = filename.split('\\').pop();
+            data.filename = filename;
+            $(this).next('.custom-file-label').html(filename);
+            theFile = this.files[0];
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext.decodeAudioData(event.target.result, function(buffer) {
+                data.duration = parseInt(buffer.duration);
+                });
+            };
+            reader.readAsArrayBuffer(theFile);
+        });
+     
+        socket.on('complete-transcription', (data) => {
+            console.log(data);
+            console.log("received socket!");
+        })
+
+        $('#startTranscriptionButton').on('click', function (e) {
+            data.engine = $('#transcription_engine').val();
+            data.deleteAudioFile = $('#deleteAudioFile').prop("checked");
+            //if ( data.deleteAudioFile) {                
+             //   data.file_name = null;
+            //} else {
+                data.file_name = theFile.name.split(".wav")[0];
+           // }
+            data.status = "RUNNING";
+            data.title=$('#transcriptionTitle').val();
+            if (data.title=="") {
+                data.title=theFile.name.split(".wav")[0];
+            }
+            //need to save file name 
+            data.file_location = "./uploads/transcription";
+            document.getElementById("loader").removeAttribute("hidden");;
+           
+            $.ajax({
+               url: './insertRunningTranscript',
+               data: data,
+               type: 'POST',
+               success: function (msg) {
+                   console.log("success");
+                    $.ajax({
+                        url: './getTranscriptId',
+                        type: 'GET',
+                        success: function (msg2) {
+                            console.log("success2" + msg2);
+                            data.id = msg2.id;
+                            data.firstname = msg2.firstname;
+                            data.lastname = msg2.lastname;
+                            let formdata = new FormData();
+                            formdata.append("id", data.id);
+                            formdata.append("file", theFile);
+                            formdata.append("engine",  $('#transcription_engine').val());
+                            $.ajax({
+                                url: './uploadTranscriptionAudio',
+                                data: formdata,
+                                type: 'POST',
+                                cache: false,
+                                contentType: false,
+                                processData: false,
+                                success: function (msg) {
+                                    console.log(msg);
+                                    document.getElementById("loader").setAttribute("hidden","");
+                                    $('#addTranscriptionModal').modal('hide');
+                                    socket.emit("run-usability-transcription", data );
+                                    location.reload();
+                                },
+                                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                    console.log("Something Went Wrong");
+                                }
+                            }); 
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Something Went Wrong");
+                        }
+                    });
+                 
+                },
+               error: function (XMLHttpRequest, textStatus, errorThrown) {
+                   console.log("Something Went Wrong");
+               }
+            });            
+        });
+
+    </script>
+</body>
+
+</html>

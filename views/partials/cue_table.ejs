@@ -1,0 +1,80 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
+<% const upper_type = cue_type[0].toUpperCase() + cue_type.slice(1) %>
+<div class="row">
+    <div class="col-12">
+        <div class="card" id="ProfileCard">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h3><%= cue_title %> Cues</h3>
+                        <button class="btn btn-primary" id="new<%= upper_type %>" onclick="add<%=upper_type%>Modal()" >New <%= cue_title %> Cue</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12" class="card-body table-responsive">
+                        <table id="<%=cue_type%>table"
+                            class="table table-bordered table-hover dataTable no-footer">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">ID</th>
+                                    <th class="text-center">Title</th>                                                            
+                                    <th class="text-center">Date</th>
+                                    <th class="text-center">Duration</th>
+                                    <th class="text-center">Transcript</th>
+                                    <th class="text-center"></th> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% cues.forEach(function(p) { %>
+                                    <% if(p.type === cue_type) { %>
+                                        <tr>
+                                            <td>
+                                                <%= p.id %>
+                                            </td>
+                                            <td>
+                                                <%= p.title %>
+                                            </td>
+                                            <td>
+                                                <%= p.date %>
+                                            </td>
+                                            <td>
+                                                <%= p.duration %> seconds
+                                            </td>
+                                            <td>
+                                                <%= p.transcript %>
+                                            </td>
+                                            <td>
+                                                <button type="button"
+                                                    class="btn btn-success btn-primary btn-sm" id="downloadAudioFileBtn" onclick="downloadFile('<%= p.id %>')">
+                                                    Audio File
+                                                </button>
+                                                <button type="button"
+                                                    class="btn btn-danger btn-sm dt-delete" onclick="deleteFile('<%= p.id %>')">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

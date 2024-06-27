@@ -1,0 +1,271 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('./../partials/head') %>
+</head>
+
+<body class="skin-blue fixed sidebar-mini sidebar-mini-expand-feature">
+    <div class="wrapper">
+
+        <!-- Header -->
+        <%- include('./../partials/header') %>
+
+            <!-- Left side column. contains the logo and sidebar -->
+            <%- include('./../partials/sidebar') %>
+
+                <div class="content-wrapper">
+                    <!-- Content Header (Page header) -->
+                    <section class="content-header">
+                        <div class="container-fluid">
+                            <div class="row mb-2">
+                                <div class="col-sm-6">
+                                    <h1>Audible Cues</h1>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ol class="breadcrumb float-sm-right">
+                                        <li class="breadcrumb-item"><i class="fa fa-wrench"></i>&nbsp;Tools</li>
+                                        <li class="breadcrumb-item active">Audio Greetings</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div><!-- /.container-fluid -->
+                    </section>
+            <!-- Main content -->
+            <section class="content">
+                <%- include('./../partials/cue_table', {cues: cues, cue_type: 'greeting', cue_title:'Greeting'}) %>
+                <%- include('./../partials/cue_table', {cues: cues, cue_type: 'typing', cue_title:'Typing'}) %>
+                <%- include('./../partials/cue_table', {cues: cues, cue_type: 'noise', cue_title:'Background Noise'}) %>
+            </section>
+        </div>
+        <!-- /.content - wrapper -->
+
+        <footer class="main-footer">
+            <%- include('./../partials/footer') %>
+        </footer>
+    </div>
+    <!-- ./wrapper -->                <!-- /.content - wrapper -->
+
+    <!-- modals -->
+    <%- include('./../partials/cue_modal', {cue_type: 'greeting', cue_title:'Greeting'}) %>
+    <%- include('./../partials/cue_modal', {cue_type: 'typing', cue_title:'Typing'}) %>
+    <%- include('./../partials/cue_modal', {cue_type: 'noise', cue_title:'Background Noise'}) %>
+
+    <script>
+        $(document).ready(function () {
+        });
+    </script>
+    <script type="text/javascript">
+        $('#settings_greetings_treeview').addClass('active');
+        $('[data-toggle="popover"]').popover();
+
+        var theFile;
+        var data = {};
+
+        var socket = io('/admin', {
+            path: '/socket.io'
+        });
+
+        function downloadFile(id){
+            $.ajax({
+                url: './getAudibleCue',
+                data: {"id": id},
+                type: 'GET',
+                success: function (msg) {
+                    if (msg.message=="no file") {
+                        alert("No file for this record");
+                    } else {
+                        window.location = "./downloadAudibleCue?id=" + msg.cue.id;
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+        const tableConfig = {
+            "searching": true,
+            "paging": true,
+            "lengthChange": false,
+            "bInfo": false,
+            "autoWidth": true,
+            "columnDefs": [{
+                "targets": 0,
+                "render": function (data, type, full, meta) {
+                    return data;
+                },
+            }, 
+            {
+                "targets": 1,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            {
+                "targets": 2,
+                "render": function (data, type, full, meta) {
+                    return moment.utc(data, moment.ISO_8601).local().format("YYYY-MM-DD HH:mm:ss");
+                }
+            }, 
+            {
+                "targets": 3,
+                "render": function (data, type, full, meta) {
+                    return data;
+                }
+            }, 
+            { orderable: false, targets: 4 },
+            { orderable: false, targets: 5 }
+        ]
+        }
+        var greetingTable = $('#greetingtable').DataTable(tableConfig);
+
+        var typingTable = $('#typingtable').DataTable(tableConfig);
+
+        var noiseTable = $('#noisetable').DataTable(tableConfig);
+
+        function addGreetingModal() {
+            $('#addGreetingModal').modal();
+        }
+
+        function addTypingModal() {
+            $('#addTypingModal').modal();
+        }
+
+        function addNoiseModal() {
+            $('#addNoiseModal').modal();
+        }
+
+        function deleteFile(id) {
+            confirm("Delete this audio cue?");
+            $.ajax({
+                url: './deleteAudibleCue',
+                data: {"id": id},
+                type: 'POST',
+                success: function (msg) {
+                    location.reload();
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("Something Went Wrong");
+                }
+            });
+        }
+
+        function fileUploadChange(el){
+            var filename = $(el).val();
+            filename = filename.split('\\').pop();
+            data.filename = filename;
+            $(el).next('.custom-file-label').html(filename);
+            theFile = el.files[0];
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext.decodeAudioData(event.target.result, function(buffer) {
+                data.duration = parseInt(buffer.duration);
+                });
+            };
+            reader.readAsArrayBuffer(theFile);
+        }
+
+        function createAudibleCue(data){
+            data.file_location = "./uploads/audible_cues";
+            document.getElementById("loader").removeAttribute("hidden");
+            $.ajax({
+               url: './createAudibleCue',
+               data: data,
+               type: 'POST',
+               success: function (msg) {
+                    data.id = msg.id;
+                    let formdata = new FormData();
+                    formdata.append("id", data.id);
+                    formdata.append("file", theFile);
+                    $.ajax({
+                        url: './uploadAudibleCue',
+                        data: formdata,
+                        type: 'POST',
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        success: function (msg2) {
+                            console.log(msg2);
+                            document.getElementById("loader").setAttribute("hidden","");
+                            $('#addGreetingModal').modal('hide');
+                            $('#addTypingModal').modal('hide');
+                            $('#addNoiseModal').modal('hide');
+                            location.reload();
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            console.log("Something Went Wrong");
+                        }
+                    });
+                },
+               error: function (XMLHttpRequest, textStatus, errorThrown) {
+                   console.log("Something Went Wrong");
+               }
+            }); 
+        }
+
+        $('#createGreetingButton').on('click', function (e) {
+            data.status="ACTIVE";
+            data.type="greeting";
+            data.length=500;
+            data.file_name = theFile.name.split(".wav")[0];
+            data.title=$('#greetingTitle').val();
+            if (data.title=="") {
+                data.title=theFile.name.split(".wav")[0];
+            }
+            data.transcript=$('#greetingTranscript').val();
+            if (data.transcript=="") {
+                data.transcript="(Pre-recorded Greeting: "+ data.title +" )";
+            }
+            createAudibleCue(data);          
+        });
+
+        $('#createTypingButton').on('click', function (e) {
+            data.status="ACTIVE";
+            data.type="typing";
+            data.length=500;
+            data.file_name = theFile.name.split(".wav")[0];
+            data.title=$('#typingTitle').val();
+            if (data.title=="") {
+                data.title=theFile.name.split(".wav")[0];
+            }
+            data.transcript=$('#typingTranscript').val();
+            if (data.transcript=="") {
+                data.transcript="(Typing Sounds)";
+            }
+            createAudibleCue(data);  
+        });
+
+        $('#createNoiseButton').on('click', function (e) {
+            data.status="ACTIVE";
+            data.type="noise";
+            data.length=500;
+            data.file_name = theFile.name.split(".wav")[0];
+            data.title=$('#noiseTitle').val();
+            if (data.title=="") {
+                data.title=theFile.name.split(".wav")[0];
+            }
+            data.transcript=$('#noiseTranscript').val();
+            if (data.transcript=="") {
+                data.transcript="(Background Noise)";
+            }
+            createAudibleCue(data);  
+        });
+    </script>
+</body>
+
+</html>
