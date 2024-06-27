@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,15 +10,14 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 */
-
+const config = require('./configs/config.js');
 const AsteriskManager = require('asterisk-manager');
-const nconf = require('nconf');
 const fs = require('fs');
 // const util = require('util');
 const moment = require('moment');
-const mysql = require('mysql');
+const mysql = require('mysql2/promise');
 const HashMap = require('hashmap');
 const Watson = require('./transcription/watson');
 const Google = require('./transcription/google');
@@ -29,32 +28,16 @@ const WatsonT = require('./translation/watson');
 const GoogleT = require('./translation/google');
 const AzureT = require('./translation/azure');
 const AmazonT = require('./translation/amazon');
-const decode = require('./utils/decode');
 const validator = require('./utils/validator');
 
 const channelToDigitMap = new HashMap();
 const channelToDestChannelMap = new HashMap();
 
-const winston = require('winston');
-// const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
+const transcriptFilePath = config.transcriptFilePath;
+const wavFilePath = config.wavFilePath;
+const adminExtension = config.adminExtension;
 
-// Set log4js level from the config file
-// logger.setLevel(decode(nconf.get('debuglevel')));
-// log level hierarchy: ALL TRACE DEBUG INFO WARN ERROR FATAL OFF
-// logger.trace('TRACE messages enabled.');
-// console.log('DEBUG messages enabled.');
-// console.log('INFO messages enabled.');
-// logger.warn('WARN messages enabled.');
-// logger.error('ERROR messages enabled.');
-// logger.fatal('FATAL messages enabled.');
-// console.log(`Using config file: ${cfile}`);
-
-const transcriptFilePath = decode(nconf.get('transcriptFilePath'));
-const wavFilePath = decode(nconf.get('wavFilePath'));
-const adminExtension = decode(nconf.get('asterisk:ext_admin'))
+const constants = require('./configs/constants');
 
 let ami = null;
 
@@ -65,12 +48,12 @@ let is_iprelay = null;
 let researchId = null;
 
 function openMySqlConnection() {
-  info.info('watson sql pool connection');
+  console.info('watson sql pool connection');
   const mySqlConnection = mysql.createPool({
-    host: decode(nconf.get('mysql:host')),
-    user: decode(nconf.get('mysql:user')),
-    password: decode(nconf.get('mysql:password')),
-    database: decode(nconf.get('mysql:database')),
+    host: config.mysql.host,
+    user: config.mysql.user,
+    password: config.mysql.password,
+    database: config.mysql.database,
     debug: false,
   });
   return mySqlConnection;
@@ -79,9 +62,10 @@ function openMySqlConnection() {
 const mySqlConnection = openMySqlConnection();
 
 function sendAmiAction(obj) {
+  console.log(obj)
   ami.action(obj, (err) => {
     if (err) {
-      error.error(`AMI Action error ${JSON.stringify(err)}`);
+      console.error(`AMI Action error ${JSON.stringify(err)}`);
     }
   });
 }
@@ -94,17 +78,17 @@ function translate(text, settings, callback) {
     let configs;
     switch (settings.translationEngine) {
       case 'GOOGLE':
-        info.info('Translating with google');
+        console.info('Translating with google');
         engine = new GoogleT();
         break;
       case 'WATSON':
-        info.info('Translating with watson');
+        console.info('Translating with watson');
         configs = JSON.parse(
           fs.readFileSync('./configs/watson/watson-translation.json'),
         );
 
-        if (decode(nconf.get('proxy'))) {
-          const proxy = new URL(decode(nconf.get('proxy')));
+        if (config.proxy) {
+          const proxy = new URL(config.proxy);
           configs.proxy = proxy.hostname;
           configs.proxy_port = proxy.port;
         }
@@ -112,19 +96,19 @@ function translate(text, settings, callback) {
         engine = new WatsonT(configs);
         break;
       case 'AZURE':
-        info.info('Translating with azure');
+        console.info('Translating with azure');
         configs = JSON.parse(
           fs.readFileSync('./configs/azure/azure-translation.json'),
         );
 
-        if (decode(nconf.get('proxy'))) {
-          const proxy = new URL(decode(nconf.get('proxy')));
+        if (config.proxy) {
+          const proxy = new URL(config.proxy);
           configs.proxy = proxy;
         }
         engine = new AzureT(configs);
         break;
       case 'AMAZON':
-        info.info('Translating with Amazon');
+        console.info('Translating with Amazon');
         engine = new AmazonT();
         break;
       default:
@@ -145,46 +129,42 @@ function translate(text, settings, callback) {
 
 function startTranscription(
   extension,
-  sipFilename,
-  pstnFilename,
+  audio,
   sttSettings,
   channel,
   srcExtension,
-  langCodes,
+  isOutgoing,
+  isIncoming,
+  aqInternalCall
 ) {
   let pstn;
   let engineCd = 'A';
-  const file = `${wavFilePath + sipFilename}-out.wav16`;
+  //const file = `${wavFilePath + sipFilename}-out.wav16`;
+  const file = `${wavFilePath + audio}-out.wav16`;
 
-  info.info(
-    `Entering startTranscription() for extension: ${
-      extension
-    }, and file: ${
-      file}`,
+  console.info(
+    `Entering startTranscription() for extension: ${extension
+    }, and file: ${file}`,
   );
   //sttSettings.sttEngine = "PREDEFINED"
   //sttSettings.predefined_id = 10;
-  info.info(`STT Engine: ${sttSettings.sttEngine}`);
-  info.info(`Delay: ${sttSettings.delay}`);
-  info.info('language codes ', langCodes);
+  console.info(`STT Engine: ${sttSettings.sttEngine}`);
+  console.info(`Delay: ${sttSettings.delay}`);
   const index0 = 0;
   const index1 = 1;
-  const en = langCodes[index0];
-  const es = langCodes[index1];
   let langCode;
   switch (sttSettings.sttEngine) {
     case 'GOOGLE': {
       // pstn = new Google(file, 'en');
       if (sttSettings.sourceLanguage === 'en') {
-        langCode = en.google;
+        langCode = constants.LANGUAGE_CODES.US_ENGLISH.GOOGLE;
       }
       if (sttSettings.sourceLanguage === 'es') {
-        langCode = es.google;
+        langCode = constants.LANGUAGE_CODES.US_SPANISH.GOOGLE;
       }
-
-      pstn = new Google(file, langCode);
+      pstn = new Google(file, langCode, sttSettings.auto_punctuation, sttSettings.v2);
       engineCd = 'G';
-      info.info('Connected to Google');
+      console.info('Connected to Google');
       break;
     }
     case 'WATSON': {
@@ -192,24 +172,24 @@ function startTranscription(
         const config = JSON.parse(
           fs.readFileSync('./configs/watson/watson-stt.json'),
         );
-        if (decode(nconf.get('proxy'))) {
-          const proxy = new URL(decode(nconf.get('proxy')));
+        if (config.proxy) {
+          const proxy = new URL(config.proxy);
           config.proxy = proxy.hostname;
           config.proxy_port = proxy.port;
         }
         // pstn = new Watson(file, config, 'en-US_BroadbandModel');
         if (sttSettings.sourceLanguage === 'en') {
-          langCode = en.watson;
+          langCode = constants.LANGUAGE_CODES.US_ENGLISH.WATSON;
         }
         if (sttSettings.sourceLanguage === 'es') {
-          langCode = es.watson;
+          langCode = constants.LANGUAGE_CODES.US_SPANISH.WATSON;
         }
-        pstn = new Watson(file, config, langCode);
+        pstn = new Watson(file, config, langCode, sttSettings.background_audio_suppression, sttSettings.speech_detector_sensitivity);
         engineCd = 'W';
-        info.info('Connected to Watson');
+        console.info('Connected to Watson');
       } catch (err) {
-        error.error('Error loading configs/watson/watson-stt.json');
-        error.error(err);
+        console.error('Error loading configs/watson/watson-stt.json');
+        console.error(err);
       }
       break;
     }
@@ -218,25 +198,27 @@ function startTranscription(
         const config = JSON.parse(
           fs.readFileSync('./configs/azure/azure-cognitive.json'),
         );
-        // config.key = config.key;
-        // config.location = config.location;
         config.file = file;
-        config.language = en.azure;
+        config.language = constants.LANGUAGE_CODES.US_ENGLISH.AZURE;
         if (sttSettings.sourceLanguage === 'es') {
-          config.language = es.azure;
+          config.language = constants.LANGUAGE_CODES.US_SPANISH.AZURE;
         }
-        if (decode(nconf.get('proxy'))) {
-          const proxy = new URL(decode(nconf.get('proxy')));
+        if (config.proxy) {
+          const proxy = new URL(config.proxy);
           config.proxy = proxy.hostname;
           config.proxy_port = proxy.port;
         }
+        config.stt_dropout_enabled = sttSettings.stt_dropout_enabled;
+        config.stt_dropout_interval = sttSettings.stt_dropout_interval;
+        config.stt_dropout_length_min = sttSettings.stt_dropout_length_min;
+        config.stt_dropout_length_max = sttSettings.stt_dropout_length_max;
 
         pstn = new Azure(config);
         engineCd = 'A';
-        info.info('Connected Azure');
+        console.info('Connected Azure');
       } catch (err) {
-        error.error('Error loading configs/azure/azure-cognitive.json');
-        error.error(err);
+        console.error('Error loading configs/azure/azure-cognitive.json');
+        console.error(err);
       }
       break;
     }
@@ -244,26 +226,26 @@ function startTranscription(
       try {
         const config = {};
         config.file = file;
-        config.language = en.aws;
+        config.language = constants.LANGUAGE_CODES.US_ENGLISH.AMAZON;
         if (sttSettings.sourceLanguage === 'es') {
-          config.language = es.aws;
+          config.language = constants.LANGUAGE_CODES.US_SPANISH.AMAZON;
         }
 
         pstn = new Amazon(config);
         engineCd = 'Z';
-        info.info('Connected Amazon');
+        console.info('Connected Amazon');
       } catch (err) {
-        error.error('Error loading configs/amazon/amazon.json');
-        error.error(err);
+        console.error('Error loading configs/amazon/amazon.json');
+        console.error(err);
       }
       break;
     }
     case 'PREDEFINED': {
-          console.log("PREDEFINED: " + sttSettings.predefined_id);
-          pstn = new PredefinedTranscripts(sttSettings.predefined_id, mySqlConnection);
-          engineCd = 'P';
-          info.info('Connected to Predefined Transcripts');
-          break;
+      console.info("PREDEFINED: " + sttSettings.predefined_id);
+      pstn = new PredefinedTranscripts(sttSettings.predefined_id, mySqlConnection);
+      engineCd = 'P';
+      console.info('Connected to Predefined Transcripts');
+      break;
     }
     default: {
       const now = new Date();
@@ -274,8 +256,7 @@ function startTranscription(
           event: 'message-stream',
           extension,
           transcript:
-            `Extension: ${
-              extension
+            `Extension: ${extension
             } has not been configured for ACE Quill. Please add this extension in the administrative research portal.`,
           source: 'PSTN',
           sttengine: '?',
@@ -288,23 +269,28 @@ function startTranscription(
     // return;
   }
   const now = new Date();
-  sendAmiAction({
-    Action: 'SendText',
-    Channel: channel,
-    Message: JSON.stringify({
-      event: 'message-stream',
-      extension,
-      transcript: '---Answered---',
-      source: 'PSTN',
-      sttengine: engineCd,
-      final: true,
-      timestamp: now,
-      msgid: now.getTime(),
-    }),
-  });
+
+  if (!isOutgoing) {
+    sendAmiAction({
+      Action: 'SendText',
+      Channel: channel,
+      Message: JSON.stringify({
+        event: 'message-stream',
+        extension,
+        transcript: '---Answered---',
+        source: 'PSTN',
+        sttengine: engineCd,
+        final: true,
+        timestamp: now,
+        type: "info",
+        isIncoming: true,
+        msgid: now.getTime(),
+      }),
+    });
+  }
 
   let pstnMsgTime = 0;
-  pstn.start((data) => {
+  pstn.start(async (data) => {
     if (pstnMsgTime === 0) {
       const d = new Date();
       pstnMsgTime = d.getTime();
@@ -315,13 +301,15 @@ function startTranscription(
     Data.extension = extension;
     Data.msgid = pstnMsgTime;
     Data.sttengine = engineCd;
+    Data.isOutgoing = isOutgoing;
+    Data.isIncoming = isIncoming;
 
     let ip_config = JSON.parse(
-          fs.readFileSync('./configs/acequill.json'),
-        );
-    if (ip_config.isIprelay == "true"){
+      fs.readFileSync('./configs/acequill.json'),
+    );
+    if (ip_config.isIprelay == "true") {
       is_iprelay = 1;
-    } else{
+    } else {
       is_iprelay = 0;
     }
 
@@ -330,60 +318,68 @@ function startTranscription(
       extension: Data.extension,
       final: Data.final,
       timestamp: Data.timestamp,
-      raw: Data.raw,
+      raw: (Data.sttengine == 'A') ? null : Data.raw,
       sttEngine: Data.sttengine,
       research_data_id: sttSettings.researchId,
       is_iprelay: is_iprelay,
 
     };
-    info.info('callback dataStore, ', dataStore);
-    mySqlConnection.query('INSERT INTO data_store SET ?', dataStore, (
-      err,
-      result,
-    ) => {
-      if (err) {
-        error.error(`Error in INSERT: ${JSON.stringify(err)}`);
-      } else {
-        info.info(`INSERT result: ${JSON.stringify(result)}`);
-      }
-    });
+    console.info('callback dataStore, ', dataStore);
+    try{
+      const [result, _fields] = await mySqlConnection.query('INSERT INTO data_store SET ?', dataStore);
+      console.info(`INSERT result: ${JSON.stringify(result)}`);
+    }
+    catch(error){
+      console.error(`Error in INSERT: ${JSON.stringify(error)}`);
+    }
+
     Data.raw = null; // dont need to send this to the phone
     // if (sttSettings.translationEngine !== 'NONE') {
-    translate(Data.transcript, sttSettings, (err, translation) => {
+    translate(Data.transcript, sttSettings, async (err, translation) => {
       Data.transcript = err ? Data.transcript : translation;
       const delay = sttSettings.delay * 1000;
       setTimeout(() => {
         if (channel) {
-          if (Buffer.byteLength(JSON.stringify(data)) > 1024){
+          if (Buffer.byteLength(JSON.stringify(data)) > 1024) {
             var theData = (JSON.stringify(data));
             var msgCount = Math.ceil((Buffer.byteLength(theData)) / 1024);
             var i = 0;
             var splitAt = Math.ceil(theData.length / msgCount);
-            while (i < msgCount){
-                i += 1;
-                s = "Part " + i + " of " + msgCount + ": " + theData.slice(0, splitAt);
-                sendAmiAction({
-                  Action: 'SendText',
-                  ActionID: data.msgid,
-                  Channel: channel,
-                  Message: s,
-                });
-                theData = theData.slice(splitAt);
-            }
-          } else {
-            sendAmiAction({
+            while (i < msgCount) {
+              i += 1;
+              s = "Part " + i + " of " + msgCount + ": " + theData.slice(0, splitAt);
+              sendAmiAction({
                 Action: 'SendText',
                 ActionID: data.msgid,
                 Channel: channel,
+                Message: s,
+              });
+              theData = theData.slice(splitAt);
+            }
+          } else {
+            sendAmiAction({
+              Action: 'SendText',
+              ActionID: data.msgid,
+              Channel: channel,
+              Message: JSON.stringify(data),
+            });
+            if (aqInternalCall) {
+              data.isIncoming = !data.isIncoming;
+              data.isOutgoing = !data.isOutgoing;
+              sendAmiAction({
+                Action: 'SendText',
+                ActionID: data.msgid,
+                Channel: aqInternalCall,
                 Message: JSON.stringify(data),
-          });
+              });
+            }
           }
         }
       }, delay);
       if (Data.final) {
-        info.info(`PSTN: ${data.transcript}`);
+        console.info(`PSTN: ${data.transcript}`);
         fs.appendFileSync(
-          `${transcriptFilePath + pstnFilename}.txt`,
+          `${transcriptFilePath + audio}.txt`,
           `${+Data.timestamp}: ${Data.transcript}\n`,
         );
         if (sttSettings.sourceLanguage !== sttSettings.targetLanguage) {
@@ -395,18 +391,12 @@ function startTranscription(
             msgid: Data.msgid,
             research_data_id: sttSettings.researchId,
           };
-          mySqlConnection.query(
-            'INSERT INTO translation_data SET ?',
-            translationData,
-            (err2,
-              result2) => {
-              if (err2) {
-                error.error(`Error in INSERT: ${JSON.stringify(err2)}`);
-              } else {
-                info.info(`INSERT result: ${JSON.stringify(result2)}`);
-              }
-            },
-          );
+          try {
+            const [result2, _fields2] = await mySqlConnection.query('INSERT INTO translation_data SET ?', translationData);
+            console.info(`INSERT result: ${JSON.stringify(result2)}`);
+          } catch (error) {
+            console.error(`Error in INSERT: ${JSON.stringify(error)}`);
+          }
         }
         // reset pstnMsgTime;
         pstnMsgTime = 0;
@@ -416,12 +406,12 @@ function startTranscription(
   });
 }
 
-function handleManagerEvent(evt) {
+async function handleManagerEvent(evt) {
   let extString;
   let extensionArray;
   let ext;
 
-  if(evt.channel && evt.channel.startsWith(`PJSIP/${adminExtension}-`))
+  if (evt.channel && evt.channel.startsWith(`PJSIP/${adminExtension}-`))
     return;
 
   switch (evt.event) {
@@ -430,10 +420,10 @@ function handleManagerEvent(evt) {
       /*
        * Listen for DialEnd to indicate a connected call.
        */
-      info.info('****** Processing AMI DialEnd ******');
-      console.log(`PJSIP/+${adminExtension}-`)
-      if(evt.channel.startsWith(`PJSIP/${adminExtension}-`))
-           break
+      console.info('****** Processing AMI DialEnd ******');
+      console.info(`PJSIP/+${adminExtension}-`)
+      if (evt.channel.startsWith(`PJSIP/${adminExtension}-`))
+        break
 
       if (evt.dialstatus === 'ANSWER') {
         /*
@@ -449,18 +439,17 @@ function handleManagerEvent(evt) {
          * [Mix:] <value>
          */
 
-        // console.log('Call connected');
+        // console.info('Call connected');
         if (
           validator.isChannel(evt.channel)
           && validator.isChannel(evt.destchannel)
         ) {
           // Populate the map containing destchannel => EMPTY as an initial value
           channelToDigitMap.set(evt.destchannel, 'EMPTY');
-          info.info(
-            `DialEnd - setting channelToDigitMap: ${
-              evt.destchannel
+          console.info(
+            `DialEnd - setting channelToDigitMap: ${evt.destchannel
             } => `
-          + 'EMPTY',
+            + 'EMPTY',
           );
 
           /*
@@ -469,72 +458,26 @@ function handleManagerEvent(evt) {
            * we only have access to the
            * channel, but, also need access to the destchannel.
            */
-          info.info(
-            `DialEnd - setting channelToDestChannelMap: ${
-              evt.channel
-            } => ${
-              evt.destchannel}`,
+          console.info(
+            `DialEnd - setting channelToDestChannelMap: ${evt.channel
+            } => ${evt.destchannel}`,
           );
           channelToDestChannelMap.set(evt.channel, evt.destchannel);
-
-
 
           // Build unique filenames using timestamp and channel name
           const now = moment().format('MM-DD-YYYY_HH-mm-ss');
           let sipFilename = `${now}_${evt.channel}`;
           sipFilename = sipFilename.replace(/\//g, '-');
-          info.info(`sipFilename: ${sipFilename}`);
-
-          // Open the file for the SIP transcript text
-          // const fdSip = fs.open(
-          //   `${transcriptFilePath + sipFilename}.txt`,
-          //   'w',
-          //   (err, sfd) => {
-          //     if (err) {
-          //       logger.error(
-          //         `Error opening SIP transcript text: ${JSON.stringify(err)}`,
-          //       );
-          //     }
-          //     logger.info('SIP transcript file opened successfully!');
-          //   },
-          // );
+          console.info(`sipFilename: ${sipFilename}`);
 
           let pstnFilename = `${now}_${evt.destchannel}`;
           pstnFilename = pstnFilename.replace(/\//g, '-');
-          info.info(`pstnFilename: ${pstnFilename}`);
+          console.info(`pstnFilename: ${pstnFilename}`);
 
-          // Open the file for the PSTN transcript text
-          // const fdPstn = fs.open(
-          //   `${transcriptFilePath + pstnFilename}.txt`,
-          //   'w',
-          //   (err, sfd) => {
-          //     if (err) {
-          //       logger.error('Error opening PSTN transcript text');
-          //     }
 
-          //     logger.info('PSTN transcript file opened successfully!');
-          //   },
-          // );
+          console.info(`channel 1: ${evt.channel}`);
+          console.info(`channel 2: ${evt.destchannel}`);
 
-          info.info(`channel 1: ${evt.channel}`);
-          info.info(`channel 2: ${evt.destchannel}`);
-          /*
-                    var calleeRecordCommand = {
-                      Action: "MixMonitor",
-                      Channel: evt.destchannel,
-                      File: wavFilePath + pstnFilename + "-callee-out.wav16",
-                      //Format: "wav16",
-                      //Mix: "false",
-                  options: "t("+wavFilePath + pstnFilename + "-callee-first.wav16)",
-                    };
-
-                    console.log(
-                      "Outgoing AMI Action for Callee: " +
-                        JSON.stringify(calleeRecordCommand)
-                    );
-
-                    sendAmiAction(calleeRecordCommand);
-          */
           const mixMonitorCommand = {
             Action: 'MixMonitor',
             Channel: evt.channel,
@@ -542,9 +485,8 @@ function handleManagerEvent(evt) {
             options: `r(${wavFilePath}${pstnFilename}-callee-out.wav16) t(${wavFilePath}${pstnFilename}-caller-out.wav16)`,
           };
 
-          info.info(
-            `Outgoing AMI Action for Caller: ${
-              JSON.stringify(mixMonitorCommand)}`,
+          console.info(
+            `Outgoing AMI Action for Caller: ${JSON.stringify(mixMonitorCommand)}`,
           );
 
           sendAmiAction(mixMonitorCommand);
@@ -559,192 +501,117 @@ function handleManagerEvent(evt) {
           const destString = evt.destchannel;
           const destArray = destString.split(/[/,-]/);
           const dest = destArray[1];
+          let sttSettings = {};
+          try {
+            sttSettings = await getExtensionSettings(ext);
+          }
+          catch (error) {
+            console.info("ERROR GETTING EXTENSION SETTINGS", error);
+            return;
+          }
+          
+          const milliseconds = new Date().getTime();
+          // Insert MySQL insert here
+          console.info('DialEnd MySQL Data');
+          console.info('Device ID: 1');
+          console.info(`Extension: ${ext}`);
+          console.info(`Source channel: ${evt.channel}`);
+          console.info(`Dest channel: ${evt.destchannel}`);
+          console.info(`Call start: ${milliseconds}`);
+          console.info(`Unique ID: ${evt.uniqueid}`);
+          console.info(`Dest Phone number: ${evt.destcalleridnum}`);
+          console.info(`STT Engine: ${sttSettings.sttEngine}`);
+          console.info(`STT Delay: ${sttSettings.delay}`);
+          console.info(`STT Background Audio Suppression: ${sttSettings.background_audio_suppression}`);
+          console.info(`STT Speech Detector Sensitivity: ${sttSettings.speech_detector_sensitivity}`);
+          console.info(
+            `Translation Engine: ${sttSettings.translationEngine}`,
+          );
+          console.info(`Source Langauge: ${sttSettings.sourceLanguage}`);
+          console.info(`Target Language: ${sttSettings.targetLanguage}`);
+          console.info(`TTS Engine: ${sttSettings.ttsEngine}`);
+          console.info('Call Accuracy: 100%');
+          console.info(`Transcript File Path: ${transcriptFilePath}`);
+          console.info(`Transcript File: ${pstnFilename}.txt`);
+          console.info(`Wav File Path: ${wavFilePath}`);
+          console.info(`Wav File: ${pstnFilename}-mix.wav16`);
 
-          const sql = '(SELECT id, extension, stt_engine, delay, default_device, translation_engine, source_language, target_language, ARIA_settings, tts_engine, predefined_id FROM device_settings WHERE extension = ?) '
-            + 'UNION '
-            + '(SELECT id, extension, stt_engine, delay, default_device, translation_engine, source_language, target_language, ARIA_settings, tts_engine, predefined_id FROM device_settings WHERE default_device = 1) '
-            + 'LIMIT 1;';
+          const buildNumber = null;
+          const gitCommit = null;
 
-          mySqlConnection.query(sql, ext, (err, result) => {
-            if (err) {
-              error.error(`Error in UPDATE statement: ${JSON.stringify(err)}`);
-              throw err;
-            } else {
-              info.info(`MySQL INSERT result: ${JSON.stringify(result)}`);
-              const sttSettings = {
-                sttEngine: result[0] ? result[0].stt_engine : 'UNKNOWN',
-                delay: result[0] ? result[0].delay : '0',
-                translationEngine: result[0]
-                  ? result[0].translation_engine
-                  : 'UNKNOWN',
-                sourceLanguage: result[0]
-                  ? result[0].source_language
-                  : 'UNKNOWN',
-                targetLanguage: result[0]
-                  ? result[0].target_language
-                  : 'UNKNOWN',
-                ttsEngine: result[0]
-                  ? result[0].tts_engine
-                  : 'UNKNOWN',
-                ariaSettings: result[0] ? result[0].ARIA_settings : 'UNKNOWN',
-                predefined_id: result[0]
-                ? result[0].predefined_id
-                : 'UNKNOWN',
-              };
-              /*
-                            startTranscription(
-                              ext,
-                              sipFilename,
-                              pstnFilename,
-                              sttSettings,
-                              evt.channel
-                            );
-              */
-              // startTranscription(dest, pstnFilename, sipFilename,sttSettings, evt.destchannel);
-              // mw both sides
-              const milliseconds = new Date().getTime();
-              // Insert MySQL insert here
-              info.info('DialEnd MySQL Data');
-              info.info('Device ID: 1');
-              info.info(`Extension: ${ext}`);
-              info.info(`Source channel: ${evt.channel}`);
-              info.info(`Dest channel: ${evt.destchannel}`);
-              info.info(`Call start: ${milliseconds}`);
-              info.info(`Unique ID: ${evt.uniqueid}`);
-              info.info(`Dest Phone number: ${evt.destcalleridnum}`);
-              info.info(`STT Engine: ${sttSettings.sttEngine}`);
-              info.info(`STT Delay: ${sttSettings.delay}`);
-              info.info(
-                `Translation Engine: ${sttSettings.translationEngine}`,
+          const mySet = {
+            device_id: ext, // deviceId,
+            extension: ext,
+            src_channel: evt.channel,
+            dest_channel: evt.destchannel,
+            unique_id: evt.uniqueid,
+            dest_phone_number: evt.destcalleridnum,
+            stt_engine: sttSettings.sttEngine,
+            translation_engine: sttSettings.translationEngine,
+            source_language: sttSettings.sourceLanguage,
+            target_language: sttSettings.sourceLanguage,
+            tts_engine: sttSettings.ttsEngine,
+            call_accuracy: 100,
+            added_delay: sttSettings.delay,
+            transcription_file_path: transcriptFilePath,
+            transcription_file: `${pstnFilename}.txt`,
+            audio_file_path: wavFilePath,
+            audio_file: `${pstnFilename}-mix.wav16`,
+            build_number: buildNumber,
+            git_commit: gitCommit,
+            is_iprelay: is_iprelay,
+            predefined_id: sttSettings.predefined_id,
+          };
+
+          console.info(`Call data: ${JSON.stringify(mySet)}`);
+          try {
+            const [result, _fields] = await mySqlConnection.query('INSERT INTO research_data SET ?', mySet);
+            console.info(`INSERT result: ${JSON.stringify(result)}`);
+            sttSettings.researchId = result.insertId;
+            researchId = sttSettings.researchId;
+          } catch (error) {
+            console.error(`Error in INSERT: ${JSON.stringify(error)}`);
+          }
+          // if dest is 4 in length must be terminal to terminal.
+          let aqCall = dest.length === 4 ? evt.destchannel : false;
+          console.info("MW ORIGIN CAPTIONS TURN ON FOR", ext);
+          console.info("MW AND AQ DUAL", aqCall && sttSettings.dual_enabled)
+          startTranscription(
+            ext,
+            `${pstnFilename}-caller`,
+            sttSettings,
+            evt.channel,
+            dest,
+            false,
+            true,
+            aqCall
+          );
+        
+        if (aqCall) {
+          try {
+            const destSettings = await getExtensionSettings(dest);
+          }
+          catch (error) {
+            console.error('Error fetching destSettings ', error);
+          }
+          if (destSettings) {
+            console.info("MW REC CAPTIONS TURN ON FOR", dest);
+            console.info("MW AND AQ DUAL", aqCall && destSettings.dual_enabled)
+            console.info(JSON.stringify(destSettings, null, 2))
+            destSettings.researchId = researchId;
+            const aqCallChannel = evt.channel
+              startTranscription(
+                dest,
+                `${pstnFilename}-callee`,
+                destSettings,
+                evt.destchannel,
+                ext,
+                false,
+                true,
+                aqCallChannel
               );
-              info.info(`Source Langauge: ${sttSettings.sourceLanguage}`);
-              info.info(`Target Language: ${sttSettings.targetLanguage}`);
-              info.info(`TTS Engine: ${sttSettings.ttsEngine}`);
-              info.info('Call Accuracy: 100%');
-              info.info(`Transcript File Path: ${transcriptFilePath}`);
-              info.info(`Transcript File: ${pstnFilename}.txt`);
-              info.info(`Wav File Path: ${wavFilePath}`);
-              info.info(`Wav File: ${pstnFilename}-mix.wav16`);
-
-              const buildNumber = null;
-              const gitCommit = null;
-              // const deviceId = null;
-              // TODO: we'll register the devices and and this back.
-              /*
-                            mySqlConnection.query(
-                              "SELECT build_number, git_commit, device_id FROM registration_data
-                              WHERE extension = ?",
-                              ext,
-                              function (err, result) {
-                                if (err) {
-                                  console.log("Error in SELECT " + err);
-                                  throw err;
-                                } else {
-                                  console.log("SELECT success: " + JSON.stringify(result));
-                                  buildNumber = result[0].build_number;
-                                  console.log("buildNumber: " + buildNumber);
-
-                                  gitCommit = result[0].git_commit;
-                                  console.log("gitCommit: " + gitCommit);
-
-                                  deviceId = result[0].device_id;
-                                  console.log("deviceId: " + deviceId);
-              */
-
-
-
-              const mySet = {
-                device_id: ext, // deviceId,
-                extension: ext,
-                src_channel: evt.channel,
-                dest_channel: evt.destchannel,
-                unique_id: evt.uniqueid,
-                dest_phone_number: evt.destcalleridnum,
-                stt_engine: sttSettings.sttEngine,
-                translation_engine: sttSettings.translationEngine,
-                source_language: sttSettings.sourceLanguage,
-                target_language: sttSettings.sourceLanguage,
-                tts_engine: sttSettings.ttsEngine,
-                call_accuracy: 100,
-                added_delay: sttSettings.delay,
-                transcription_file_path: transcriptFilePath,
-                transcription_file: `${pstnFilename}.txt`,
-                audio_file_path: wavFilePath,
-                audio_file: `${pstnFilename}-mix.wav16`,
-                build_number: buildNumber,
-                git_commit: gitCommit,
-                is_iprelay: is_iprelay,
-                predefined_id: sttSettings.predefined_id,
-              };
-
-              info .info(`Call data: ${JSON.stringify(mySet)}`);
-
-              mySqlConnection.query(
-                'INSERT INTO research_data SET ?',
-                mySet,
-                (err2, result2) => {
-                  if (err2) {
-                    error.error(`Error in INSERT: ${JSON.stringify(err2)}`);
-                  } else {
-                    info.info(`INSERT result: ${JSON.stringify(result2)}`);
-                    sttSettings.researchId = result2.insertId;
-
-                    researchId = sttSettings.researchId;
-
-
-                    // let en;
-                    // let es;
-                    mySqlConnection.query('SELECT * FROM language_code', (
-                      err3,
-                      result3,
-                    ) => {
-                      if (err3) {
-                        error.error(`Error in INSERT: ${JSON.stringify(err3)}`);
-                      } else {
-                        info.info(`language code result: ${JSON.stringify(result3)}`);
-                        startTranscription(
-                          ext,
-                          // sipFilename + "-caller",
-                          `${pstnFilename}-caller`,
-                          `${pstnFilename}-callee`,
-                          sttSettings,
-                          evt.channel,
-                          dest,
-                          result3,
-                        );
-
-                        // Extension to Extension are 4 digits,
-                        // if dest is 4 in length must be terminal to terminal.
-                        if (dest.length === 4) {
-                          // Reverse the language settings for the destination caller
-                          const destSettings = JSON.parse(
-                            JSON.stringify(sttSettings),
-                          ); // Must copy the JSON Object, otherwise both ext's will be effected.
-                          destSettings.sourceLanguage = sttSettings.targetLanguage;
-                          destSettings.targetLanguage = sttSettings.sourceLanguage;
-                          startTranscription(
-                            dest,
-                            // sipFilename,
-                            `${pstnFilename}-callee`, // mw test 1009
-                            `${pstnFilename}-caller`,
-                            destSettings,
-                            evt.destchannel,
-                            ext,
-                            result2,
-                          );
-                        }
-                      }
-                    });
-                  }
-                },
-              );
-
-
-              // }
-              // }
-              // );
-            }
-          });
+          }
+        }
         }
       }
       break;
@@ -764,7 +631,7 @@ function handleManagerEvent(evt) {
        *
        */
 
-      info.info('****** Processing AMI Hangup ******');
+      console.info('****** Processing AMI Hangup ******');
 
       /*
        * Extract the extension from the Hangup.  Note, we will get two hangup messages:
@@ -795,64 +662,46 @@ function handleManagerEvent(evt) {
        *
        */
 
-      if(researchId){
-       let sql = 'SELECT is_iprelay FROM data_store WHERE research_data_id = ? LIMIT 1';
-
-      mySqlConnection.query(sql, researchId, (err, result) => {
-          if (err){
-            error.error("error!!" + err)
-          } else{
-            let sql = 'UPDATE research_data SET is_iprelay = ? WHERE id = ?'
-
-            if (result.length != 0){
-                let args = [result[0].is_iprelay, researchId]
-                mySqlConnection.query(sql, args,
-                (err, result) => {
-                  if(err){
-                    console.log("error:" + err);
-                  } else {
-                    console.log("Success!!!");
-                  }
-                }
-              );
-            }
+      if (researchId) {
+        try {
+          const [result, _fields] = await mySqlConnection.query('SELECT is_iprelay FROM data_store WHERE research_data_id = ? LIMIT 1', researchId);
+          if (result.length > 0) {
+            await mySqlConnection.query('UPDATE research_data SET is_iprelay = ? WHERE id = ?', [result[0].is_iprelay, researchId]);
           }
-      } );
-    }
-
-
+        } catch (error) {
+          console.error("Error fetching and setting is_iprelay" + error);
+        }
+      }
 
       if (evt.uniqueid === evt.linkedid && validator.isUniqueId(evt.uniqueid)) {
         let sql = 'UPDATE research_data SET call_end = CURRENT_TIMESTAMP(), ';
-        sql
-          += 'call_duration = UNIX_TIMESTAMP(call_end) - UNIX_TIMESTAMP(call_start)';
+        sql += 'call_duration = UNIX_TIMESTAMP(call_end) - UNIX_TIMESTAMP(call_start)';
         sql += ' WHERE unique_id = ?;';
 
         const params = evt.uniqueid;
 
-        info.info(`Hangup SQL statement: ${sql}`);
-        info.info(`Hangup SQL statement: ${params}`);
-
-        mySqlConnection.query(sql, params, (err, result) => {
-          if (err) {
-            error.error(`Error in UPDATE statement: ${JSON.stringify(err)}`);
-            throw err;
-          } else {
-            info.info(`MySQL INSERT result: ${JSON.stringify(result)}`);
-          }
-        });
+        console.info(`Hangup SQL statement: ${sql}`);
+        console.info(`Hangup SQL statement: ${params}`);
+        try {
+          const [result3, _fields3] = await mySqlConnection.query(sql, params);
+          console.info(`MySQL INSERT result: ${JSON.stringify(result3)}`);
+        }
+        catch (error) {
+          console.error(`Error in UPDATE statement for research_data: ${JSON.stringify(error)}`);
+          throw error;
+        }
       }
 
       // This should be the channel containing twilio
       if (channelToDigitMap.has(evt.channel)) {
-        info.info(
+        console.info(
           `Hangup, - deleting ${evt.channel} from channelToDigitMap`,
         );
         channelToDigitMap.delete(evt.channel);
       }
 
       if (channelToDestChannelMap.has(evt.channel)) {
-        info.info(
+        console.info(
           `Hangup, - deleting ${evt.channel} from channelToDestChannelMap`,
         );
         channelToDestChannelMap.delete(evt.channel);
@@ -881,12 +730,12 @@ function handleManagerEvent(evt) {
         Digit: 1
         Direction: Sent
       */
-      info.info('****** Processing AMI DTMFBegin ******');
+      console.info('****** Processing AMI DTMFBegin ******');
       // logger.info(`Received DTMF: ${util.inspect(evt, false, null)}`);
 
-      info.info('Contents of map before:');
+      console.info('Contents of map before:');
       channelToDigitMap.forEach((value, key) => {
-        info.info(`${key} => ${value}`);
+        console.info(`${key} => ${value}`);
       });
 
       /*
@@ -907,11 +756,9 @@ function handleManagerEvent(evt) {
          *  Originally set to EMPTY to make sure we only set it once
          */
         if (channelToDigitMap.get(evt.channel) === 'EMPTY') {
-          info.info(
-            `DTMFBegin - setting channelToDigitMap ${
-              evt.channel
-            } => ${
-              evt.digit}`,
+          console.info(
+            `DTMFBegin - setting channelToDigitMap ${evt.channel
+            } => ${evt.digit}`,
           );
           channelToDigitMap.set(evt.channel, evt.digit);
           // Validate both digit and linkedid (linkedid is same Format of uniqueid) are numbers.
@@ -921,34 +768,31 @@ function handleManagerEvent(evt) {
           ) {
             const sql = 'UPDATE research_data SET scenario_number = ? WHERE unique_id = ?;';
             const params = [evt.digit, evt.linkedid];
-            info.info(`DTMF SQL statement: ${sql}`);
-            info.info(`DTMF SQL params: ${params}`);
-            mySqlConnection.query(sql, params, (err, result) => {
-              if (err) {
-                error.error(
-                  `Error in UPDATE statement: ${JSON.stringify(err)}`,
-                );
-                throw err;
-              } else {
-                info.info(`MySQL UPDATE result: ${JSON.stringify(result)}`);
-              }
-            });
+            console.info(`DTMF SQL statement: ${sql}`);
+            console.info(`DTMF SQL params: ${params}`);
+            try{
+              const [result4, _fields4] = await mySqlConnection.query(sql, params);
+              console.info(`MySQL UPDATE result: ${JSON.stringify(result4)}`);
+            }
+            catch(error){
+              console.error(`MySQL UPDATE research_data error: ${JSON.stringify(error)}`);
+            }
           }
         } else {
-          info.info('No match in the channelToDigitMap');
+          console.info('No match in the channelToDigitMap');
         }
       }
 
-      info.info('Contents of map after:');
+      console.info('Contents of map after:');
       channelToDigitMap.forEach((value, key) => {
-        info.info(`${key} => ${value}`);
+        console.info(`${key} => ${value}`);
       });
 
       break;
     }
 
     case 'UserEvent':
-      info.info('AMI Event: UserEvent');
+      console.info('AMI Event: UserEvent');
       if (evt.userevent === 'SIPMESSAGE') {
         /*
         { event: 'UserEvent',
@@ -994,23 +838,17 @@ function handleManagerEvent(evt) {
             git_commit: gitCommit,
             device_id: deviceId,
           };
-          mySqlConnection.query(
-            sql,
-            [myRegisterData, buildNumber, gitCommit, deviceId],
-            (err, result) => {
-              if (err) {
-                error.error(
-                  `Error in UPDATE statement: ${JSON.stringify(err)}`,
-                );
-                throw err;
-              } else {
-                info.info(`MySQL UPDATE result: ${JSON.stringify(result)}`);
-              }
-            },
-          );
+          try {
+            [result5, _fields5] = await mySqlConnection.query(sql, [myRegisterData, buildNumber, gitCommit, deviceId]);
+            console.info(`MySQL UPDATE result: ${JSON.stringify(result5)}`);
+          }
+          catch(error) {
+            console.error(
+              `Error in UPDATE statement: ${JSON.stringify(error)}`,
+            );
+          }
         }
       }
-
       break;
     default:
       break;
@@ -1021,10 +859,10 @@ function initAmi() {
   if (ami === null) {
     try {
       ami = new AsteriskManager(
-        decode(nconf.get('asterisk:port')),
-        decode(nconf.get('asterisk:host')),
-        decode(nconf.get('asterisk:user')),
-        decode(nconf.get('asterisk:password')),
+        config.asterisk.port,
+        config.asterisk.host,
+        config.asterisk.user,
+        config.asterisk.password,
         true,
       );
 
@@ -1033,25 +871,60 @@ function initAmi() {
       // Define event handlers here
       ami.on('managerevent', handleManagerEvent);
 
-      info.info('Connected to Asterisk');
+      console.info('Connected to Asterisk');
     } catch (exp) {
-      info.info(`Init AMI error${JSON.stringify(exp)}`);
+      console.error(`Init AMI error${JSON.stringify(exp)}`);
     }
+  }
+}
+
+
+async function getExtensionSettings(ext, callback) {
+  const sql = '(SELECT * FROM device_settings WHERE extension = ?) '
+    + 'UNION '
+    + '(SELECT * FROM device_settings WHERE default_device = 1) '
+    + 'LIMIT 1;';
+
+  const [result, _fields] = await mySqlConnection.query(sql, ext);
+  if (result[0]) {
+    var row = result[0];
+    return {
+      sttEngine: row.stt_engine || 'UNKNOWN',
+      delay: row.delay || '0',
+      background_audio_suppression: row.background_audio_suppression,
+      speech_detector_sensitivity: row.speech_detector_sensitivity,
+      auto_punctuation: row.auto_punctuation || '0',
+      v2: row.v2,
+      translationEngine: row.translation_engine || 'UNKNOWN',
+      sourceLanguage: row.source_language || 'UNKNOWN',
+      targetLanguage: row.target_language || 'UNKNOWN',
+      ttsEngine: row.tts_engine || 'UNKNOWN',
+      ariaSettings: row.ARIA_settings || 'UNKNOWN',
+      predefined_id: row.predefined_id,
+      stt_dropout_enabled: row.stt_dropout_enabled,
+      stt_dropout_interval: row.stt_dropout_interval || 1,
+      stt_dropout_length_min: row.stt_dropout_length_min || 100,
+      stt_dropout_length_max: row.stt_dropout_length_max || 200,
+      dual_enabled: row.dual_enabled,
+      captions_enabled: row.caller_captions_enabled
+    }
+  } else {
+    throw new Error('No Record for extension');
   }
 }
 
 initAmi();
 
 process.on('SIGINT', () => {
-  info.info('SIGINT About to exit \n closing sql connection pool');
+  console.info('SIGINT About to exit \n closing sql connection pool');
   mySqlConnection.end();
   process.exit();
 });
 
 process.on('uncaughtException', (e) => {
-  error.error('Uncaught Exception...');
-  error.error(e.stack);
-  error.error('closing sql connection pool');
+  console.error('Uncaught Exception...');
+  console.error(e.stack);
+  console.error('closing sql connection pool');
   mySqlConnection.end();
   process.exit();
 });

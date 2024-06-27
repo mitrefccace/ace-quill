@@ -1,60 +1,40 @@
-const proxy = require('proxy-agent');
-const fs = require('fs');
+/*
+                                 NOTICE
 
-const winston = require('winston');
-const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
-const AWS = require('aws-sdk');
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
 
-const aceConfig = JSON.parse(
-  fs.readFileSync('./configs/acequill.json'),
-);
+                        ©2024 The MITRE Corporation.
+*/
 
-AWS.config.update({
-  httpOptions: { agent: proxy(aceConfig.proxy) },
-});
+const { getAWSConfigWithProxy } = require('../utils/aws-config');
+const { TranslateClient, TranslateTextCommand  } = require("@aws-sdk/client-translate");
 
-function Amazon() {}
+function Amazon() {
+  this.translateConfig = getAWSConfigWithProxy();
+  this.Translate = new TranslateClient(this.translateConfig);
+  console.info(`Amazon Translate config: ${JSON.stringify(this.translateConfig)}`);
+}
 
 Amazon.prototype.translate = function translation(text, source, target, callback) {
-  const config = JSON.parse(fs.readFileSync('./configs/amazon/amazon.json'),);
-  let creds = {};
-  let awsConfig = {
-    region: config.region,
-  };
-  
-  switch (config.auth_type) {
-    case 'credentials': 
-      creds.accessKeyId = config.key;
-      creds.secretAccessKey = config.secret;
-      awsConfig.credentials = creds;
-      break;
-    case 'mfa':
-      creds.accessKeyId = config.credentials.AccessKeyId;
-      creds.secretAccessKey = config.credentials.SecretAccessKey;
-      creds.sessionToken = config.credentials.SessionToken;
-      awsConfig.credentials = creds;
-      break;
-  } 
-  
-  AWS.config.update(awsConfig);
-  const translate = new AWS.Translate();
-
-  const params = {
-    SourceLanguageCode: source /* required */,
-    TargetLanguageCode: target /* required */,
-    Text: text /* required */,
-  };
-  translate.translateText(params, (err, data) => {
-    if (err) error.error(err, err.stack);
-    // an error occurred
-    else {
-      info.info('amazon translation', data); // successful response
-      callback(err, data.TranslatedText);
+  const command = new TranslateTextCommand({ SourceLanguageCode: source,
+                                             TargetLanguageCode: target,
+                                             Text: text });
+  this.Translate.send(command).then(
+    (data) => {
+      console.info(`amazon translation: ${JSON.stringify(data)}`);
+      callback(data, data.TranslatedText);
+    },
+    (err) => {
+      console.info(`amazon translation Error: ${err.message} : ${JSON.stringify(err)}`);
     }
-  });
+  );
 };
 
 module.exports = Amazon;

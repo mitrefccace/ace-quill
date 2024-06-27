@@ -1,20 +1,38 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
 <html>
 
 <head>
+
     <title>ACE Quill Terminal</title>
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+
     <link type="text/css" rel="stylesheet" href="/stylesheets/terminal.css">
     <link type="text/css" rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="/assets/css/adminlte.min.css">
+    <link type="text/css" rel="stylesheet" href="/assets/css/font-awesome.min.css">
 
-    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
     <script src='/assets/js/jquery.min.js'></script>
     <script src='/assets/js/bootstrap.js'></script>
     <script src='/assets/js/adminlte.min.js'></script>
-
-    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src='/assets/js/wavesurfer.min.js'></script>
     <script src='/assets/js/Tone.js'></script>
-
-    <script src='/assets/js/jssip.min.js'></script>
+    <script src='/assets/js/moment.js'></script>
+    <script src='/javascript/jssip.min.js'></script>
+    <script src='/assets/js/RecordRTC.js'></script>
 </head>
 
 <body class="hold-transition">
@@ -25,9 +43,49 @@
                 <span id='extensionInfo'><i class="fa fa-circle text-gray"></i> No Registered Extension</span>
             </div>
             <ul class="navbar-nav ml-auto" aria-hidden="true">
-                <li class="nav-item " aria-hidden="true">
+                <span class="collapse multi-collapse" id="customNameInput"><input type="text" name="customName" placeholder="Call Name (optional)" class="form-control" id="customName" oninput="customNameOnChange()"></span>
+                <li class="nav-item" aria-hidden="true" data-toggle="tooltip" title="Edit Call Name">
+                    <a class="nav-link" onclick="" href="#" aria-hidden="true" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="customeNameInput">
+                    <i id="editCustomName" class="fa fa-pencil"></i></a>
+                </li>
+                <li class="nav-item dropdown keep-open" data-toggle="tooltip" title="Direct Chat">
+                    <a class="nav-link" data-toggle="dropdown" href="#" id="chatMenu" onclick="resetNotifs()">
+                    <i class="fa fa-comments"></i>
+                    <span class="badge badge-danger navbar-badge" id="notifications"></span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-xl dropdown-menu-right">
+                    <div class="card card-danger direct-chat direct-chat-danger" >
+                        <div class="card-header">
+                            <h3 class="card-title">Direct Chat</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body" id="notifications">
+                            <div class="direct-chat-messages" id="directChat"></div>
+                        </div>
+                        <!-- /.card-body -->
+                        <div class="card-footer">
+                            <form onsubmit="return false;">
+                                <div class="input-group">
+                                    <input type="text" name="message" placeholder="Type Message ..." class="form-control" id="toSend">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="button" id="sendButton" onclick="addOutgoingChatBubble()" disabled>Send</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- /.card-footer-->
+                    </div>
+                    <!--/.direct-chat -->
+                    <!-- Message End -->
+                    </a>
+                </li>
+                <li class="nav-item " aria-hidden="true" data-toggle="tooltip" title="Mute Microphone">
+                    <a class="nav-link" onclick="mute()" href="#" aria-hidden="true">
+                    <i id="mic" class="fa fa-microphone"></i></a>
+                </li>
+                <li class="nav-item " aria-hidden="true" title="Settings">
                     <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" aria-hidden="true">
-                        <i class="fa fa-gears"></i></a>
+                    <i class="fa fa-gears"></i></a>
                 </li>
             </ul>
         </nav>
@@ -137,20 +195,19 @@
 
                 </div>
                 <div id="waveform"></div>
-
             </div>
         </aside>
         
       
         <div class='content-wrapper'>
-            <pre id="terminal">
+<pre id="terminal">
 <output id="history" aria-hidden="true" aria-live="off">
-
 Welcome to the ACE Quill terminal.
 </output>
 <output id="transcripts" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
 <output id="app-output" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
-    </pre>
+<output id="app-output-outgoing" aria-live="polite" aria-atomic="false" aria-hidden="false"></output>
+</pre>
             <!-- Footer -->
             <footer class="page-footer font-small special-color-dark" id="ttsFooter" hidden>
                 <!-- Footer Elements -->
@@ -172,8 +229,14 @@ Welcome to the ACE Quill terminal.
             </footer>
             <!-- Footer -->
         </div>
-        <audio id='remoteView' hidden></audio>
-        <audio id='selfView' hidden></audio>
+        <audio id="remoteView" hidden></audio>
+        <audio id="incomingBackgroundNoiseAudio" preload="none" hidden></audio>
+
+        <audio id="ttsAudio" preload="none" hidden></audio>
+        <audio id="typingAudio" preload="auto" hidden></audio>
+        <audio id="greetingAudio" preload="none" hidden></audio>
+        <audio id="outgoingBackgroundNoiseAudio" preload="none" hidden></audio>
+
         <aside class="control-sidebar control-sidebar-dark" aria-hidden="true">
             <div class="sidebar-form">
                 <form role="form">
@@ -192,6 +255,15 @@ Welcome to the ACE Quill terminal.
                         <input type="text" class="form-control form-control-sm" placeholder="servername:port"
                             id="sipServer">
                     </div>
+                    <div class="form-group">
+                        <label>STUN Server (optional)</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="servername:port"
+                            id="stunServer">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-check-input" type="checkbox"  id="recordWebcamOption">
+                        <label class="form-check-label" for="recordWebcamOption">Record Webcam</label>
+                    </div>
                     <div class="form-group text-center">
                         <button type="button" class="btn btn-success btn-sm" id='registerBtn'>Register</button>
                         <button type="button" class="btn btn-danger btn-sm" id='logoutBtn'>Log Out</button>
@@ -207,6 +279,7 @@ Welcome to the ACE Quill terminal.
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Incoming Call</h5>
+                    <img src="/images/phoneRinging.gif" width="50" />
                 </div>
                 <div class="modal-body">
                     Caller ID: <span id="callerId">7001</span>
@@ -217,6 +290,9 @@ Welcome to the ACE Quill terminal.
                 </div>
             </div>
         </div>
+        <audio id="ringing" autoplay loop>
+            <source src="/sounds/ring.mp3" type="audio/mpeg">
+        </audio>
     </div>
 </body>
 <script>JsSIP.debug.disable('JsSIP:*');</script>
@@ -228,18 +304,24 @@ Welcome to the ACE Quill terminal.
         window.open('https://' + asteriskHost + '/ws');
     }
 
-    entitySentimentEnabled = 0
+    var entitySentimentEnabled = false;
+    var recorderCamera = null;
+
+    $('#chat-pane-toggle').DirectChat('toggle')
+
 
     $(document).ready(function () {
         loadConfig(localStorage.getItem('sipExtension'));
         $('#sipExtension').val(localStorage.getItem('sipExtension'));
         $('#sipPassword').val(localStorage.getItem('sipPassword'));
         $('#sipServer').val(localStorage.getItem('sipServer'));
+        $('#stunServer').val(localStorage.getItem('stunServer'));
         $('#phraseConfidenceCheckbox').prop('checked', (localStorage.getItem('phraseConfidenceEnabled') == 'true'))
         $('#wordConfidenceCheckbox').prop('checked', (localStorage.getItem('wordConfidenceEnabled') == 'true'))
         $('#wordConfidenceBoldCheckbox').prop('checked', (localStorage.getItem('wordConfidenceBold') == 'true'))
         $('#wordConfidenceItalicCheckbox').prop('checked', (localStorage.getItem('wordConfidenceItalic') == 'true'))
         $('#wordConfidenceUnderlineCheckbox').prop('checked', (localStorage.getItem('wordConfidenceUnderline') == 'true'))
+        $('#recordWebcamOption').prop('checked', (localStorage.getItem('recordWebcam') == 'true'))
         $('#ttsEnabledCheckbox').prop('checked', (localStorage.getItem('ttsEnabled') == 'true'))
         if (localStorage.getItem('lowConfidenceColor'))
             $('#lowConfidenceColor').val(localStorage.getItem('lowConfidenceColor'))
@@ -252,7 +334,11 @@ Welcome to the ACE Quill terminal.
 
         if (localStorage.getItem('sipServer') != null)
             registerJsSip();
-
+        
+        if (localStorage.getItem('stunServer') != null)
+            updateCallOptions();
+                       
+        document.getElementById("ringing").pause();
     });
 
     $('#lowConfidenceColor').change(function () {
@@ -286,6 +372,10 @@ Welcome to the ACE Quill terminal.
         localStorage.setItem('wordConfidenceUnderline', this.checked);
     });
 
+    $('#recordWebcamOption').change(function () {
+        localStorage.setItem('recordWebcam', this.checked);
+    });
+
     $('#ttsEnabledCheckbox').change(function () {
         localStorage.setItem('ttsEnabled', this.checked);
         if (this.checked) {
@@ -297,8 +387,15 @@ Welcome to the ACE Quill terminal.
         }
     });
 
+    $('#ttsText').on('input', function() {
+        if(config.typing_id && config.typing_id >= 0){
+            playTyping();
+        }
+    });
+
     $("#ttsForm").submit(function (e) {
         e.preventDefault();
+        stopTyping();
         var ttsText = $('#ttsText').val()
         $.ajax({
             url: './terminal/texttospeech',
@@ -306,75 +403,269 @@ Welcome to the ACE Quill terminal.
             data: {"text": ttsText, "extension": localStorage.getItem('sipExtension')},
             datatype: 'json',
             success: function (data) {
-                playTextToSpeech(data)
-                if (data.translation)
+                playTextToSpeech(data);
+                if (data.translation){
                     ttsText = data.translation + " (" + ttsText + ")";
-                writeToConsole('<span class="text-yellow">> ' + ttsText + '</span>');
+                }
+                writeToConsole('<span class="text-yellow"> ' + ttsText + '</span>');
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("error")
             }
         });
-
         $('#ttsForm').trigger("reset");
     });
 
-    function playTextToSpeech(data) {
-        selfStream.src = './terminal/playTextToSpeech?audiofile=' + data.audiofile;
-        selfStream.type = 'type="audio/wav"';
-        selfStream.loop = false;
-        selfStream.muted = false
-
-        var playPromise = selfStream.play();
-        if (playPromise !== undefined) {
-            playPromise.then(function () {//currentSession.unmute({audio: false, video: true});
-            }).catch(function (error) {
-                console.error('ERROR - this browser does not support play() Promise');
-            });
+    function playTyping() {
+        if(!typingStream.paused){
+            // Already playing
+            return;
         }
-
-        selfStream.onplay = function () {
-            var stream = selfStream.captureStream();
-            stream.onactive = function () {
-                // without onactive the tracks of captured stream may be empty
-                var tracks = stream.getTracks();
-                Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
+        if(config.typing_repeat){
+            // Play if enough time has passed since the last play
+            var lastPlayed = Date.now() - typingLastEnded;
+            if(lastPlayed > config.typing_repeat_delay){
+                typingStream.play().then(function(){}).catch(function (error) {
+                    writeToConsole("<span class='text-green'>[Typing] Typing sound not played because of an error</span>");
+                    console.log(error);
+            });
             }
+            return;
         }
-            ;
-
-        selfStream.onended = function () {
-            selfStream.muted = true
-            navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: false
-            }).then(function (stream) {
-                if ("srcObject" in selfStream) {
-                    selfStream.srcObject = stream;
-                } else {
-                    selfStream.src = window.URL.createObjectURL(stream);
+        if(typingLastEnded == 0){
+            // Either the first play or we've hit 'send' since last play
+            typingStream.play().then(function(){
+                if(config.typing_show_transcript){
+                    writeToConsole('<span class="text-green">[Typing]'+typingTranscript+'</span>');
                 }
-                selfStream.onloadedmetadata = function (e) {
-                    selfStream.play();
-                    Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
-                }
-                    ;
-            }).catch(function (err) {
-                console.log(err.name + ": " + err.message);
+            }).catch(function (error) {
+                    writeToConsole("<span class='text-green'>[Typing] Typing sound not played because of an error</span>");
+                    console.log(error);
             });
+
         }
+    }
+
+    function stopTyping() {
+        typingStream.pause();
+        typingStream.currentTime = 0;
+        typingLastEnded = 0;
+    }
+
+    function playGreeting() {
+        if(config.greeting_id && config.greeting_id >= 0){
+            setTimeout(function (){
+                greetingStream.play().then(function(){
+                    if(config.greeting_show_transcript){
+                        writeToConsole("<span class='text-green'>[Greeting] "+greetingTranscript+"</span>");
+                    }
+                }).catch(function (error) {
+                    writeToConsole("<span class='text-green'>[Greeting] Greeting not played because of an error</span>");
+                    console.log(error);
+                });
+            }, config.greeting_delay);
+        }
+    }
+1
+    function playBackgroundNoise() {
+        if(config.background_noise_incoming_enabled){
+            incomingAudioContext.resume();
+            incomingBackgroundNoiseStream.play();
+        }
+        if(config.background_noise_outgoing_enabled){
+            outgoingAudioContext.resume();
+            outgoingBackgroundNoiseStream.play();
+        }
+    }
+
+    function stopBackgroundNoise() {
+        if(config.background_noise_incoming_enabled){
+            incomingBackgroundNoiseStream.pause();
+        }
+        if(config.background_noise_outgoing_enabled){
+            outgoingBackgroundNoiseStream.pause();
+        }
+    }
+
+    function playTextToSpeech(data) {
+        ttsStream.src = './terminal/playTextToSpeech?audiofile=' + data.audiofile;
+        ttsStream.play();
+    }
+
+    function resetNotifs() {
+        $('#notifications').text("");
+        notifs=0;
+    }
+
+    function mergeOutgoingAudioStreams(session, context, audioNodes){
+        // Resume in case Chrome paused the context because of autoplay rules
+        context.resume();
+        var combinedSourceNode = context.createChannelMerger();
+        for(const node of audioNodes){
+            node.connect(combinedSourceNode);
+        }
+        var combinedDestNode = context.createMediaStreamDestination();
+        combinedSourceNode.connect(combinedDestNode);
+        var sender = session.connection.getSenders()[0];
+        micTrack = sender.track;
+        var mic_source_stream = new MediaStream();
+        mic_source_stream.addTrack(micTrack);
+        var micSourceNode = context.createMediaStreamSource(mic_source_stream);
+        micSourceNode.connect(combinedSourceNode);
+        sender.replaceTrack(combinedDestNode.stream.getAudioTracks()[0]);
+    }
+
+    function clearSimulationSetIntervals(){
+        clearInterval(incomingDropoutSetInterval);
+        clearInterval(outgoingDropoutSetInterval);
+    }
+
+    function setupOutgoingDropoutSimulator(session){
+        if(!config.dropout_outgoing_enabled){
+            return;
+        }
+        var waiting = false;
+        var delayRangeMax = config.dropout_outgoing_interval_max - config.dropout_outgoing_interval_min;
+        var dropoutRangeMax = config.dropout_outgoing_length_max - config.dropout_outgoing_length_min;
+        var micSender = session.connection.getSenders()[0];
+        clearInterval(outgoingDropoutSetInterval);
+        outgoingDropoutSetInterval = setInterval(() => {
+            if(waiting){
+                return;
+            }
+            waiting = true;
+            var delayMs = Math.floor(Math.random()*delayRangeMax);
+            setTimeout(() => {
+                micSender.track.enabled = false;
+            }, delayMs);
+            // Dont forget to wait the random delay length milliseconds PLUS delayMs to unmute
+            var dropoutMs = delayMs + config.dropout_outgoing_length_min + Math.floor(Math.random()*dropoutRangeMax) ;
+            setTimeout(() => {
+                micSender.track.enabled = true;
+                waiting = false;
+            }, dropoutMs);
+        }, config.dropout_outgoing_interval_min);
+    }
+
+    function setupIncomingDropoutSimulator(session){
+        if(!config.dropout_incoming_enabled){
+            return;
+        }
+        var waiting = false;
+        var delayRangeMax = config.dropout_incoming_interval_max - config.dropout_incoming_interval_min;
+        var dropoutRangeMax = config.dropout_incoming_length_max - config.dropout_incoming_length_min;
+        clearInterval(incomingDropoutSetInterval);
+        incomingDropoutSetInterval = setInterval(() => {
+            if(waiting){
+                return;
+            }
+            waiting = true;
+            var delayMs = Math.floor(Math.random()*delayRangeMax);
+            setTimeout(() => {
+                remoteStream.volume = 0;
+            }, delayMs);
+            // Dont forget to wait the random delay length milliseconds PLUS delayMs to unmute
+            var dropoutMs = delayMs + config.dropout_incoming_length_min + Math.floor(Math.random()*dropoutRangeMax) ;
+            setTimeout(() => {
+                remoteStream.volume = 1;
+                waiting = false;
+            }, dropoutMs);
+        }, config.dropout_incoming_interval_min);
+    }
+
+    var customNameChangeTimeout = null;
+    function customNameOnChange(){
+        // Can't save unless we're in a call
+        if (currentSession == null || !callActive) {
+            return;
+        }
+        $('#customName').removeClass('bg-success').addClass('bg-warning');
+        clearTimeout(customNameChangeTimeout);
+        customNameChangeTimeout = setTimeout(() => {
+                saveCustomName();
+            }, 600);
+    }
+
+    function saveCustomName(){
+        var customName = $('#customName').val().trim();
+        if(customName.length < 1 || currentSession == null || !callActive){
+            return;
+        }
+        $.ajax({
+            url: './terminal/saveCustomName',
+            type: 'POST',
+            data: {"customName": customName, "extension": localStorage.getItem('sipExtension')},
+            datatype: 'json',
+            success: function (data) {
+                writeToConsole('<span class="text-yellow">Call saved under name: ' + customName+ '</span>');
+                $('#customName').removeClass('bg-warning').addClass('bg-success');
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                writeToConsole('<span class="text-red">Call name: ' + customName+ ' has NOT been saved, please try again.</span>');
+            }
+        });
+    }
+
+    function clearCustomName(){
+        $('#customNameInput').collapse('hide');
+        $('#customName').val('');
+        $('#customName').removeClass('bg-warning').removeClass('bg-success');
     }
 
     $(this).scrollTop();
     var ua = null;
     var aria = null;
-    var remoteStream = document.getElementById('remoteView')
-    var selfStream = document.getElementById("selfView");
+    var micTrack = null;
+    var remoteStream = document.getElementById('remoteView');
+    // Creating the contexts and sources now to avoid lag when the call is accepted
+    var incomingAudioContext = new AudioContext();
+    var outgoingAudioContext = new AudioContext();
 
+    var ttsStream = document.getElementById('ttsAudio');
+    ttsStream.type = 'type="audio/wav"';
+    ttsStream.loop = false;
+
+    var greetingFile = null;
+    var greetingTranscript = null;
+    var greetingStream = document.getElementById('greetingAudio');
+    greetingStream.type = 'type="audio/wav"';
+    greetingStream.loop = false;
+
+    var typingTranscript = null;
+    var typingStream = document.getElementById('typingAudio');
+    typingStream.type = 'type="audio/wav"';
+    typingStream.loop = false;
+    var typingLastEnded = 0;
+    typingStream.onended = function () {
+        typingLastEnded = Date.now();
+    }
+
+    var outgoingBackgroundNoiseStream = document.getElementById('outgoingBackgroundNoiseAudio');
+    outgoingBackgroundNoiseStream.type = 'type="audio/wav"';
+    outgoingBackgroundNoiseStream.loop = true;
+
+    // These will get mixed together into one stream later
+    var outgoingAudioPlayNodes = [];
+    outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(ttsStream));
+    outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(typingStream));
+    outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(greetingStream));
+    outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(outgoingBackgroundNoiseStream));
+
+    var incomingBackgroundNoiseStream = document.getElementById('incomingBackgroundNoiseAudio');
+    incomingBackgroundNoiseStream.type = 'type="audio/wav"';
+    incomingBackgroundNoiseStream.loop = true;
+
+    // These will get mixed together into one stream later
+    // var incomingAudioPlayNodes = [];
+    // incomingAudioPlayNodes.push(incomingAudioContext.createMediaElementSource(incomingBackgroundNoiseStream));
+    var test = incomingAudioContext.createMediaElementSource(incomingBackgroundNoiseStream);
+    test.connect(incomingAudioContext.destination);
     var sipMessageOne = "";
     var sipMessageWhole = "";
 
-    var mesiaStream;
+    var mediaStream;
+    var incomingDropoutSetInterval = null;
+    var outgoingDropoutSetInterval = null;
 
     var jssipConnection = {
         display_name: null,
@@ -402,19 +693,21 @@ Welcome to the ACE Quill terminal.
             AppSecret: null
         }
     };
-    var options = {
+    var callOptions = {
         'mediaConstraints': {
             'audio': true,
             'video': false
         },
         'pcConfig': {
-            //'iceServers': [{'urls': ['stun:stun.task3acrdemo.com:3478']}],
             'rtcpMuxPolicy': 'negotiate'
         }
     };
 
-
     var currentSession = null;
+    var callActive = false;
+    var incomingCall = false;
+
+    var notifs = 0;
 
     function getARIASettings() {
         $.ajax({
@@ -440,17 +733,14 @@ Welcome to the ACE Quill terminal.
             datatype: 'json',
             success: function (data) {
                 let sentiment = ""
-                if (entitySentimentEnabled == 1) {
-                    data.results.forEach(res => {
-                        score = JSON.stringify(res.Score)
-                        if (score > 0) {
-                            sentiment = '<span class="text-green"> (positive)</span>'
-                        } else if (score < 0) {
-                            sentiment = '<span class="text-red"> (negative)</span>'
-                        }
-                    });
-                }
-
+                data.results.forEach(res => {
+                    score = JSON.stringify(res.Score)
+                    if (score > 0) {
+                        sentiment = '<span class="text-green"> (positive)</span>'
+                    } else if (score < 0) {
+                        sentiment = '<span class="text-red"> (negative)</span>'
+                    }
+                });
                 writeToConsole(markup + sentiment);
                 appOutput('');
             },
@@ -516,6 +806,90 @@ Welcome to the ACE Quill terminal.
         aria = data;
     }
 
+    function updateCallOptions() {
+        var stunServer = localStorage.getItem('stunServer');
+        if(stunServer){
+            callOptions.pcConfig.iceServers = [{'urls': ['stun:' + stunServer]}];
+        }
+    }
+
+    function recordWebCam(){
+        if(localStorage.getItem('recordWebcam') == 'true'){
+            navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                }).then(async function (stream) {
+                    window.localStream = stream;
+                    recorderCamera = RecordRTC(stream, {
+                        type: 'video',
+                        mimeType: 'video/webm',
+                    });
+                    recorderCamera.startRecording();
+                });
+        }
+
+    }
+
+    function stopRecordingWebCam(){
+        if(recorderCamera){
+            let timestamp = new Date().getTime();
+            // stop both video and audio
+            localStream.getTracks().forEach( (track) => {
+                track.stop();
+            });
+            recorderCamera.stopRecording(function () {
+                let blob = recorderCamera.getBlob();
+                let name = "camera_" + timestamp + ".webm";
+                postRecording(blob, name, "camera");
+                recorderCamera = null;
+            });
+        }
+    }
+
+
+
+    function postRecording(blob, filename, source) {
+            console.log('Post the file');
+            if (blob.size > 0) {
+                //console.log("Call Data: " + localStorage.calldata);
+                var file = new File([blob], filename, {
+                    type: 'video/webm'
+                });
+
+                xhr('./iprelay/uploadRecording', file, source, function (responseText) {
+                    console.info('FileUploaded: ' + responseText);
+                });
+            } else {
+                console.log("no data in video record");
+            }
+
+        }
+        // XHR2/FormData
+        function xhr(url, data, source, callback) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                if (request.readyState == 4 && request.status == 200) {
+                    callback(request.responseText);
+                }
+            };
+
+            request.open('POST', url);
+            console.log("URL is: " + url);
+            var formData = new FormData();
+            formData.append('file', data);
+            formData.append('source', source);
+            if(incomingCall){
+                formData.append('extension', $('#callerId').html());
+            } else {
+                formData.append('extension', localStorage.getItem('sipExtension'));
+            }
+
+            request.send(formData);
+        }
+
+
+
+
     function registerJsSip() {
 
         getARIASettings();
@@ -527,9 +901,6 @@ Welcome to the ACE Quill terminal.
         jssipConnection.uri = localStorage.getItem('sipExtension') + '@' + localStorage.getItem('sipServer');
         jssipConnection.password = localStorage.getItem('sipPassword');
         jssipConnection.socket.uri = 'wss://' + localStorage.getItem('sipServer') + '/ws';
-
-        console.log(jssipConnection.uri);
-        console.log(jssipConnection.socket.uri);
 
         $('#extensionInfo').html('<i class="fa fa-circle text-gray"></i> ' + jssipConnection.uri + '</span>');
         try {
@@ -562,58 +933,91 @@ Welcome to the ACE Quill terminal.
 
             ua.on('newRTCSession', function (e) {
                 currentSession = e.session;
-
+                console.log(currentSession);
 
                 if (currentSession.direction === "incoming") {
+                    incomingCall = true;
                     writeToConsole('Incoming Call From: ' + e.request.from._display_name)
                     $('#callerId').html(e.request.from._display_name)
                     $('#incomingCallModal').modal();
+                } else {
+                    incomingCall = false;
                 }
 
-
-
                 currentSession.on('accepted', function (e) {
+                    if (config.steno_enabled) {
+                        createWaveSurfer(remoteStream.srcObject);
+                    }
+                    recordWebCam();
+                    console.log(currentSession);
+                    console.log()
+                    try{
+                        mergeOutgoingAudioStreams(currentSession, outgoingAudioContext, outgoingAudioPlayNodes);
+                        setupOutgoingDropoutSimulator(currentSession);
+                        setupIncomingDropoutSimulator(currentSession);
+                    } catch (err) {
+                        console.log(err);
+                    }
+                    callActive = true;
                     $('#call_btn').addClass('incall_btn');
+                    let button = document.getElementById("sendButton");
+                    button.disabled = false; //setting button state to disabled
                     writeToConsole("<span class='text-green'>Call Answered</span>");
+                    playGreeting();
+                    playBackgroundNoise();
+                    saveCustomName();
+                    console.log(currentSession);
                 });
 
                 currentSession.on('ended', function (e) {
+                    callActive = false;
+                    clearSimulationSetIntervals();
+                    stopRecordingWebCam();
+                    stopBackgroundNoise();
                     writeToConsole($('#app-output').html());
+                    writeToConsole($('#app-output-outgoing').html());
                     appOutput('');
+                    let button = document.getElementById("sendButton");
+                    button.disabled = true; //setting button state to disabled
                     writeToConsole("<span class='text-red'>Call Ended</span>");
                     if (entitySentimentEnabled) {
                         getEntities();
                         getClassification();
                     }
-                    $('#call_btn').removeClass('incall_btn')
-                    destroyWaveSurfer()
+                    $('#call_btn').removeClass('incall_btn');
+                    destroyWaveSurfer();
                     $("#waveform").html("");
-
+                    document.getElementById("directChat").innerHTML = "";
+                    clearCustomName();
                 });
-                currentSession.on('failed', function (e) {
-                    writeToConsole("<span class='text-red'>Error</span>");
-                    $('#call_btn').removeClass('incall_btn')
 
+                currentSession.on('failed', function (e) {
+                    clearSimulationSetIntervals();
+                    stopBackgroundNoise();
+                    writeToConsole("<span class='text-red'>Error</span>");
+                    $('#call_btn').removeClass('incall_btn');
                 });
 
                 if (currentSession.connection) {
                     currentSession.connection.ontrack = function (e) {
-                        remoteStream.srcObject = e.streams[0];
                         mediaStream = e.streams[0];
+                        remoteStream.srcObject = mediaStream;
+                        //createWaveSurfer(mediaStream);
                         $('input[name=profileRadios]:checked').trigger('change');
-                        createWaveSurfer(e.streams[0]);
                     }
-
                 }
             });
 
-
             ua.on('newMessage', function (e) {
+                console.log("MMMMMM,",e)
                 if (e.request.body.slice(0, 4) == 'Part') {
                     sipMessageWhole += (e.request.body.slice(13));
                     if (e.request.body[5] == e.request.body[10]) {
                         processTranscripts(sipMessageWhole);
                     }
+                } else if ((e.request.body.slice(0, 11) == 'DIRECTCHAT:') && (e.originator == "remote")) {
+                    message = e.request.body.slice(11)
+                    addIncomingChatBubble(message);
                 } else {
                     processTranscripts(e.request.body);
                 }
@@ -621,19 +1025,39 @@ Welcome to the ACE Quill terminal.
         } catch (err) {
             $('#extensionInfo').html('<i class="fa fa-circle text-gray"></i> Unknown Registration</span>');
         }
-
     }
+
     function processTranscripts(body) {
         try {
             sipMessageWhole = "";
             var transcripts = JSON.parse(body);
+            var markup = "";
             if (transcripts.transcript) {
                 if (!config.stt_show_final_caption) {
-                    appOutput(transcripts.transcript);
+                    if (transcripts.isOutgoing && localStorage.getItem('dualEnabled') == '1') {
+                        appOutputOutgoing(transcripts.transcript)
+                    } else if (transcripts.isIncoming){
+                        if (localStorage.getItem('callerEnabled') == '1') {
+                            appOutput(transcripts.transcript);
+                        }
+                    }
                 }
                 if (transcripts.final) {
-                    var markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
-                    sentenceAnalysis(transcripts.transcript, markup);
+                    if (transcripts.isOutgoing && localStorage.getItem('dualEnabled') == '1') {
+                        markup = markUpOutgoing(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
+                    } else if (transcripts.isIncoming) {
+                        if (localStorage.getItem('callerEnabled') == '1' || transcripts.type == "info") {
+                            markup = markUpTranscripts(transcripts.transcript, transcripts.wordConfidence, transcripts.transcriptConfidence)
+                        }
+                    }
+                    if(entitySentimentEnabled) {
+                        sentenceAnalysis(transcripts.transcript, markup);
+                    } else if (markup.length > 0) {
+                        writeToConsole(markup);
+                        console.log(">>>>",markup)
+                        appOutput('');
+                        appOutputOutgoing('');
+                    }
                 }
             }
         } catch (err) {
@@ -642,10 +1066,11 @@ Welcome to the ACE Quill terminal.
     }
 
     function startCall(number) {
-        writeToConsole('Calling: ' + number)
-        ua.call(number, options);
+        writeToConsole('Calling: ' + number);
+        ua.call(number, callOptions);
         getHistory();
     }
+
     var count = 0;
     $(".digit").on('click', function () {
         var num = ($(this).clone().children().remove().end().text());
@@ -657,7 +1082,7 @@ Welcome to the ACE Quill terminal.
             var currentValue = $('#output').val();
             var newValue = currentValue + num;
             $('#output').val(newValue);
-            count++
+            count++;
         }
     });
 
@@ -674,11 +1099,13 @@ Welcome to the ACE Quill terminal.
         }
         if (aria == "continuous") {
             document.getElementById('app-output').setAttribute('aria-hidden', 'false');
+            document.getElementById('app-output-outgoing').setAttribute('aria-hidden', 'false');
             document.getElementById('history').setAttribute('aria-hidden', 'false');
             document.getElementById('transcripts').setAttribute('aria-hidden', 'true');
         }
         if (aria == "final") {
             document.getElementById('app-output').setAttribute('aria-hidden', 'true');
+            document.getElementById('app-output-outgoing').setAttribute('aria-hidden', 'false');
             document.getElementById('transcripts').setAttribute('aria-hidden', 'false');
             document.getElementById('history').setAttribute('aria-hidden', 'true');
         }
@@ -697,7 +1124,9 @@ Welcome to the ACE Quill terminal.
         localStorage.setItem('sipExtension', $('#sipExtension').val());
         localStorage.setItem('sipPassword', $('#sipPassword').val());
         localStorage.setItem('sipServer', $('#sipServer').val());
-        registerJsSip()
+        localStorage.setItem('stunServer', $('#stunServer').val());
+        registerJsSip();
+        updateCallOptions();
     });
 
     $('#logoutBtn').on('click', function () {
@@ -708,14 +1137,17 @@ Welcome to the ACE Quill terminal.
     $('#clearBtn').on('click', function () {
         $('#history').html('');
         $('#app-output').html('');
+        $('#app-output-outgoing').html('');
         scrollPage();
     });
 
     $('#answerBtn').on('click', function () {
         if (currentSession && !currentSession.isEnded()) {
-            currentSession.answer(options);
+            currentSession.answer(callOptions);
             $('#call_btn').addClass('incall_btn');
             $('#incomingCallModal').modal('hide');
+            //var audio = document.getElementById("ringing");
+            //audio.pause();
             if (currentSession.connection) {
                 currentSession.connection.ontrack = function (e) {
                     remoteStream.srcObject = e.streams[0];
@@ -731,9 +1163,29 @@ Welcome to the ACE Quill terminal.
             currentSession.terminate()
             $('#call_btn').removeClass('incall_btn');
             $('#incomingCallModal').modal('hide');
+            //var audio = document.getElementById("ringing");
+            //audio.pause();
         }
 
     });
+
+    $('#incomingCallModal').on('shown.bs.modal', function () {
+        var audio = document.getElementById("ringing");
+        audio.play();
+    })
+
+    $('#incomingCallModal').on('hidden.bs.modal', function () {
+        var audio = document.getElementById("ringing");
+        audio.pause();
+        //audio.currentTime = 0
+    })
+
+    $('.dropdown.keep-open').on({
+        "shown.bs.dropdown": function() { this.closable = false; },
+        "click":             function() { this.closable = true; },
+        "hide.bs.dropdown":  function() { return this.closable; }
+    });
+
 
     function getHistory() {
         $.ajax({
@@ -745,20 +1197,14 @@ Welcome to the ACE Quill terminal.
                 $('#call_history').html("");
                 //Loop through the result and populate the table
                 for (var i = 0; i < data.results.length; i++) {
-                    var timeOfDay;
-                    var localDate = new String(new Date(data.results[i].call_start));
-                    var date = localDate.slice(4, 7) + " " + localDate.slice(8, 10) + ", " + localDate.slice(11, 15);
-                    if (parseInt(localDate.slice(16, 18)) > 12) {
-                        timeOfDay = "PM"
-                    } else {
-                        timeOfDay = "AM"
-                    }
-                    var time = ((localDate.slice(16, 18) + 11) % 12 + 1) + localDate.slice(18, 24) + " " + timeOfDay;
                     var liAttribute = document.createElement('li');
                     liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
                     liAttribute.setAttribute("id", "call_hist");
                     liAttribute.setAttribute("onclick", "reDial(this)");
-                    liAttribute.innerHTML = data.results[i].dest_phone_number + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' + date + ", " + time + "</span>";
+                    liAttribute.innerHTML = data.results[i].dest_phone_number 
+                        + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' 
+                        + moment.utc(data.results[i].call_start, moment.ISO_8601).local().format("MMM D, YYYY, h:mm:ss A")
+                        + "</span>";
                     $('#call_history').append(liAttribute);
                 }
             },
@@ -795,10 +1241,9 @@ Welcome to the ACE Quill terminal.
         });
     }
 
-
     function reDial(element) {
         $("#output").val("");
-        let number = element.innerHTML.slice(0, 10);
+        let number = element.innerHTML.split("<")[0];
         $("#output").val(number);
     }
 
@@ -806,6 +1251,13 @@ Welcome to the ACE Quill terminal.
         $("#output").val("");
         let number = element.id;
         $("#output").val(number);
+    }
+
+    function mute() {
+        if(micTrack){
+            micTrack.enabled = !micTrack.enabled;
+            document.getElementById("mic").className = micTrack.enabled ? "fa fa-microphone": "fa fa-microphone-slash";
+        }
     }
 
     function writeToConsole(text) {
@@ -819,7 +1271,6 @@ Welcome to the ACE Quill terminal.
             if ((-5 < delta) && (delta < 5)) {
                 $('#transcripts').append(innerDiv);
                 scrollPage();
-                console.log("scroll");
             } else {
                 $('#transcripts').append(innerDiv);
                 console.log(" don't scroll");
@@ -849,6 +1300,20 @@ Welcome to the ACE Quill terminal.
         }
     }
 
+    function appOutputOutgoing(text) {
+        var element = document.getElementById("terminal");
+        let divCurrentUserScrollPosition = element.scrollTop + element.offsetHeight;
+        let divScrollHeight = element.scrollHeight;
+        let delta = divCurrentUserScrollPosition - divScrollHeight;
+        document.getElementById("app-output-outgoing").style.color  = localStorage.getItem('dualColor');
+        if ((-5 < delta) && (delta < 5)) {
+            $('#app-output-outgoing').html(text);
+            scrollPage();
+        } else {
+            $('#app-output-outgoing').html(text);
+        }
+    }
+
     function setConfidence(data) {
         localStorage.setItem('wordConfidenceEnabled', data.confidence_show_word);
         localStorage.setItem('phraseConfidenceEnabled', data.confidence_show_phrase);
@@ -859,6 +1324,21 @@ Welcome to the ACE Quill terminal.
         localStorage.setItem('wordConfidenceBold', data.confidence_bold);
         localStorage.setItem('wordConfidenceItalic', data.confidence_italicize);
         localStorage.setItem('wordConfidenceUnderline', data.confidence_underline);
+    }
+
+    function setDual(data) {
+        localStorage.setItem('dualEnabled', data.dual_enabled);
+        localStorage.setItem('callerEnabled', data.caller_captions_enabled);
+        localStorage.setItem('dualColor', data.dual_font_color);
+        localStorage.setItem('wordCallerConfidenceEnabled', data.caller_confidence_show_word);
+        localStorage.setItem('phraseCallerConfidenceEnabled', data.caller_confidence_show_phrase);
+        localStorage.setItem('mediumCallerConfidencePercent', data.caller_confidence_upper_lim);
+        localStorage.setItem('lowCallerConfidencePercent', data.caller_confidence_lower_lim);
+        localStorage.setItem('mediumCallerConfidenceColor', data.caller_confidence_upper_color);
+        localStorage.setItem('lowCallerConfidenceColor', data.caller_confidence_lower_color);
+        localStorage.setItem('wordCallerConfidenceBold', data.caller_confidence_bold);
+        localStorage.setItem('wordCallerConfidenceItalic', data.caller_confidence_italicize);
+        localStorage.setItem('wordCallerConfidenceUnderline', data.caller_confidence_underline);
     }
 
     function setTts(value) {
@@ -872,10 +1352,62 @@ Welcome to the ACE Quill terminal.
     }
 
     function setTextAnalysis(val) {
-        if (val == "GOOGLE") {
-            entitySentimentEnabled = 1;
+        entitySentimentEnabled = (val == "GOOGLE");
+    }
+
+    function setTypingSounds(cfg){
+        if(!cfg.typing_id || cfg.typing_id < 0){
+            return;
+        }
+        if(cfg.typing_repeat_delay){
+            cfg.typing_repeat_delay = cfg.typing_repeat_delay*1000;
+        }
+        cfg.typing_repeat = cfg.typing_repeat == 1;
+        cfg.typing_show_transcript = cfg.typing_show_transcript == 1;
+        $.get("./terminal/getAudibleCue", {
+            "id": cfg.typing_id
+        },
+            function (data, status) {
+                var cue = data.cue
+                typingStream.src = './terminal/playAudibleCue?audiofile='+cue.id+'_'+cue.audio_file_name+'.wav';
+                typingTranscript = cue.transcript;
+            });
+    }
+
+    function setGreeting(cfg){
+        if(!cfg.greeting_id || cfg.greeting_id < 0){
+            return;
+        }
+        if(cfg.greeting_delay){
+            cfg.greeting_delay = cfg.greeting_delay*1000;
+        }
+        cfg.greeting_show_transcript = cfg.greeting_show_transcript == 1;
+        $.get("./terminal/getAudibleCue", {
+            "id": cfg.greeting_id
+        },
+            function (data, status) {
+                var cue = data.cue;
+                greetingStream.src = './terminal/playAudibleCue?audiofile='+cue.id+'_'+cue.audio_file_name+'.wav';
+                greetingTranscript = cue.transcript;
+            });
+    }
+
+    function setBackgroundNoise(cfg){
+        if(cfg.background_noise_incoming_enabled && cfg.background_noise_incoming_id ){
+            $.get("./terminal/getAudibleCue", {"id": cfg.background_noise_incoming_id},
+                function (data, status) {
+                    incomingBackgroundNoiseStream.src = './terminal/playAudibleCue?audiofile='+data.cue.id+'_'+data.cue.audio_file_name+'.wav';
+                }
+            );
         }
 
+        if(cfg.background_noise_outgoing_enabled && cfg.background_noise_outgoing_id ){
+            $.get("./terminal/getAudibleCue", {"id": cfg.background_noise_outgoing_id},
+                function (data, status) {
+                    outgoingBackgroundNoiseStream.src = './terminal/playAudibleCue?audiofile='+data.cue.id+'_'+data.cue.audio_file_name+'.wav';
+                }
+            );
+        }
     }
 
     var config;
@@ -885,23 +1417,70 @@ Welcome to the ACE Quill terminal.
         },
             function (data, status) {
                 config = data;
-                // entitySentimentEnabled = data.stt_show_entity_sentiment
                 setTextAnalysis(data.stt_show_entity_sentiment)
                 setTts(config.tts_enabled);
                 setConfidence(data);
+                setDual(data);
+                setGreeting(data);
+                setTypingSounds(data);
+                setBackgroundNoise(data);
             });
     }
 
     function markUpTranscripts(text, wC, tC) {
+            var textArray = text.split(" ");
+            if (localStorage.getItem('wordConfidenceEnabled') == '1') {
+                var mConfPercent = localStorage.getItem('mediumConfidencePercent');
+                var mConfColor = localStorage.getItem('mediumConfidenceColor');
+                var lConfPercent = localStorage.getItem('lowConfidencePercent');
+                var lConfColor = localStorage.getItem('lowConfidenceColor');
+                var underline = localStorage.getItem('wordConfidenceUnderline');
+                var bold = localStorage.getItem('wordConfidenceBold');
+                var italic = localStorage.getItem('wordConfidenceItalic');
+                var font = ""
+                if (underline || bold || italic) {
+                    font += bold ? "font-weight: 900;" : ""
+                    font += italic ? "font-style: italic;" : ""
+                    font += underline ? " text-decoration: underline;" : ""
+                }
+                lConfFontString = (lConfColor != "none") ? "color:" + lConfColor + ";" : "";
+                lConfFontString += font;
+                mConfFontString = (mConfColor != "none") ? "color:" + mConfColor + ";" : "";
+                mConfFontString += font;
+
+                if (wC != null) {
+                    for (var i = 0; i < wC.length; i++) {
+                        var p = parseInt(wC[i] * 100);
+                        if (p < lConfPercent) {
+                            textArray[i] = '<span style="' + lConfFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
+                        } else if (p < mConfPercent) {
+                            textArray[i] = '<span style="' + mConfFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
+                        } 
+                    }
+                }
+            }
+
+            if (localStorage.getItem('phraseConfidenceEnabled') == '1') {
+                if (tC != null) {
+                    tC = parseInt(tC * 100);
+                    textArray[textArray.length - 1] = textArray[textArray.length - 1] + "(" + tC + "%)"
+                }
+            }
+        return textArray.join(" ");
+        
+    }
+
+    function markUpOutgoing(text, wC, tC) {
         var textArray = text.split(" ");
-        if (localStorage.getItem('wordConfidenceEnabled') == '1') {
-            var mConfPercent = localStorage.getItem('mediumConfidencePercent');
-            var mConfColor = localStorage.getItem('mediumConfidenceColor');
-            var lConfPercent = localStorage.getItem('lowConfidencePercent');
-            var lConfColor = localStorage.getItem('lowConfidenceColor');
-            var underline = localStorage.getItem('wordConfidenceUnderline');
-            var bold = localStorage.getItem('wordConfidenceBold');
-            var italic = localStorage.getItem('wordConfidenceItalic');
+        if (localStorage.getItem('dualEnabled') == '1') {
+            var fColor = localStorage.getItem('dualColor');
+            var mConfPercent = localStorage.getItem('mediumCallerConfidencePercent');
+            var mConfColor = localStorage.getItem('mediumCallerConfidenceColor');
+            var lConfPercent = localStorage.getItem('lowCallerConfidencePercent');
+            var lConfColor = localStorage.getItem('lowCallerConfidenceColor');
+            var underline = localStorage.getItem('wordCallerConfidenceUnderline');
+            var bold = localStorage.getItem('wordCallerConfidenceBold');
+            var italic = localStorage.getItem('wordCallerConfidenceItalic');
             var font = ""
             if (underline || bold || italic) {
                 font += bold ? "font-weight: 900;" : ""
@@ -912,20 +1491,29 @@ Welcome to the ACE Quill terminal.
             lConfFontString += font;
             mConfFontString = (mConfColor != "none") ? "color:" + mConfColor + ";" : "";
             mConfFontString += font;
-
-            if (wC != null) {
+            fColorFontString = (fColor != "none") ? "color:" + fColor + ";" : "";
+            
+            if (wC != null && (localStorage.getItem('wordCallerConfidenceEnabled') == '1') ) {
                 for (var i = 0; i < wC.length; i++) {
                     var p = parseInt(wC[i] * 100);
                     if (p < lConfPercent) {
                         textArray[i] = '<span style="' + lConfFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
                     } else if (p < mConfPercent) {
                         textArray[i] = '<span style="' + mConfFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
+                    } else {
+                        textArray[i] = '<span style="' + fColorFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
+                    }
+                }
+            } else {
+                for (var i = 0; i<textArray.length; i++) {
+                    if (fColor){
+                        textArray[i] = '<span style="' + fColorFontString + '" title="' + p + '%">' + textArray[i] + '</span>';
                     }
                 }
             }
         }
-
-        if (localStorage.getItem('phraseConfidenceEnabled') == '1') {
+        
+        if (localStorage.getItem('phraseCallerConfidenceEnabled') == '1') {
             if (tC != null) {
                 tC = parseInt(tC * 100);
                 textArray[textArray.length - 1] = textArray[textArray.length - 1] + "(" + tC + "%)"
@@ -933,13 +1521,16 @@ Welcome to the ACE Quill terminal.
         }
         return textArray.join(" ");
     }
+
     function scrollPage(text) {
         var element1 = document.getElementById("history");
         var element2 = document.getElementById("app-output");
         var element3 = document.getElementById("transcripts");
-        $('#terminal').scrollTop(element1.scrollHeight + element2.scrollHeight + element3.scrollHeight + 100);
+        var element4 = document.getElementById("app-output-outgoing");
+        $('#terminal').scrollTop(element1.scrollHeight + element2.scrollHeight + element3.scrollHeight + element4.scrollHeight + 100);
     }
-    getAudioProfiles()
+
+    getAudioProfiles();
     function getAudioProfiles() {
         $.ajax({
             url: './terminal/audioprofiles',
@@ -976,7 +1567,8 @@ Welcome to the ACE Quill terminal.
             }
         });
     }
-    var mediaStream2
+
+    var mediaStream2;
     function setMultipleFilters(stream, filters) {
         if (mediaStream) {
             remoteStream.pause();
@@ -1023,7 +1615,74 @@ Welcome to the ACE Quill terminal.
         }
     }
 
+    function addOutgoingChatBubble() {
+            msg = $('#toSend').val();
 
+            let msgblock = document.createElement('div');
+            let msgimage = document.createElement('img');
+            let msginfo = document.createElement('div');
+            let msgsender = document.createElement('span');
+            let msgclicktime = document.createElement('span');
+            let msgtext = document.createElement('div');
+
+            $(msgsender).addClass("direct-chat-name pull-right").html("ACE Quill").appendTo(msginfo);
+            $(msgclicktime).addClass("direct-chat-timestamp pull-left").appendTo(msginfo);
+            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+            $(msgimage).addClass("direct-chat-img").attr("src", "./images/acequill.png").appendTo(msgblock);
+            $(msgtext).addClass("direct-chat-text").html(msg).appendTo(msgblock);
+            $(msgblock).addClass("direct-chat-msg right").appendTo($("#directChat"));
+
+            text = 'DIRECTCHAT:' + msg;
+
+            var contentType = "text/plain";
+
+            var sendAddress = currentSession.remote_identity.uri.user + "@" + localStorage.getItem("sipServer");;
+            
+            ua.sendMessage(sendAddress, text);
+
+            $('#toSend').val("");
+
+            var objDiv = document.getElementById("directChat");
+
+            objDiv.scrollTop = objDiv.scrollHeight;
+
+        }
+
+        function addIncomingChatBubble(msg) {
+            let msgblock = document.createElement('div');
+            let msgimage = document.createElement('img');
+            let msginfo = document.createElement('div');
+            let msgsender = document.createElement('span');
+            let msgclicktime = document.createElement('span');
+            let msgtext = document.createElement('div');
+
+            $(msgsender).addClass("direct-chat-name pull-left").html(currentSession.remote_identity.uri.user).appendTo(msginfo);
+            $(msgclicktime).addClass("direct-chat-timestamp pull-right").appendTo(msginfo);
+            $(msginfo).addClass("direct-chat-info clearfix").appendTo(msgblock);
+            $(msgimage).addClass("direct-chat-img").attr("src", "./images/iprelay_icon.png").appendTo(msgblock);
+            $(msgtext).addClass("direct-chat-text").html(msg).appendTo(msgblock);
+            $(msgblock).addClass("direct-chat-msg").appendTo($("#directChat"));
+            
+            var objDiv = document.getElementById("directChat");
+            
+            objDiv.scrollTop = objDiv.scrollHeight;
+
+            let menu = document.getElementById("chatMenu")
+
+            writeToConsole('<span class="text-green"> ' + "---NEW MESSAGE---" + '</span>');
+
+            if ($(menu).attr("aria-expanded") !== "true"){
+                console.log($(menu).attr("aria-expanded") )
+                notifs += 1;
+                $('#notifications').text(notifs);
+            } 
+
+            if ($(menu).attr("aria-expanded") == true){
+                $('#notifications').text("");
+            }
+
+
+        }
 </script>
 
 </html>

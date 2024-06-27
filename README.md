@@ -139,9 +139,6 @@ From the command prompt (not the MySQL prompt) type the following and enter the 
 ```
 cd ~/ace-quill/resources/asterisk
 mysql -uace_quill -p asterisk < asterisk.sql`
-
-cd ~/ace-quill
-mysql -uace_quill -p ace_quill < ace_quill.sql`
 ```
 *NOTE: If using a remote database specify the host -h*
 
@@ -209,6 +206,7 @@ The `config` directory contains a file named acequill.json_TEMPLATE that contain
 | asterisk > password | String | "AQaccount123%" | Asterisk password for the Asterisk username|
 | accuracy > ace2_repo | String | "https://github.com/YOUR-USERNAME/YOUR-REPOSITORY%" | Repository for the ACE2 library|
 | accuracy > ace2 | Boolean | "false" | Use the ACE 2 accuracy library|
+| accuracy > ace2server | String | "local" | If using a server to host ace2 the ip of that server|
 | accuracy > sclite | Boolean | "true" | Use the SCLite accuracy library|
 | accuracy > jiwer | Boolean | "true" | Use the Jiwer accuracy library|
 
@@ -249,6 +247,7 @@ The following is an sample of a valid config/acequill.json file:
     "accuracy" {
       "ace2_repo":"https://github.com/YOUR-USERNAME/YOUR-REPOSITORY",
       "ace2": "false",
+      "ace2server": "local",
       "sclite": "true",
       "jiwer": "true"
     }
@@ -320,8 +319,15 @@ No special configuration is necessary. ACE Quill will work with the JAWS default
 
 In order to integrate NVDA and a braille device with ACE Quill, navigate to NVDA settings --> Braille. Make sure that the "Tether Braille" field is set to "to focus". 
 
-## NOTICE
+### NOTICE
 
-This (software/technical data) was produced for the U. S. Government under Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition Regulation Clause 52.227-14, Rights in Data-General. No other use other than that granted to the U. S. Government, or to those acting on behalf of the U. S. Government under that Clause is authorized without the express written permission of The MITRE Corporation. For further information, please contact The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive, McLean, VA 22102-7539, (703) 983-6000.
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
 
-©2021 The MITRE Corporation.
+©2024 The MITRE Corporation.

@@ -1,3 +1,18 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
 <html>
 
 <head>
@@ -5,14 +20,14 @@
     <link type="text/css" rel="stylesheet" href="/stylesheets/terminal.css">
     <link type="text/css" rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="/assets/css/adminlte.min.css">
+    <link type="text/css" rel="stylesheet" href="/assets/css/font-awesome.min.css">
 
-    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
     <script src='/assets/js/jquery.min.js'></script>
     <script src='/assets/js/Tone.js'></script>
     <script src='/assets/js/bootstrap.js'></script>
     <script src='/assets/js/adminlte.min.js'></script>
-
-    <script src='/assets/js/jssip.min.js'></script>
+    <script src='/javascript/jssip.min.js'></script>
+    <script src='/assets/js/moment.js'></script>
 </head>
 
 <body class="hold-transition">
@@ -334,7 +349,6 @@
             'video': false
         },
         'pcConfig': {
-            //'iceServers': [{'urls': ['stun:stun.task3acrdemo.com:3478']}],
             'rtcpMuxPolicy': 'negotiate'
         }
     };
@@ -502,20 +516,14 @@
                 $('#call_history').html("");
                 //Loop through the result and populate the table
                 for (var i = 0; i < data.results.length; i++) {
-                    var timeOfDay;
-                    var localDate = new String(new Date(data.results[i].call_start));
-                    var date = localDate.slice(4, 7) + " " + localDate.slice(8, 10) + ", " + localDate.slice(11, 15);
-                    if (parseInt(localDate.slice(16, 18)) > 12) {
-                        timeOfDay = "PM"
-                    } else {
-                        timeOfDay = "AM"
-                    }
-                    var time = ((localDate.slice(16, 18) + 11) % 12 + 1) + localDate.slice(18, 24) + " " + timeOfDay;
                     var liAttribute = document.createElement('li');
                     liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
                     liAttribute.setAttribute("id", "call_hist");
                     liAttribute.setAttribute("onclick", "reDial(this)");
-                    liAttribute.innerHTML = data.results[i].dest_phone_number + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' + date + ", " + time + "</span>";
+                    liAttribute.innerHTML = data.results[i].dest_phone_number 
+                            + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' 
+                            + moment.utc(data.results[i].call_start, moment.ISO_8601).local().format("MMMM D, YYYY, h:mm:ss A")
+                            + "</span>";
                     $('#call_history').append(liAttribute);
                 }
             },

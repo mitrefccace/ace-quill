@@ -19,107 +19,43 @@ McLean, VA 22102-7539, (703) 983-6000.
  * Module dependencies.
  */
 // const debug = require('debug')('init:server');
+const config = require("./../configs/config.js");
 const https = require('https');
-// const http = require('http');
+const http = require('http');
 const fs = require('fs');
-const nconf = require('nconf');
 let io = require('socket.io');
-const log4js = require('log4js');
 
-const winston = require('winston');
-const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
-
-
-// Get the name of the config file from the command line (optional)
-nconf.argv().env();
-const cfile = 'configs/acequill.json';
-
-// Validate the incoming JSON config file
-try {
-  const content = fs.readFileSync(cfile, 'utf8');
-  const myjson = JSON.parse(content);
-  if (myjson) {
-    info.info('Valid JSON config file');
-  }
-} catch (ex) {
-  info.error(`Error in ${cfile}`);
-  info.error('Exiting...');
-  info.error(ex);
-  process.exit(1);
-}
-
-nconf.file({
-  file: cfile,
-});
-
-// log4js.loadAppender('file');
-log4js.configure({
-  appenders: {
-    admin: {
-    type: 'dateFile',
-    category: 'admin',
-    filename: 'logs/admin.log',
-    pattern: '-yyyy-MM-dd',
-    alwaysIncludePattern: false,
-    maxLogSize: 20480,
-    backups: 10,
-  }, 
-  caller: {
-    type: 'dateFile',
-    category: 'caller',
-    filename: 'logs/caller.log',
-    pattern: '-yyyy-MM-dd',
-    alwaysIncludePattern: false,
-    maxLogSize: 20480,
-    backups: 10,
-  }, 
-  asterisk: {
-    type: 'dateFile',
-    category: 'asterisk',
-    filename: 'logs/asterisk.log',
-    pattern: '-yyyy-MM-dd',
-    alwaysIncludePattern: false,
-    maxLogSize: 20480,
-    backups: 10,
-  }
-  },
-    categories: {
-    default: { appenders: [ 'admin' ], level: 'info' },
-    }
-});
 /**
  * Get port from environment and store in Express.
  */
-const decode = require('../utils/decode');
 const app = require('../app');
 
-const port = decode(nconf.get('port'));
+const port = config.port;
 app.set('port', port);
 
 /**
  * Create HTTP server.
 * */
-info.info('Listening for HTTPS connections');
-const credentials = {
-  key: fs.readFileSync(decode(nconf.get('ssl:key'))),
-  cert: fs.readFileSync(decode(nconf.get('ssl:cert'))),
-};
-const server = https.createServer(credentials, app);
-/*
-console.log("Listening for HTTP connections");
-var server = http.createServer(app);
-*/
+var server = null;
+
+if (config.ssl.enabled) {
+  console.info('Listening for HTTPS connections');
+  const credentials = {
+    key: fs.readFileSync(config.ssl.key),
+    cert: fs.readFileSync(config.ssl.cert),
+  };
+  server = https.createServer(credentials, app);
+} else {
+  console.info("Listening for HTTP connections");
+  server = http.createServer(app);
+}
 
 io = require('socket.io')(server);
-require('../sockets/admin')(io.of('/admin'), nconf);
+require('../sockets/admin')(io.of('/admin'));
 require('../asterisk');
 
-if (decode(nconf.get('sttService')) === 'enabled') {
+if (config.sttServices) {
   process.env.GOOGLE_APPLICATION_CREDENTIALS = `${process.cwd()}/configs/google/google.json`;
-  debug.debug(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 } else {
   info.info(`STT Service is currently DISABLED.
   This allows the ACE Quill web server to be run without including the STT node_modules.`);
@@ -141,11 +77,11 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      info.error(`${bind} requires elevated privileges`);
+      console.error(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      info.error(`${bind} is already in use`);
+      console.error(`${bind} is already in use`);
       process.exit(1);
       break;
     default:
@@ -166,7 +102,7 @@ function onListening() {
   const bind = typeof addr === 'string'
     ? `pipe ${addr}`
     : `port ${addr.port}`;
-  info.info(`Listening on port: ${bind}`);
+  console.info(`Listening on port: ${bind}`);
 }
 
 /**

@@ -1,20 +1,36 @@
+<!--
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+-->
+
 <html>
 
     <head>
         <title>ACE Quill Terminal</title>
         <link type="text/css" rel="stylesheet" href="/assets/css/bootstrap.min.css">
         <link type="text/css" rel="stylesheet" href="/assets/css/adminlte.min.css">
-
         <link type="text/css" rel="stylesheet" href="/stylesheets/iprelay.css">
+        <link type="text/css" rel="stylesheet" href="/assets/css/font-awesome.min.css">
 
-        <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
         <script src='/assets/js/jquery.min.js'></script>
         <script src='/assets/js/bootstrap.js'></script>
         <script src='/assets/js/adminlte.min.js'></script>
-
-        <script src='/assets/js/jssip.min.js'></script>
+        <script src='/javascript/jssip.min.js'></script>
         <script src='/assets/js/RecordRTC.js'></script>
         <script src='/assets/js/html2canvas.min.js'></script>
+        <script src='/assets/js/wavesurfer.min.js'></script>
+        <script src='/assets/js/Tone.js'></script>
+        <script src='/assets/js/moment.js'></script>
     </head>
 
     <body class="hold-transition" id="pagebody">
@@ -26,6 +42,10 @@
                     <span id='extensionInfo'><i class="fa fa-circle text-gray"></i> No Registered Extension</span>
                 </div>
                 <ul class="navbar-nav ml-auto">
+                    <li class="nav-item " aria-hidden="true">
+                        <a class="nav-link" onclick="mute()" href="#" aria-hidden="true">
+                            <i id="mic" class="fa fa-microphone"></i></a>
+                    </li>
                     <li class="nav-item dropdown messages-menu">
                         <a class="nav-link" data-toggle="dropdown" href="#">
                             <i id="recordOptions" class="fa fa-video-camera" title=""></i>
@@ -131,6 +151,8 @@
                             </li>
                             <li class="nav-item"><a href="#tab_contacts" data-toggle="pill" aria-expanded="false" role="tab"
                                     class="nav-link"><i class="fa fa-address-book"></i>&nbsp;Contacts</a></li>
+                            <li class="nav-item"><a href="#tab_presets" data-toggle="pill" aria-expanded="false" role="tab"
+                                class="nav-link"><i class="fa fa-volume-control-phone"></i>&nbsp;Controls</a></li>
                         </ul>
                         <div class="tab-content ">
                             <div class="tab-pane active" id="tab_history">
@@ -143,9 +165,25 @@
                                 <ul id="contacts" style="padding-left: 0.5em; padding-right: 0.5em;">
                                 </ul>
                             </div>
+                            <div class="tab-pane" id="tab_presets">
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="profileRadios" id="noFilter"
+                                            value="-1" checked>
+                                        <label class="form-check-label" for="noFilter">
+                                            No Filter
+                                        </label>
+                                    </div>
+                                    <div id="audioprofileDiv">
+                                        aaaa
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <div id="waveform"></div>
                 </div>
+
             </aside>
             <div class='content-wrapper  d-flex flex-column'>
                 <div class="row flex-fill d-flex ">
@@ -174,9 +212,11 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="row h-75">
                             <div class="col-12">
                                 <pre id="terminal" class="terminal">
+
     <output id="history">
     Welcome to the ACE Quill terminal.
     </output>
@@ -195,8 +235,10 @@
                             <div class="col-12">
                                 <div class="card mt-1 h-100 direct-chat direct-chat-warning">
                                     <div class="card-header">
-                                        Scenario
-                                    </div>
+                                        Scenario 
+                                        <a onclick="mute_scenario_toggle();return false;" href="#" aria-hidden="true">
+                                            <i id="mute-scenario" class="fa fa-volume-up text-success"></i>
+                                        </a>
                                     <div class="card-body ">
                                         <div class="direct-chat-messages" id="scenarioChat"></div>
                                     </div>
@@ -205,11 +247,11 @@
                         </div>
                     </div>
                 </div>
-
-
             </div>
             <audio id='remoteView' hidden></audio>
-            <audio id='selfView' hidden></audio>
+            <audio id="ttsAudio" preload="none" hidden></audio>
+            <audio id="scenarioAudio" preload="none" hidden></audio>
+
             <aside class="control-sidebar control-sidebar-dark">
                 <div class="sidebar-form">
                     <form role="form">
@@ -228,6 +270,11 @@
                             <input type="text" class="form-control form-control-sm" placeholder="servername:port"
                                 id="sipServer">
                         </div>
+                        <div class="form-group">
+                            <label>STUN Server (optional)</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="servername:port"
+                                id="stunServer">
+                        </div>
                         <div class="form-group text-center">
                             <button type="button" class="btn btn-success btn-sm" id='registerBtn'>Register</button>
                             <button type="button" class="btn btn-danger btn-sm" id='logoutBtn'>Log Out</button>
@@ -238,7 +285,6 @@
                     </form>
                 </div>
             </aside>
-
         </div>
         <div class="modal fade" tabindex="-1" role="dialog" id="incomingCallModal">
             <div class="modal-dialog modal-sm">
@@ -259,6 +305,7 @@
     </div>
     </body>
     <script>JsSIP.debug.enable('JsSIP:*');</script>
+    <script src="/javascript/waveform.js"></script>
     <script>
         var currentCallID;
         function fixCert() {
@@ -270,7 +317,7 @@
             $('#sipExtension').val(localStorage.getItem('sipExtension'));
             $('#sipPassword').val(localStorage.getItem('sipPassword'));
             $('#sipServer').val(localStorage.getItem('sipServer'));
-
+            $('#stunServer').val(localStorage.getItem('stunServer'));
 
             if (!localStorage.recordScreen)
                 localStorage.setItem('recordScreen', true)
@@ -282,6 +329,9 @@
 
             if (localStorage.getItem('sipServer') != null)
                 registerJsSip();
+            
+            if (localStorage.getItem('stunServer') != null)
+                updateCallOptions();
 
             updateClock()
             setInterval(() => {
@@ -369,54 +419,56 @@
         });
 
         function playTextToSpeech(data) {
-            selfStream.src = './terminal/playTextToSpeech?audiofile=' + data.audiofile;
-            selfStream.type = 'type="audio/wav"';
-            selfStream.loop = false;
-            selfStream.muted = false
-
-            var playPromise = selfStream.play();
-            if (playPromise !== undefined) {
-                playPromise.then(function () {//currentSession.unmute({audio: false, video: true});
-                }).catch(function (error) {
-                    console.error('ERROR - this browser does not support play() Promise');
-                });
-            }
-
-            selfStream.onplay = function () {
-                var stream = selfStream.captureStream();
-                stream.onactive = function () {
-                    // without onactive the tracks of captured stream may be empty
-                    var tracks = stream.getTracks();
-                    Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
-                };
-            };
-
-            selfStream.onended = function () {
-                selfStream.muted = true
-                navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: false
-                }).then(function (stream) {
-                    if ("srcObject" in selfStream) {
-                        selfStream.srcObject = stream;
-                    } else {
-                        selfStream.src = window.URL.createObjectURL(stream);
-                    }
-                    selfStream.onloadedmetadata = function (e) {
-                        selfStream.play();
-                        Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
-                    }
-                        ;
-                }).catch(function (err) {
-                    console.log(err.name + ": " + err.message);
-                });
-            }
+            ttsStream.src = './terminal/playTextToSpeech?audiofile=' + data.audiofile;
+            ttsStream.play();
         }
 
+        function mergeOutgoingAudioStreams(session, context, audioNodes){
+            // Resume in case Chrome paused the context because of autoplay rules
+            context.resume();
+            var combinedSourceNode = context.createChannelMerger();
+            for(const node of audioNodes){
+                node.connect(combinedSourceNode);
+            }
+            console.log(context.destination);
+            var combinedDestNode = context.createMediaStreamDestination();
+            combinedSourceNode.connect(combinedDestNode);
+            var sender = session.connection.getSenders()[0];
+            micTrack = sender.track;
+            var mic_source_stream = new MediaStream();
+            mic_source_stream.addTrack(micTrack);
+            var micSourceNode = context.createMediaStreamSource(mic_source_stream);
+            micSourceNode.connect(combinedSourceNode);
+            sender.replaceTrack(combinedDestNode.stream.getAudioTracks()[0]);
+            if(isMicMuted){
+                micTrack.enabled = false;
+            }
+        }
+        
         $(this).scrollTop();
         var ua = null;
+        var micTrack = null;
         var remoteStream = document.getElementById('remoteView')
-        var selfStream = document.getElementById("selfView");
+        var ttsStream = document.getElementById('ttsAudio');
+        ttsStream.type = 'type="audio/wav"';
+        ttsStream.loop = false;
+        var scenarioStream = document.getElementById('scenarioAudio');
+        scenarioStream.type = 'type="audio/wav"';
+        scenarioStream.loop = false;
+        var isMicMuted = false;
+
+        // Creating the contexts and sources now to avoid lag when the call is accepted
+        var incomingAudioContext = new AudioContext();
+        var outgoingAudioContext = new AudioContext();
+        var outgoingAudioPlayNodes = [];
+
+        outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(ttsStream));
+        outgoingAudioPlayNodes.push(outgoingAudioContext.createMediaElementSource(scenarioStream));
+        // We will pipe scenario audio into this node so we can mute it separately from the outgoing audio
+        var scenarioLoopbackNode = outgoingAudioContext.createGain();
+        outgoingAudioPlayNodes[1].connect(scenarioLoopbackNode);
+        scenarioLoopbackNode.connect(outgoingAudioContext.destination);
+
         var jssipConnection = {
             display_name: null,
             uri: null,
@@ -443,19 +495,28 @@
                 AppSecret: null
             }
         };
-        var options = {
+
+        var callOptions = {
             'mediaConstraints': {
                 'audio': true,
                 'video': false
             },
             'pcConfig': {
-                //'iceServers': [{'urls': ['stun:stun.task3acrdemo.com:3478']}],
                 'rtcpMuxPolicy': 'negotiate'
             }
         };
 
-
         var currentSession = null;
+
+
+        function updateCallOptions() {
+            var stunServer = localStorage.getItem('stunServer');
+            if(stunServer){
+                callOptions.pcConfig.iceServers = [{'urls': ['stun:' + stunServer]}];
+            }
+        }
+
+        var mediaStream;
         function registerJsSip() {
 
             getHistory();
@@ -514,6 +575,7 @@
                         document.getElementById("callAnswerTime").innerHTML = dt.toLocaleString();
                         totalDurationSeconds = 0;
                         durationTimer = setInterval(setTime, 1000);
+                        mergeOutgoingAudioStreams(currentSession, outgoingAudioContext, outgoingAudioPlayNodes);
                         writeToConsole("<span class='text-green'>Call Answered</span>");
                         postNotes();
                     });
@@ -528,21 +590,21 @@
                         $('#call_btn').removeClass('incall_btn')
                         $.post('./iprelay/updateIprelay', { isIprelay: "false" }).done(function (msg) {})
                         stopRecording();
-
+                        $("#waveform").html("");
                     });
                     currentSession.on('failed', function (e) {
                         writeToConsole("<span class='text-red'>Error</span>");
                         $('#call_btn').removeClass('incall_btn')
                         stopRecording();
-
                     });
 
                     if (currentSession.connection) {
                         currentSession.connection.ontrack = function (e) {
-                            remoteStream.srcObject = e.streams[0];
-                            remoteStream.play();
+                            mediaStream = e.streams[0];
+                            remoteStream.srcObject = mediaStream;
+                            createWaveSurfer(mediaStream);
+                            $('input[name=profileRadios]:checked').trigger('change');
                         }
-
                     }
                 });
 
@@ -572,7 +634,7 @@
 
         function startCall(number) {
             writeToConsole('Calling: ' + number)
-            ua.call(number, options);
+            ua.call(number, callOptions);
             getHistory();
             startRecording();
         }
@@ -613,7 +675,9 @@
             localStorage.setItem('sipExtension', $('#sipExtension').val());
             localStorage.setItem('sipPassword', $('#sipPassword').val());
             localStorage.setItem('sipServer', $('#sipServer').val());
-            registerJsSip()
+            localStorage.setItem('stunServer', $('#stunServer').val());
+            registerJsSip();
+            updateCallOptions();
         });
 
         $('#logoutBtn').on('click', function () {
@@ -629,7 +693,7 @@
 
         $('#answerBtn').on('click', function () {
             if (currentSession && !currentSession.isEnded()) {
-                currentSession.answer(options);
+                currentSession.answer(callOptions);
                 $('#call_btn').addClass('incall_btn');
                 $('#incomingCallModal').modal('hide');
                 if (currentSession.connection) {
@@ -661,20 +725,14 @@
                     $('#call_history').html("");
                     //Loop through the result and populate the table
                     for (var i = 0; i < data.results.length; i++) {
-                        var timeOfDay;
-                        var localDate = new String(new Date(data.results[i].call_start));
-                        var date = localDate.slice(4, 7) + " " + localDate.slice(8, 10) + ", " + localDate.slice(11, 15);
-                        if (parseInt(localDate.slice(16, 18)) > 12) {
-                            timeOfDay = "PM"
-                        } else {
-                            timeOfDay = "AM"
-                        }
-                        var time = ((localDate.slice(16, 18) + 11) % 12 + 1) + localDate.slice(18, 24) + " " + timeOfDay;
                         var liAttribute = document.createElement('li');
                         liAttribute.setAttribute("style", "font-size:small; cursor:pointer;");
                         liAttribute.setAttribute("id", "call_hist");
                         liAttribute.setAttribute("onclick", "reDial(this)");
-                        liAttribute.innerHTML = data.results[i].dest_phone_number + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' + date + ", " + time + "</span>";
+                        liAttribute.innerHTML = data.results[i].dest_phone_number 
+                            + '<span class="pull-right badge bg-blue" style="font-size:xx-small">' 
+                            + moment.utc(data.results[i].call_start, moment.ISO_8601).local().format("MMM D, YYYY, h:mm:ss A")
+                            + "</span>";
                         $('#call_history').append(liAttribute);
                     }
                 },
@@ -720,7 +778,24 @@
             $("#output").append('<span>' + element.id + '</span>');
         }
 
+        function mute() {
+            isMicMuted = !isMicMuted;
+            document.getElementById("mic").className = isMicMuted ? "fa fa-microphone-slash" : "fa fa-microphone";
+            if (micTrack) {
+                micTrack.enabled = !isMicMuted;
+            }            
+        }
 
+        function mute_scenario_toggle(e) {
+            if(scenarioLoopbackNode.gain.value < 1){
+                scenarioLoopbackNode.gain.value = 1;
+                document.getElementById("mute-scenario").className = "fa fa-volume-up text-success";
+            }
+            else{
+                scenarioLoopbackNode.gain.value = 0;
+                document.getElementById("mute-scenario").className =  "fa fa-volume-off text-danger";
+            }
+        }
 
         function writeToConsole(text) {
             $('#history').append(text + '\n');
@@ -798,6 +873,89 @@
                // writeToConsole(temp);
             i++
         }, 100)*/
+        getAudioProfiles()
+        function getAudioProfiles() {
+            $.ajax({
+                url: './terminal/audioprofiles',
+                type: 'GET',
+                data: {"extension": localStorage.getItem('sipExtension')},
+                datatype: 'json',
+                success: function (data) {
+                    $('#audioprofileDiv').html("");
+                    let profiles = data.profiles;
+                    let phtml = ''
+                    profiles.forEach((p) => {
+                        phtml += '<div class="form-check">'
+                        phtml += '<input class="form-check-input" type="radio" name="profileRadios" id="profile_' + p.id + '" value="' + p.id + '">'
+                        phtml += '<label class="form-check-label" for="profile_' + p.id + '">' + p.name + '</label>'
+                        phtml += '</div>'
+                    })
+                    $('#audioprofileDiv').html(phtml);
+                    $("input[name='profileRadios']").change(function () {
+                        console.log("Detected a change")
+                        if ($(this).val() > 0) {
+                            $.ajax({
+                                url: './terminal/audioprofilefilters',
+                                type: 'GET',
+                                data: {"profileId": $(this).val()},
+                                datatype: 'json',
+                                success: function (data) {
+                                    setMultipleFilters(mediaStream, data.filters);
+                                }
+                            })
+                        } else {
+                            setMultipleFilters(mediaStream, {});
+                        }
+                    });
+                }
+            });
+        }
+        var mediaStream2
+        function setMultipleFilters(stream, filters) {
+            if (mediaStream) {
+                remoteStream.pause();
+                if (mediaStream2)
+                    Tone.disconnect(mediaStream2)
+                mediaStream2 = Tone.context.createMediaStreamSource(stream);
+                //pitchShift = new Tone.PitchShift().toDestination();
+                let tones = []
+                if (filters.length > 0) {
+                    for (let i = 0; i < filters.length; i++) {
+                        let f = {}
+                        if (filters[i].type == 'pitch shift') {
+                            
+                        } else {
+                            f.type = filters[i].type
+                            f.gain = filters[i].gain | 0;
+                            f.frequency = filters[i].frequency | 350;
+                            f.rolloff = filters[i].rolloff | -12;
+                            f.Q = filters[i].Q | 1; 
+                        }
+                        console.log(f)
+                        if (i == 0) {
+                            if (filters[i].type == 'pitch shift') {
+                                tones[i] = new Tone.PitchShift({pitch:filters[i].pitchshift}).toDestination();
+                            } else {
+                                tones[i] = new Tone.Filter(f).toDestination();
+                            }
+                        } else {
+                            if (filters[i].type == 'pitch shift') {
+                                tones[i] = new Tone.PitchShift({pitch:filters[i].pitchshift}).connect(tones[i - 1]);
+                            } else {
+                                tones[i] = new Tone.Filter(f).connect(tones[i - 1]);
+                            }
+                        }
+                    }
+                    Tone.connect(mediaStream2, tones[filters.length - 1])
+
+                    Tone.start();
+                } else {
+                    console.log("no filter")
+                    //Tone.connect(mediaStream2, new Tone.AudioNode(mediaStream2).toDestination());
+                    remoteStream.play();
+                }
+            }
+        }
 
         function scrollPage(text) {
             var element1 = document.getElementById("history");
@@ -919,48 +1077,8 @@
         }
 
         function playScenarioSpeech(audioId) {
-            selfStream.src = './iprelay/playScenarioSpeech?audioId=' + audioId;
-            selfStream.type = 'type="audio/wav"';
-            selfStream.loop = false;
-            selfStream.muted = false
-
-            var playPromise = selfStream.play();
-            if (playPromise !== undefined) {
-                playPromise.then(function () {//currentSession.unmute({audio: false, video: true});
-                }).catch(function (error) {
-                    console.error('ERROR - this browser does not support play() Promise');
-                });
-            }
-
-            selfStream.onplay = function () {
-                var stream = selfStream.captureStream();
-                stream.onactive = function () {
-                    // without onactive the tracks of captured stream may be empty
-                    var tracks = stream.getTracks();
-                    Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
-                };
-            };
-
-            selfStream.onended = function () {
-                selfStream.muted = true
-                navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: false
-                }).then(function (stream) {
-                    if ("srcObject" in selfStream) {
-                        selfStream.srcObject = stream;
-                    } else {
-                        selfStream.src = window.URL.createObjectURL(stream);
-                    }
-                    selfStream.onloadedmetadata = function (e) {
-                        selfStream.play();
-                        Promise.all(currentSession.connection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind == sender.track.kind), stream)));
-                    }
-                        ;
-                }).catch(function (err) {
-                    console.log(err.name + ": " + err.message);
-                });
-            }
+            scenarioStream.src = './iprelay/playScenarioSpeech?audioId=' + audioId;
+            scenarioStream.play();
         }
 
         function postNotes() {

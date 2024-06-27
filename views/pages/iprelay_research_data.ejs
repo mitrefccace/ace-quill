@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 -->
 
 <!DOCTYPE html>
@@ -107,20 +107,20 @@ McLean, VA 22102-7539, (703) 983-6000.
                                         <a href="#notes-call-tab" data-toggle="pill" aria-expanded="true" role="tab"
                                             class="nav-link active">Call Notes</a>
                                     </li>
-                                    <li class="nav-item">
+                                    <!-- <li class="nav-item">
                                         <a href="#notes-mobizen-tab" data-toggle="pill" aria-expanded="true" role="tab"
                                             class="nav-link">Mobizen Notes</a>
-                                    </li>
+                                    </li> -->
                                 </ul>
                                 <div class="tab-content no-padding">
                                     <div class="tab-pane card-body active" id="notes-call-tab">
                                         <textarea id="callNotesTextarea" class="form-control" rows="5"
                                             placeholder="Enter notes about the call..."></textarea>
                                     </div>
-                                    <div class="tab-pane card-body" id="notes-mobizen-tab">
+                                    <!-- <div class="tab-pane card-body" id="notes-mobizen-tab">
                                         <textarea id="mobizenNotesTextarea" class="form-control" rows="5"
                                             placeholder="Enter notes about mobizen..."></textarea>
-                                    </div>
+                                    </div> -->
                                 </div>
                                 <div class="card-footer">
                                     <button id="saveNotesBtn" type="button" class="btn btn-primary"
@@ -176,13 +176,22 @@ McLean, VA 22102-7539, (703) 983-6000.
                                             <br>
                                             <hr>
                                             <button id="downloadtranscriptsBtn" type="button" class="btn btn-primary"
-                                                onclick="downloadTranscripts();">Download</button>
+                                                onclick="downloadTranscripts();">Download Transcript</button>
                                             <br>
                                             <hr>
                                             <audio id="player" controls="controls" style="width: 100%;">
                                                 <source id="wav_src" src="" type="audio/wav" /> Your browser does not
                                                 support audio.
                                             </audio>
+                                            <br>
+                                            <hr>
+                                            <label for="downloadAudioFilename">Custom Download Filename (optional)</label>
+                                            <input type="text" class="form-control" id='downloadAudioFilename'
+                                            placeholder="Custom Download Filename (optional)"
+                                            aria-label="Custom filename for download (optional)" />
+                                            <br/>
+                                            <button id="downloadaudioBtn" type="button" class="btn btn-primary"
+                                                onclick="downloadAudio();">Download Audio</button>
                                         </div>
                                     </div>
                                     <div class="tab-pane card-body direct-chat direct-chat-primary"
@@ -338,7 +347,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                     {
                         "data": "call_start",
                         "render": function (value) {
-                            return moment(value).local().format('YYYY/MM/DD h:mm:ss a');
+                            return moment.utc(value, moment.ISO_8601).local().format("YYYY-MM-DD, h:mm A");
                         }
                     },
                     {
@@ -422,7 +431,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                     $('#videorowselect').hide();
                     $('#transcriptId').html(data.id);
     
-                    $("#mobizenNotesTextarea").val('');
+                 //   $("#mobizenNotesTextarea").val('');
                     $("#callNotesTextarea").val('');
                     $("#recordingsList").html("No Recordings")
     
@@ -456,7 +465,7 @@ McLean, VA 22102-7539, (703) 983-6000.
     
                     $("#player").show();
                     var audio = $("#player");
-                    $("#wav_src").attr("src", './getAudioFile?id=' + data.id);
+                    $("#wav_src").attr("src", './getCallAudioFile?id=' + data.id);
                     audio[0].pause();
                     audio[0].load();
     
@@ -485,9 +494,9 @@ McLean, VA 22102-7539, (703) 983-6000.
                                 if (notes.call) {
                                     $("#callNotesTextarea").val(notes.call);
                                 }
-                                if (notes.mobizen) {
-                                    $("#mobizenNotesTextarea").val(notes.mobizen);
-                                }
+                                // if (notes.mobizen) {
+                                //     $("#mobizenNotesTextarea").val(notes.mobizen);
+                                // }
                             }
                         }
                     });
@@ -514,11 +523,11 @@ McLean, VA 22102-7539, (703) 983-6000.
                     $('#wil').html("");
                 }
                 var listRecordings = function (data) {
-                    if (data) {
+                    if (data && Array.isArray(data)) {
                         $("#recordingsList").html("")
                         let temp = "";
                         data.forEach(function (rec) {
-                            temp = "<li><a href='./playrecording?id="+rec[0]+"' target='_blank'>"+rec[1]+"</a></li>"
+                            temp = "<li style='padding-bottom:10px'><a style='padding-right:10px'href='./playrecording?id="+rec[0]+"' target='_blank'>"+rec[1]+"</a><button class='btn btn-primary' id='downloadrecordingsBtn'type='button'onclick='downloadRecordings(" + rec[0] + ");'><i class='fa fa-download'></i></button></li>"
                             $("#recordingsList").append(temp)
                         })
                     }
@@ -775,11 +784,11 @@ McLean, VA 22102-7539, (703) 983-6000.
     
                 var uId = $("#selectedRowId").val()
                 var callNotes = $("#callNotesTextarea").val();
-                var mobizenNotes = $("#mobizenNotesTextarea").val();
+              //  var mobizenNotes = $("#mobizenNotesTextarea").val();
                 $.post("./saveNotes", {
                     "id": uId,
                     "callNotes": callNotes,
-                    "mobizenNotes": mobizenNotes
+                    //"mobizenNotes": mobizenNotes
                 },
                     function (data, status) {
                         console.log("Saved!!!!")
@@ -836,6 +845,18 @@ McLean, VA 22102-7539, (703) 983-6000.
                         });
                     
                 }
+            }
+
+
+
+            function downloadRecordings(id) {
+                window.location = "./downloadRecording?id=" + id;
+            }
+
+            function downloadAudio() {
+                var uId = $("#selectedRowId").val();
+                var customName = $("#downloadAudioFilename").val();
+                window.location = "./getCallAudioFiles?id=" + uId + "&customName="+ customName;
             }
     
             function deleteVideo() {

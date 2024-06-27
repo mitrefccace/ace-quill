@@ -1,13 +1,24 @@
-// Pull in the required packages.
+/*
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+*/
+
 const sdk = require('microsoft-cognitiveservices-speech-sdk');
-// const fs = require('fs');
 const GrowingFile = require('growing-file');
 
-const winston = require('winston');
-const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
+// Max size of a single wav file byte buffer
+// One of these packets is 32,768 bytes, i.e. 16,384 samples in pc16 mono wav
+const MAX_BUFFER_LENGTH = 32768;
 
 function Azure(configs) {
   this.file = configs.file;
@@ -16,26 +27,61 @@ function Azure(configs) {
   this.proxy = configs.proxy;
   this.proxy_port = configs.proxy_port;
   this.language = configs.language;
+
+  this.enableDropoutSimulation = configs.stt_dropout_enabled && configs.stt_dropout_interval && configs.stt_dropout_length_min && configs.stt_dropout_length_min;
+  if(this.enableDropoutSimulation){
+    // Dropout interval in whole seconds, dropout length in whole milliseconds, where 100 < x < 1000
+    this.dropoutIntervalSecs = configs.stt_dropout_interval;
+    // Assuming pc16 mono wav at 16000hz sample rate, one packet is 1.024 seconds.
+    // To make things easier, we will assume 2 bytes = 1 sample, and 16 samples == 1 ms, and 1 packet == 1 second
+    this.dropoutLengthMinBytes = configs.stt_dropout_length_min * 16 * 2;
+    this.dropoutLengthMaxBytes = configs.stt_dropout_length_max * 16 * 2;
+    this.dropoutLengthRangeBytes = this.dropoutLengthMaxBytes - this.dropoutLengthMinBytes;
+    this.dropoutMaxOffset = MAX_BUFFER_LENGTH - this.dropoutLengthMaxBytes;
+  }
 }
 
 Azure.prototype.start = function start(callback) {
   const pushStream = sdk.AudioInputStream.createPushStream();
-
   const gf = GrowingFile.open(this.file, {
     timeout: 25000,
     interval: 100,
   });
 
-  gf.on('data', (data) => {
-    pushStream.write(data);
-  }).on('end', () => {
-    info.info('AZURE FILE HAS ENDED');
-    pushStream.close();
-    callback({ end: true });
-  });
+  if(!this.enableDropoutSimulation) {
+    gf.on('data', (data) => {
+      pushStream.write(data);
+    }).on('end', () => {
+      console.info('AZURE TRANSCRIPTION FILE HAS ENDED');
+      pushStream.close();
+      callback({ end: true });
+    });
+  }
+  else {
+    var dataBufferCount = 0;
+    gf.on('data', (data) => {
+      dataBufferCount++;
+      // Avoid first couple of buffers which contain the header
+      if (dataBufferCount > 2){
+        // Again, assuming the number of buffers == number of seconds elapsed
+        // Also, ignore buffers smaller than 32,768, which is probably only the first and last buffer of the call anyway
+        if((dataBufferCount % this.dropoutIntervalSecs == 0) && data.length === MAX_BUFFER_LENGTH){
+          // Fill with zeros from a random start to (start + min length + random(0...(max-min)) bytes
+          var start = Math.floor(Math.random() * this.dropoutMaxOffset);
+          var end = start + this.dropoutLengthMinBytes + Math.floor(Math.random() * this.dropoutLengthRangeBytes);
+          data.fill(0, start, end);
+        }
+      }
+      pushStream.write(data);
+    }).on('end', () => {
+      console.info('AZURE TRANSCRIPTION FILE HAS ENDED');
+      pushStream.close();
+      callback({ end: true });
+    });
+  }
 
   // We are done with the setup
-  info.info(`Azure now recognizing from: ${this.file}`);
+  console.info(`Azure now recognizing from: ${this.file}`);
 
   // Create the audio-config pointing to our stream and
   // the speech config specifying the language.
@@ -51,6 +97,7 @@ Azure.prototype.start = function start(callback) {
   speechConfig.outputFormat = 1; // detailed == 1; give much more data
   speechConfig.requestWordLevelTimestamps();
   speechConfig.setServiceProperty('wordLevelConfidence', true, sdk.UriQueryParameter);
+  speechConfig.setProfanity(sdk.ProfanityOption.Raw);
   // peechConfig.setServiceProperty("format", "detailed", sdk.UriQueryParameter);
 
   // Create the speech recognizer.
@@ -104,21 +151,18 @@ Azure.prototype.start = function start(callback) {
   };
 
   recognizer.canceled = (s, e) => {
-    error.error(`CANCELED: Reason=${e.reason}`);
-
-    let CancellationReason;
-
-    if (e.reason === CancellationReason.Error) {
-      error.error(`"CANCELED: ErrorCode=${e.errorCode}`);
-      error.error(`"CANCELED: ErrorDetails=${e.errorDetails}`);
+    console.error(`Azure Transcription CANCELED: Reason=${e.reason}`);
+    // ERROR is 0, EndOfStream is 1
+    if (e.reason === 0) {
+      console.error(`"CANCELED: ErrorCode=${e.errorCode}`);
+      console.error(`"CANCELED: ErrorDetails=${e.errorDetails}`);
     }
-
     recognizer.stopContinuousRecognitionAsync();
     recognizer.close();
   };
 
   recognizer.sessionStopped = () => {
-    info.info('\n    Session stopped event.');
+    console.info('Azure session stopped');
     recognizer.stopContinuousRecognitionAsync();
   };
 

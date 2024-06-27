@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
@@ -62,8 +62,6 @@ McLean, VA 22102-7539, (703) 983-6000.
             <!-- Main content -->
             <section class="content">
                 <div class="row">
-
-
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header with-border">
@@ -80,6 +78,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                             <th class="text">Last Name</th>
                                             <th class="text">Username</th>
                                             <th class="text">Last Login</th>
+                                            <th class="text">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -97,12 +96,17 @@ McLean, VA 22102-7539, (703) 983-6000.
                                             <td>
                                                 <%= user.username %>
                                             </td>
-                                            
-                                            <td>
+                                            <td class="local-date">
                                                 <%= user.last_login %>
                                             </td>
+                                            <td class="user-actions">
+                                                <button type="button" class="btn btn-primary"
+                                                    onclick="updatePasswordModal('<%= user.username %>')">Update Password</button>
+                                                <button type="button" class="btn btn-danger btn-delete-user"
+                                                    onclick="deleteUserModal('<%= user.username %>','<%= user.first_name %>','<%= user.last_name %>','<%= user.idlogin_credentials %>')">
+                                                    Delete</button>
+                                            </td>
                                         </tr>
-
                                         <% }) %>
                                     </tbody>
                                 </table>
@@ -159,7 +163,14 @@ McLean, VA 22102-7539, (703) 983-6000.
                                 <p class="help-block">Password must be 8 to 64 characters and contain at least 1
                                     uppercase letter, 1 lowercase
                                     letter, 1 number, and 1 special character.</p>
-
+                            </div>
+                            <label for="inputConfirmPassword" class="col-sm-2 control-label">Confirm Password</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" id="inputConfirmPassword" name="confirmPassword" placeholder="Confirm Password"
+                                    data-minlength="8" data-maxlength="64" data-validation="custom"
+                                    data-validation-regexp="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,64}$"
+                                    required data-validation-error-msg="Please confirm password">
+                                <p class="pwd-warning-block alert alert-danger pwd-hidden">Does not match</p>
                             </div>
                         </div>
                         <div class="form-group row">
@@ -211,6 +222,49 @@ McLean, VA 22102-7539, (703) 983-6000.
         </div>
     </div>
     
+    <div class="modal fade" id="passwordModal" tabindex="-1" role="dialog" aria-labelledby="passwordModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="configModalLabel">Change User Password</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form class="form-horizontal test-form toggle-disabled has-validation-callback disabled-without-errors"
+                    id="userPasswordForm">
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="inputUpdatePassword" class="col-sm-2 control-label">Password</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" id="inputUpdatePassword" name="password" placeholder="Password"
+                                    data-minlength="8" data-maxlength="64" data-validation="custom"
+                                    data-validation-regexp="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,64}$"
+                                    required data-validation-error-msg="You did not enter a password">
+                                <p class="help-block">Password must be 8 to 64 characters and contain at least 1
+                                    uppercase letter, 1 lowercase
+                                    letter, 1 number, and 1 special character.</p>
+                            </div>
+                            <label for="inputUpdateConfirmPassword" class="col-sm-2 control-label">Confirm Password</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" id="inputUpdateConfirmPassword" name="confirmPassword" placeholder="Confirm Password"
+                                    data-minlength="8" data-maxlength="64" data-validation="custom"
+                                    data-validation-regexp="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,64}$"
+                                    required data-validation-error-msg="Please confirm password">
+                                <p class="pwd-warning-block alert alert-danger pwd-hidden">Does not match</p>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="inputUpdateUsername" name="username" value="" />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id='updatePassword'>Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script type="text/javascript">
         var selectedUser = 0;
         $(document).ready(function () {
@@ -235,15 +289,12 @@ McLean, VA 22102-7539, (703) 983-6000.
                 }]
             });
 
-            $('#usertable tbody').on('click', 'tr', function () {
-                var data = table.row(this).data();
-                $("#userNameModal").html(data[1] + " " + data[2]);
-                selectedUser = $(this).attr('value');
-                $('#confirm-delete').modal();
-            });
-
             $("#addUserForm").submit(function (event) {
                 event.preventDefault();
+                if($('#inputPassword').val() !== $('#inputConfirmPassword').val()){
+                    alert('Passwords do not match, please try again');
+                    return;
+                }
                 $.post("./addUser", {
                     "username": $('#inputUsername').val(),
                     "password": $('#inputPassword').val(),
@@ -254,13 +305,57 @@ McLean, VA 22102-7539, (703) 983-6000.
                         console.log("Saved!!!!")
                         location.reload();
                     });
-
             });
+
+            $("#userPasswordForm").submit(function (event) {
+                event.preventDefault();
+                if($('#inputUpdatePassword').val() !== $('#inputUpdateConfirmPassword').val()){
+                    alert('Passwords do not match, please try again');
+                    return;
+                }
+                $.post("./adminPasswordUpdate", {
+                    "username": $('#inputUpdateUsername').val(),
+                    "password": $('#inputUpdatePassword').val()
+                })
+                .done(function (data, status) {
+                    alert(data);
+                    location.reload();  
+                })
+                .fail(function (data, status) {
+                    $("#userPasswordForm").trigger("reset");
+                    alert(data.responseText);
+                });
+            });
+            $("#inputUpdateConfirmPassword").on('input',function (event) {checkConfirmPassword(event.target, '#inputUpdatePassword')} );
+            $("#inputConfirmPassword").on('input',function (event) {checkConfirmPassword(event.target, '#inputPassword')} );
         });
+
+        function checkConfirmPassword(confirmInputEl, passInputId){
+            const confirmVal = confirmInputEl.value;
+            const passVal = $(passInputId).val();
+            const warning = $('.pwd-warning-block');
+            if(confirmVal !== passVal){
+                warning.removeClass('pwd-hidden');
+                return;
+            }
+            warning.addClass('pwd-hidden');
+        }
 
         function addUserModal() {
             $("#addUserForm").trigger("reset");
             $('#configModal').modal();
+        }
+    
+        function updatePasswordModal(username) {
+            $("#userPasswordForm").trigger("reset");
+            $("#inputUpdateUsername").val(username);
+            $('#passwordModal').modal();
+        }
+
+        function deleteUserModal(username, first, last, userId){
+            $("#userNameModal").html(first + " " + last);
+            selectedUser = userId;
+            $('#confirm-delete').modal();
         }
 
         function deleteUser() {
@@ -273,10 +368,18 @@ McLean, VA 22102-7539, (703) 983-6000.
                 });
         }
 
-        $.validate({
+        $('#addUserForm').validate({
             modules: 'toggleDisabled',
             disabledFormFilter: 'form.toggle-disabled',
             showErrorDialogs: false
+        });
+
+        $(document).ready(function () {
+            $('.local-date').each(function (i){
+                    let fDate=moment.utc(this.innerHTML, moment.ISO_8601).local().format("YYYY-MM-DD HH:mm:ss");
+                    if(fDate !== 'Invalid date')
+                        this.innerHTML=fDate;
+            });
         });
     </script>
 </body>

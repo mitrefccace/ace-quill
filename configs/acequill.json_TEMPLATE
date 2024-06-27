@@ -3,7 +3,6 @@
     "debuglevel": "ALL",
     "sttService": "enabled",
     "port": "<port>",
-    "version": "1.0",
     "nginxlocation":"<nginx location eg '/location' >",
     "proxy":"<http://proxy_ip:port>",
     "ssl" : {
@@ -15,14 +14,17 @@
       "secret": "<secret>"
     },
     "transcriptFilePath": "<path to store transcripts>",
-    "wavFilePath": "<path to store wav files>",
+    "wavFilePath": "uploads/",
     "videoFilePath":"uploads/",
+    "defaultEnv": "mysql",
     "mysql": {
       "host": "<mysql host>",
       "user": "<mysql user>",
       "password": "<mysql password>",
-      "database": "ace_quill"
-},
+      "database": "ace_quill",
+      "driver": "mysql",
+      "multipleStatements": true
+  },
     "asterisk": {
       "port": <asterisk ami port>,
       "host": "<asterisk ip>",
@@ -35,6 +37,7 @@
     "accuracy" {
       "ace2_repo":"<path to clone ace2 from e.g. https://github.com/YOUR-USERNAME/YOUR-REPOSITORY>",
       "ace2": "false",
+      "ace2server": "local",
       "sclite": "true",
       "jiwer": "true"
     }

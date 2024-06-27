@@ -1,18 +1,33 @@
-const Speech = require('@google-cloud/speech');
+/*
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+*/
+
 const GrowingFile = require('growing-file');
 const unpipe = require('unpipe');
 
-const speech = new Speech.SpeechClient();
 const maxTimeoutForReconnect = 45000;
 const growingFileOffset = -5000;
+let speech = null;
+let Speech = null;
 
-const winston = require('winston');
-const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
-
-function Google(file, languageCode, liveFile = true) {
+function Google(file, languageCode, punctuation, v2, liveFile = true) {
+  if(v2) {
+    Speech = require('@google-cloud/speech').v2;
+  } else {
+    Speech = require('@google-cloud/speech');
+  }
+  speech = new Speech.SpeechClient();
   this.file = file;
   this.gfWavPolling = null;
   this.growingWav = null;
@@ -27,6 +42,8 @@ function Google(file, languageCode, liveFile = true) {
       model: 'phone_call',
       enableWordTimeOffsets: true,
       enableWordConfidence: true,
+      enableAutomaticPunctuation: punctuation,
+      profanityFilter: false
     },
     interimResults: true,
     verbose: true,
@@ -45,7 +62,7 @@ Google.prototype.start = function start(callback) {
     'timeout', callback);
 
   this.growingWav.on('end', () => {
-    info.info('clearing reconnection timer');
+    console.info('Clearing Google reconnection timer');
     clearTimeout(this.gfWavPolling);
     this.done = true;
     callback({ end: true });
@@ -57,7 +74,7 @@ Google.prototype.reconnectStreams = function reconnectstreams(that, reason, call
   clearTimeout(that.gfWavPolling);
   unpipe(that.growingWav);
   if (!that2.done) {
-    info.info(`google started new stream because of ${reason}`);
+    console.info(`google started new stream because of ${reason}`);
     const gstream = that2.speechStream.call(that2, callback);
     that2.growingWav.pipe(gstream);
     that2.gfWavPolling = setTimeout(that2.reconnectStreams, maxTimeoutForReconnect,
@@ -68,8 +85,7 @@ Google.prototype.reconnectStreams = function reconnectstreams(that, reason, call
 Google.prototype.speechStream = function speechstream(callback) {
   return speech.streamingRecognize(this.request)
     .on('error', (error) => {
-      debug.debug(`Google Error: ${error}`);
-      debug.debug('What should I do?');
+      console.debug(`Google streaming recognize error: ${error}`);
     })
     .on('data', (data) => {
       if (!data.error) {
@@ -84,22 +100,25 @@ Google.prototype.speechStream = function speechstream(callback) {
             transcriptConfidence: [],
           };
 
-          // console.log("transcript:",data.results[0].alternatives[0].transcript)
-          // console.log("stability: ",data.results[0].stability)
           if (results.final) {
-            info.info(JSON.stringify(data, null, 2));
+            console.info(JSON.stringify(data, null, 2));
             results.transcriptConfidence = data.results[0].alternatives[0].confidence;
+            if(data.results[0].alternatives[0].words){
+              for (let i = 0; i < data.results[0].alternatives[0].words.length; i += 1) {
+                results.wordConfidence.push(data.results[0].alternatives[0].words[i].confidence);
+              }
+            }
             if (this.liveFile) this.reconnectStreams(this, 'final', callback);
           }
           this.lastResults = results;
           callback(results);
         }
       } else {
-        error.error(`Error: ${JSON.stringify(data)}`);
-        error.error('Stopping Google STT due to error');
+        console.error(`Error: ${JSON.stringify(data)}`);
+        console.error('Stopping Google STT due to error');
         if (data.error.code === 11) {
           if (this.lastResults.final === false) {
-            info.info('a FORCED final');
+            console.info('a FORCED final');
             this.lastResults.final = true;
             callback(this.lastResults);
           }
@@ -112,11 +131,3 @@ Google.prototype.speechStream = function speechstream(callback) {
 };
 
 module.exports = Google;
-/*
-process.env.GOOGLE_APPLICATION_CREDENTIALS=process.cwd() + "/../configs/google/google.json";
-var test1 = new Google('../public/sounds/rain_in_spain.wav', "en-US");
-//var test1 = new Google('./../../../../../../Desktop/onesideConvoSpanish.wav', "es-US");
-test1.start(function(data){
-    console.log(data.transcript)
-});
-*/

@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
@@ -38,7 +38,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                 </div>
                                 <div class="col-sm-6">
                                     <ol class="breadcrumb float-sm-right">
-                                        <li class="breadcrumb-item"><i class="fa fa-bar-chart"></i>&nbsp;Reports</li>
+                                        <li class="breadcrumb-item"><i class="fa fa-wrench"></i>&nbsp;Tools</li>
                                         <li class="breadcrumb-item active">Accuracy</li>
                                     </ol>
                                 </div>
@@ -93,7 +93,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
+                                        <div class="row">                                            
                                             <div class="col-3">
                                                 <div class="custom-file" id="customFile" lang="es">
                                                     <input type="file" accept=".csv" class="custom-file-input"
@@ -102,7 +102,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                                         CSV File
                                                     </label>
                                                 </div>
-                                            </div>
+                                            </div>                                
                                             <div class="col-3">
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
@@ -120,11 +120,20 @@ McLean, VA 22102-7539, (703) 983-6000.
                                                 </select>
                                             </div>
                                             <div class="col-3">
-                                                <div class="text-right">
-                                                    <button id="runReportbtn" type="button"
-                                                        class="btn btn-success mb-2">Run
-                                                        Reports</button>
+                                                <div class="checkbox">
+                                                    <label class="checkbox-inline no_indent">
+                                                        <input name="customIds" id="customIds" type="checkbox">
+                                                        Custom IDs <br/><small><i>include (customid) after each line</i></small>
+                                                    </label>
                                                 </div>
+                                            </div>
+                                            
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <button id="runReportbtn" type="button"
+                                                class="btn btn-success mb-2">Run
+                                                Reports</button>
                                             </div>
                                         </div>
                                         <hr class="my-12" />
@@ -133,7 +142,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                             <div class="col-10">
                                                 <ul class="nav nav-tabs" role="tablist">
                                                     <li class="nav-item" id="ace2">
-                                                        <a class="nav-link active" id="ace2-tab" data-toggle="tab"
+                                                        <a class="nav-link" id="ace2-tab" data-toggle="tab"
                                                             href="#ace2-panel" role="tab" aria-controls="ace2-panel"
                                                             aria-selected="true">Ace 2 <i id="ace2StatusIcon"
                                                                 aria-hidden="true"></i></a>
@@ -144,7 +153,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                                             aria-selected="false">JiWER <i id="jiwerStatusIcon"
                                                                 aria-hidden="true"></i></a>
                                                     </li>
-                                                    <li class="nav-item" id="sclite">
+                                                    <li class="nav-item active" id="sclite">
                                                         <a class="nav-link" id="sclite-tab" data-toggle="tab"
                                                             href="#sclite-panel" role="tab" aria-controls="sclite-panel"
                                                             aria-selected="false">SCLite <i id="scliteStatusIcon"
@@ -152,7 +161,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                                     </li>
                                                 </ul>
                                                 <div class="tab-content">
-                                                    <div class="tab-pane fade show active" id="ace2-panel"
+                                                    <div class="tab-pane fade" id="ace2-panel"
                                                         role="tabpanel" aria-labelledby="ace2-tab">
                                                         <textarea class="form-control accuracy-results" disabled
                                                             id="ace2-results" rows="20"> </textarea>
@@ -161,7 +170,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                                                         aria-labelledby="jiwer-tab"><textarea
                                                             class="form-control accuracy-results" disabled
                                                             id="jiwer-results" rows="20"></textarea></div>
-                                                    <div class="tab-pane fade" id="sclite-panel" role="tabpanel"
+                                                    <div class="tab-pane fade  show active" id="sclite-panel" role="tabpanel"
                                                         aria-labelledby="sclite-tab"><textarea
                                                             class="form-control accuracy-results" disabled
                                                             id="sclite-results" rows="20"></textarea></div>
@@ -262,7 +271,7 @@ McLean, VA 22102-7539, (703) 983-6000.
 
     </script>
     <script type="text/javascript">
-        $('#reports_accuracy_treeview').addClass('active');
+        $('#tools_accuracy_treeview').addClass('active');
         $('[data-toggle="popover"]').popover();
 
         var socket = io('/admin', {
@@ -320,6 +329,20 @@ McLean, VA 22102-7539, (703) 983-6000.
         //runReports
         var reportDate;
         $('#runReportbtn').on('click', function (e) {
+            if($('#parsingType').val()=='line'){
+                var text1 = $("#hypothesisText").val().replace(/^\s+|\s+$/g, '');   
+                var text2 = $("#referenceText").val().replace(/^\s+|\s+$/g, '');   
+                var lines1 = text1.split(/\r|\r\n|\n/);
+                var count1 = lines1.length;  
+                var lines2 = text2.split(/\r|\r\n|\n/);
+                var count2 = lines2.length;
+
+                console.log(count1, count2)
+                if (count1 > 100 || count2 > 100){
+                    alert("exceeds allowed amount of lines, 100 max lines")
+                    return;
+                }
+            }
             // Change these for configs
             updateReportStatus('ace2', 'pending');
             updateReportStatus('jiwer', 'pending');
@@ -333,11 +356,12 @@ McLean, VA 22102-7539, (703) 983-6000.
             var data = {};
             data.libraries = ["ace2", "jiwer", "sclite"];
             data.id = csvId
-            data.hypothesis = $('#hypothesisText').val();
-            data.reference = $('#referenceText').val();
+            data.hypothesis = $('#hypothesisText').val().replace(/^\s+|\s+$/g, '');
+            data.reference = $('#referenceText').val().replace(/^\s+|\s+$/g, '');
             data.timestamp = reportDate;
             data.alpha = $('#alphaValue').val();
             data.perLine = $('#parsingType').val();
+            data.customIds = $('#customIds').is(':checked');
             socket.emit('run-accuracy-reports', data);
         });
 
@@ -436,6 +460,7 @@ McLean, VA 22102-7539, (703) 983-6000.
         function readCSVFile(file, callback) {
             var content = { id: "", hyp: "", ref: "" };
             var reader = new FileReader();
+            var customIds = $('#customIds').is(':checked');
             reader.readAsText(file);
             reader.onload = function (event) {
                 var csv = event.target.result;
@@ -443,9 +468,9 @@ McLean, VA 22102-7539, (703) 983-6000.
                 var html = '';
                 for (var row in data) {
                     if (row > 0) {
-                        content.id += data[row][0] + '\n'
-                        content.ref += data[row][1] + '\n'
-                        content.hyp += data[row][2] + '\n'
+                        content.id += data[row][0] +'\n'
+                        content.ref += data[row][1] + (customIds ? ' ('+data[row][0]+')' + '\n' : '\n') 
+                        content.hyp += data[row][2] + (customIds ? ' ('+data[row][0]+')' + '\n' : '\n') 
                     }
                 }
                 callback(content)

@@ -1,57 +1,47 @@
-const tts = require('@google-cloud/text-to-speech');
+/*
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+*/
+
 const language = require('@google-cloud/language');
 
-
-const client = new tts.TextToSpeechClient();
-const fs = require('fs');
-const uuid = require('uuid');
-
-const winston = require('winston');
-const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
-
 function Google(configs) {
-  info.info(`Google configs: ${configs}`);
+  console.info(`Google configs: ${JSON.stringify(configs)}`);
 }
 
-Google.prototype.getEntites = async function getEntites(input, callback) {
+Google.prototype.getEntities = async function getEntities(input, callback) {
   const client = new language.LanguageServiceClient();
-
-  const text = input
-
-  const sqlLatestCall = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
-
   const document = {
-    content: text,
+    content: input,
     type: 'PLAIN_TEXT',
   };
-
-  // Detects entities in the document
-  const [result] = await client.analyzeEntities({document});
-
-  const entities = result.entities;
-  ret = [];
-
   client.analyzeEntities({document}, (err, result) => {
     if (err) {
-      error.error('Error: Google Text to Speech');
+      console.error(`Error: Google Entity Analysis: ${JSON.stringify(err)}`);
     } else {
-      const entities = result.entities;
-
       ret = [];
-      entities.forEach(entity => {
-        item = {
-          Name: entity.name,
-          Type: entity.type,
-          salience: entity.salience,
+      result.entities.forEach(entity => {
+        if(entity.salience > 0.01){
+          item = {
+            Name: entity.name,
+            Type: entity.type,
+            salience: entity.salience,
+          };
+          if (entity.metadata && entity.metadata.wikipedia_url) {
+            item.url = entity.metadata.wikipedia_url;
+          }
+          ret.push(item);
         }
-        if (entity.metadata && entity.metadata.wikipedia_url) {
-          item.url = entity.metadata.wikipedia_url
-        }
-        if(item.salience > 0.01)
-          ret.push(item)
       });
       callback(ret);
     }
@@ -59,28 +49,22 @@ Google.prototype.getEntites = async function getEntites(input, callback) {
 };
 
 Google.prototype.getClassification = async function getClassification(input, callback) {
-  const language = require('@google-cloud/language');
   const client = new language.LanguageServiceClient();
-  const text = input;
   const document = {
-    content: text,
+    content: input,
     type: 'PLAIN_TEXT',
   };
-
   // Classifies text in the document
   client.classifyText({document}, (err, result) => {
     if (err) {
-      error.error('Error: Google Text to Speech');
+      console.error(`Error: Google Classification Analysis: ${JSON.stringify(err)}`);
     } else {
-      const entities = result.categories;
-
       ret = [];
-      entities.forEach(entity => {
-        item = {
-              Name: entity.name,
-              Confidence: entity.confidence,
-            }
-        ret.push(item)
+      result.categories.forEach(entity => {
+        ret.push({
+          Name: entity.name,
+          Confidence: entity.confidence,
+        });
       });
       callback(ret);
     }
@@ -88,27 +72,19 @@ Google.prototype.getClassification = async function getClassification(input, cal
 };
 
 Google.prototype.getSentiment = async function getSentiment(input, callback) {
-  const language = require('@google-cloud/language');
   const client = new language.LanguageServiceClient();
-  const text = input;
   const document = {
-    content: text,
+    content: input,
     type: 'PLAIN_TEXT',
   };
-
   // Classifies text in the document
   client.analyzeSentiment({document}, (err, result) => {
     if (err) {
-      error.error('Error: Google Text to Speech');
+      console.error(`Error: Google Sentiment Analysis: ${JSON.stringify(err)}`);
     } else {
-      const sentences = result.sentences;
-
       ret = [];
-      sentences.forEach(sentence => {
-        item = {
-          Score: sentence.sentiment.score
-        }
-        ret.push(item)
+      result.sentences.forEach(sentence => {
+        ret.push({Score: sentence.sentiment.score})
       });
       callback(ret);
     }

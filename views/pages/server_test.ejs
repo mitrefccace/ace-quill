@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
@@ -57,60 +57,65 @@ McLean, VA 22102-7539, (703) 983-6000.
                                     <button id="test_stt_btn" type="button"
                                         class="btn btn-block btn-primary btn-xs">Test STT Engines</button>
                                 </div>
+                                <div class="card-tools pull-right languageSelect">
+                                    <select class="form-control" id="sttLangSelect">
+                                        <option value='english' selected="selected">English</option>
+                                        <option value='spanish'>Spanish</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="card-body no-padding">
                                 <table class="table">
                                     <tbody>
                                         <tr>
                                             <th style="width: 70px">Engine</th>
-                                            <th>Transcipts</th>
+                                            <th>Transcripts</th>
                                             <th style="width: 40px">Results</th>
                                         </tr>
-                                        <tr>
+                                        <tr class="test_english">
                                             <td>Azure</td>
                                             <td id='azure_transcripts'></td>
                                             <td id='azure_results'></td>
                                         </tr>
-                                        <tr>
+                                        <tr class="test_spanish test_hidden">
                                             <td>Azure Spanish</td>
                                             <td id='azureSpanish_transcripts'>
                                             </td>
                                             <td id='azureSpanish_results'>
                                             </td>
                                         </tr>
-                                        <tr>
+                                        <tr class="test_english">
                                             <td>Amazon</td>
                                             <td id='amazon_transcripts'></td>
                                             <td id='amazon_results'></td>
                                         </tr>
-                                        <tr>
+                                        <tr class="test_spanish test_hidden">
                                             <td>Amazon Spanish</td>
                                             <td id='amazonSpanish_transcripts'></td>
                                             <td id='amazonSpanish_results'></td>
                                         </tr>
-                                        <tr>
+                                        <tr class="test_english">
                                             <td>Google</td>
                                             <td id='google_transcripts'>
                                             </td>
                                             <td id='google_results'>
                                             </td>
                                         </tr>
-                     <tr>
-
+                                        <tr class="test_spanish test_hidden">
                                             <td>Google Spanish</td>
                                             <td id='googleSpanish_transcripts'>
                                             </td>
                                             <td id='googleSpanish_results'>
                                             </td>
                                         </tr>
-                                        <tr>
+                                        <tr class="test_english">
                                             <td>Watson</td>
                                             <td id='watson_transcripts'>
                                             </td>
                                             <td id='watson_results'>
                                             </td>
                                         </tr>
-                    <tr>
+                                        <tr class="test_spanish test_hidden">
                                             <td>Watson Spanish</td>
                                             <td id='watsonSpanish_transcripts'>
                                             </td>
@@ -162,6 +167,12 @@ McLean, VA 22102-7539, (703) 983-6000.
 
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td>ACE2</td>
+                                            <td id='ace2_results'>
+
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -171,49 +182,94 @@ McLean, VA 22102-7539, (703) 983-6000.
                             <!-- /.card-footer-->
                         </div>
                     </div>
-                                        <!-- translate-->
-                                        <div class="col-lg-8">
-                                            <div class="card">
-                                                <div class="card-header with-border">
-                                                    <h3 class="card-title">Translation Engines</h3>
-                                                    <div class="card-tools pull-right">
-                                                        <button id="test_translation_btn" type="button"
-                                                            class="btn btn-block btn-primary btn-xs">Test Translation Engines</button>
-                                                    </div>
-                                                </div>
-                                                <div class="card-body no-padding">
-                                                    <table class="table">
-                                                        <tbody>
-                                                            <tr>
-                                                                <th style="width: 70px">Engine</th>
-                                                                <th>Translations</th>
-                                                                <th style="width: 40px">Results</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Azure</td>
-                                                                <td id='azure_translation'></td>
-                                                                <td id='azureT_results'></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Amazon</td>
-                                                                <td id='amazon_translation'></td>
-                                                                <td id='amazonT_results'></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Google</td>
-                                                                <td id='google_translation'></td>
-                                                                <td id='googleT_results'></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Watson</td>
-                                                                <td id='watson_translation'></td>
-                                                                <td id='watsonT_results'></td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
+                    <!-- translate-->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Translation Engines</h3>
+                                <div class="card-tools pull-right">
+                                    <button id="test_translation_btn" type="button"
+                                        class="btn btn-block btn-primary btn-xs">Test Translation Engines</button>
+                                </div>
+                            </div>
+                            <div class="card-body no-padding">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 70px">Engine</th>
+                                            <th>Translations</th>
+                                            <th style="width: 40px">Results</th>
+                                        </tr>
+                                        <tr>
+                                            <td>Azure</td>
+                                            <td id='azure_translation'></td>
+                                            <td id='azureT_results'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amazon</td>
+                                            <td id='amazon_translation'></td>
+                                            <td id='amazonT_results'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Google</td>
+                                            <td id='google_translation'></td>
+                                            <td id='googleT_results'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Watson</td>
+                                            <td id='watson_translation'></td>
+                                            <td id='watsonT_results'></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- translate-->
+                    <div class="col-lg-8">
+                        <audio id="ttsAudio" preload="none" hidden></audio>
+                        <div class="card">
+                            <div class="card-header with-border">
+                                <h3 class="card-title">Text to Speech Engines</h3>
+                            </div>
+                            <div class="card-body no-padding">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 70px">Engine</th>
+                                            <th>Text</th>
+                                            <th style="width: 60px">Test</th>
+                                            <th style="width: 40px">Result</th>
+                                        </tr>
+                                        <tr>
+                                            <td>Azure</td>
+                                            <td id='azure_text'>The rain in Spain falls mainly on the plain.</td>
+                                            <td id='azure_text_test'><button id="test_azure_text_btn" type="button" class="btn btn-block btn-primary btn-xs" onclick="testTTS('azure');">Test</button></td>
+                                            <td id='azure_text_result'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amazon</td>
+                                            <td id='amazon_text'>The rain in Spain falls mainly on the plain.</td>
+                                            <td id='amazon_text_test'><button id="test_amazon_text_btn" type="button" class="btn btn-block btn-primary btn-xs" onclick="testTTS('amazon');">Test</button></td>
+                                            <td id='amazon_text_result'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Google</td>
+                                            <td id='google_text'>The rain in Spain falls mainly on the plain.</td>
+                                            <td id='google_text_test'><button id="test_google_text_btn" type="button" class="btn btn-block btn-primary btn-xs" onclick="testTTS('google');">Test</button></td>
+                                            <td id='google_text_result'></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Watson</td>
+                                            <td id='watson_text'>The rain in Spain falls mainly on the plain.</td>
+                                            <td id='watson_text_test'><button id="test_watson_text_btn" type="button" class="btn btn-block btn-primary btn-xs" onclick="testTTS('watson');">Test</button></td>
+                                            <td id='watson_text_result'></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <!-- /.content -->
@@ -230,49 +286,53 @@ McLean, VA 22102-7539, (703) 983-6000.
         $('#admin_servertest_treeview').addClass('active');
 
         var azureTimer, azureSpanishTimer, amazonTimer, amazonSpanishTimer, googleTimer
-        , watsonTimer, asteriskTimer, mysqlTimer, azureTTimer, amazonTTimer, googleTTimer, watsonTTimer;
+        , watsonTimer, asteriskTimer, mysqlTimer, ace2Timer, azureTTimer, amazonTTimer, googleTTimer, watsonTTimer;
+        var textTimers = {};
+        var ttsStream = document.getElementById("ttsAudio");
+        ttsStream.type = 'type="audio/wav"';
+        ttsStream.loop = false;
         var socket = io('/admin', {
             path:'/socket.io'
         });
         socket.on('test-stt-engines-results', function (data) {
             switch (data.engine) {
-                case 'azure':
+                case 'azureenglish':
                     clearTimeout(azureTimer);
                     $('#azure_transcripts').html(data.transcript);
                     $('#azure_results').html(createTestResult('pass'));
                     break;
-                case 'azureSpanish':
+                case 'azurespanish':
                     clearTimeout(azureSpanishTimer);
                     $('#azureSpanish_transcripts').html(data.transcript);
                     $('#azureSpanish_results').html(createTestResult('pass'));
                     break;
-                case 'amazon':
+                case 'amazonenglish':
                     clearTimeout(amazonTimer);
                     $('#amazon_transcripts').html(data.transcript);
                     $('#amazon_results').html(createTestResult('pass'));
                     break;
-                case 'amazonSpanish':
-                    clearTimeout(amazonTimer);
+                case 'amazonspanish':
+                    clearTimeout(amazonSpanishTimer);
                     $('#amazonSpanish_transcripts').html(data.transcript);
                     $('#amazonSpanish_results').html(createTestResult('pass'));
                     break;
-                case 'google':
+                case 'googleenglish':
                     clearTimeout(googleTimer);
                     $('#google_transcripts').html(data.transcript);
                     $('#google_results').html(createTestResult('pass'));
                     break;
-                case 'googleSpanish':
+                case 'googlespanish':
                     clearTimeout(googleSpanishTimer);
                     $('#googleSpanish_transcripts').html(data.transcript);
                     $('#googleSpanish_results').html(createTestResult('pass'));
                    console.log("google Spanish" + data.transcript);
                     break;
-                case 'watson':
+                case 'watsonenglish':
                     clearTimeout(watsonTimer);
                     $('#watson_transcripts').html(data.transcript);
                     $('#watson_results').html(createTestResult('pass'));
                     break;
-                case 'watsonSpanish':
+                case 'watsonspanish':
                     clearTimeout(watsonSpanishTimer);
                     $('#watsonSpanish_transcripts').html(data.transcript);
                     $('#watsonSpanish_results').html(createTestResult('pass'));
@@ -302,6 +362,11 @@ McLean, VA 22102-7539, (703) 983-6000.
                     $('#watsonT_results').html(createTestResult('pass'));
                     break;
             }
+        }).on('test-tts-engine-results', function (data) {
+            console.log(data);
+            clearTimeout(textTimers[data.engine]);
+            $(`#${data.engine}_text_result`).html(createTestResult('pass'));
+            playTextToSpeech(data.audiofile);
         }).on('test-resources-asterisk-results', function (result) {
             clearTimeout(asteriskTimer);
             result = (result) ? result : 'fail';
@@ -310,13 +375,18 @@ McLean, VA 22102-7539, (703) 983-6000.
             clearTimeout(mysqlTimer);
             result = (result) ? result : 'fail';
             $('#mysql_results').html(createTestResult(result));
+        }).on('test-resources-ace2-results', function (result) {
+            clearTimeout(ace2Timer);
+            result = (result) ? result : 'fail';
+            $('#ace2_results').html(createTestResult(result));
         });
 
         $('#test_stt_btn').on('click', function (e) {
             e.preventDefault();
             clearSTTTests();
             startEngineFailTimers();
-            socket.emit('test-stt-engines', {});
+            const language = $('#sttLangSelect').val();
+            socket.emit('test-stt-engines', {language: language});
         });
 
         $('#test_translation_btn').on('click', function (e) {
@@ -324,6 +394,10 @@ McLean, VA 22102-7539, (703) 983-6000.
             clearTranslationTests();
             startTranslationFailTimers();
             socket.emit('test-translation-engines', {});
+        });
+
+        $('#sttLangSelect').on('change', function (e) {
+            changeLanguage();
         });
 
         function clearSTTTests() {
@@ -408,6 +482,7 @@ McLean, VA 22102-7539, (703) 983-6000.
         function clearResourceTests() {
             $('#asterisk_results').html(createTestResult());
             $('#mysql_results').html(createTestResult());
+            $('#ace2_results').html(createTestResult());
         }
 
         function startResourceFailTimers() {
@@ -416,6 +491,9 @@ McLean, VA 22102-7539, (703) 983-6000.
             }, 4000);
             mysqlTimer = setTimeout(function () {
                 $('#mysql_results').html(createTestResult('fail'));
+            }, 4000);
+            ace2Timer = setTimeout(function () {
+                $('#ace2_results').html(createTestResult('fail'));
             }, 4000);
         }
 
@@ -427,6 +505,43 @@ McLean, VA 22102-7539, (703) 983-6000.
             } else {
                 return '<span class="badge bg-gray">Pending</span>'
             }
+        }
+
+        function changeLanguage(){
+            const lang =  $('#sttLangSelect').val();
+            if(lang === 'english'){
+                $('.test_english').removeClass('test_hidden');
+                $('.test_spanish').addClass('test_hidden');
+
+            }
+
+            if(lang === 'spanish'){
+                $('.test_english').addClass('test_hidden');
+                $('.test_spanish').removeClass('test_hidden');
+            }
+        }
+
+        function clearTextTest(engine){
+            $(`#${engine}_text_result`).html(createTestResult());
+        }
+
+        function startTextFailTimer(engine){
+            textTimers[engine] = setTimeout(function () {
+                $(`#${engine}_text_result`).html(createTestResult('fail'));
+            }, 10000);
+        }
+
+        function playTextToSpeech(audiofile) {
+            ttsStream.pause();
+            ttsStream.currentTime = 0;
+            ttsStream.src = "./playTextToSpeech?audiofile=" + audiofile;
+            ttsStream.play();
+        }
+
+        function testTTS(engine){
+            clearTextTest(engine);
+            startTextFailTimer(engine);
+            socket.emit('test-tts-engine', {engine: engine, voice:'Male', text:'The rain in Spain falls mainly on the plain.'});
         }
     </script>
 </body>

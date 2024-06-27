@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 */
 
 const express = require('express');
@@ -18,8 +18,8 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const formidable = require('formidable');
-const nconf = require('nconf');
 const path = require('path');
+const config = require('./../configs/config.js');
 // const log4js = require('log4js');
 const GoogleTTS = require('../texttospeech/google');
 const WatsonTTS = require('../texttospeech/watson');
@@ -30,23 +30,11 @@ const WatsonT = require('../translation/watson');
 const AzureT = require('../translation/azure');
 const AmazonT = require('../translation/amazon');
 const GoogleTA = require('../textanalysis/google');
-const decode = require('../utils/decode');
+const awsMFA = require('../utils/aws-mfa');
 
-const winston = require('winston');
-const logger = require('../utils/logger')
-const error = winston.loggers.get('error');
-const info = winston.loggers.get('info');
-const debug = winston.loggers.get('debug');
-
-let is_iprelay = null;
-
-let ip_config = JSON.parse(
-          fs.readFileSync('./configs/acequill.json'),
-        );
-if (ip_config.isIprelay == "true"){
-   is_iprelay = 1
-} else{
-   is_iprelay = 0;
+let proxy;
+if (config.proxy) {
+  proxy = new URL(config.proxy);
 }
 
 router.get('/', (_req, res) => {
@@ -54,108 +42,157 @@ router.get('/', (_req, res) => {
 });
 
 router.get('/terminal', (_req, res) => {
-  res.render('pages/terminal', {});
+  res.render('pages/terminal_combined', { iprelayMode: false });
 });
 
 router.get('/iprelay', (_req, res) => {
+  res.render('pages/terminal_combined', { iprelayMode: true });
+});
+
+router.get('/iprelay_deprecated', (_req, res) => {
   res.render('pages/terminal_iprelay', {});
+});
+
+router.get('/terminal_deprecated', (_req, res) => {
+  res.render('pages/terminal', {});
 });
 
 router.get('/audiocontrols', (_req, res) => {
   res.render('pages/audio_control', {});
 });
 
-router.get('/iprelay/getHistory', (req, res) => {
-  const ext = req.query.extension;
-  let results;
-  info.info(ext);
-  req.dbconn.query(
-    ' SELECT call_start, dest_phone_number FROM research_data WHERE extension = ? ORDER BY call_start DESC LIMIT 10',
-    ext,
-    (err, result) => {
-      if (err) {
-        error.error('ERROR: ', err);
-      } else {
-        results = result;
-        res.status(200).send({ status: 'Success', results });
-      }
-    },
-  );
-});
-
-router.get('/iprelay/getContacts', (req, res) => {
-  const ext = req.query.extension;
-  let results;
-  req.dbconn.query(
-    ' SELECT username, cellphone FROM contacts WHERE extension = ? OR extension = 0 ORDER BY FAVORITE DESC',
-    ext,
-    (err, result) => {
-      if (err) {
-        error.error('ERROR: ', err);
-      } else {
-        results = result;
-        res.status(200).send({ status: 'Success', results });
-      }
-    },
-  );
-});
-
-router.get('/iprelayscenario', (req, res) => {
-  info.info('req.query results ', req.query);
-  const ext = req.query.extension;
-  const sql = 'select iprelay_scenario_content.id, convoOrder, bubbleText, rawText, isDUT from iprelay_scenario_content '
-    + 'inner join iprelay_scenario on iprelay_scenario.id = iprelay_scenario_content.iprelay_scenario_id '
-    + 'inner join device_settings on iprelay_scenario.name = device_settings.iprelay_scenario '
-    + 'where device_settings.extension = ? '
-    + 'ORDER BY convoOrder ASC;';
-  req.dbconn.query(sql, ext, (err, results) => {
-    if (err) {
-      error.error(`SQL Error: ${err}`);
+router.get('/amazon-mfa-status', async (_req, res) => {
+  try {
+    const isValid = await awsMFA.validateSession();
+    if (isValid) {
+      res.send('valid');
     } else {
-      res.send(results);
+      res.send('invalid');
     }
-  });
+  } catch (error) {
+    res.send('invalid');
+  }
 });
 
+router.get('/audiorecorder', async (req, res) => {
+  try {
+    const [results, _fields] = await req.dbconn.query('SELECT text FROM recording_text ORDER BY id DESC LIMIT 1;');
+    const recordingText = results.length > 0 ? results[0].text : 'NO TEXT RECORD';
+    res.render('pages/audio_recorder', { recordingText });
+  } catch (error) {
+    console.error('ERROR: ', error);
+    res.send('error');
+  }
+});
+
+router.post('/uploadAudioRecording', async (req, res) => {
+  console.info('/uploadAudioRecording Called');
+  const form = new formidable.IncomingForm();
+  const dir = process.platform.match(/^win/) ? '\\..\\uploads\\recordings\\' : '/../uploads/recordings/';
+
+  form.uploadDir = path.join(__dirname, dir);
+  form.keepExtensions = true;
+  form.maxFieldsSize = 10 * 1024 * 1024;
+  form.maxFields = 1000;
+  form.multiples = false;
+  try {
+    const [fields, files] = await new Promise(function (resolve, reject) {
+      form.parse(req, function (err, fields, files) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve([fields, files]);
+      });
+    });
+
+    const insertStatement = `INSERT INTO recordings (recording_id, filepath, text) VALUES (?,?,?);`;
+    await req.dbconn.query(insertStatement, [fields.recordingId, files.file.path, fields.text]);
+
+    res.status(200).send({ status: 'Success' });
+  } catch (error) {
+    console.log("Error uploadAudioRecording:", error)
+    res.writeHead(200, {
+      'content-type': 'text/plain',
+    });
+    res.write('an error occurred');
+  }
+});
+
+router.get('/iprelay/getHistory', async (req, res) => {
+  const ext = req.query.extension;
+  const query = 'SELECT call_start, dest_phone_number FROM research_data WHERE extension = ? ORDER BY call_start DESC LIMIT 10;';
+  try {
+    const [results, _fields] = await req.dbconn.query(query, ext)
+    res.status(200).send({ status: 'Success', results: results });
+  } catch (error) {
+    console.error('Error /iprelay/getHistory:', error)
+  }
+});
+
+router.get('/iprelay/getContacts', async (req, res) => {
+  const ext = req.query.extension;
+  const query = 'SELECT username, cellphone FROM contacts WHERE extension = ? OR extension = 0 ORDER BY FAVORITE DESC;';
+  try {
+    const [results, _fields] = await req.dbconn.query(query, ext)
+    res.status(200).send({ status: 'Success', results: results });
+  } catch (error) {
+    console.error('Error /iprelay/getContacts:', error)
+  }
+});
+
+router.get('/iprelayscenario', async (req, res) => {
+  const ext = req.query.extension;
+  const query = `select iprelay_scenario_content.id, convoOrder, bubbleText, rawText, isDUT from iprelay_scenario_content 
+  inner join iprelay_scenario on iprelay_scenario.id = iprelay_scenario_content.iprelay_scenario_id
+  inner join device_settings on iprelay_scenario.name = device_settings.iprelay_scenario
+  where device_settings.extension = ?
+  ORDER BY convoOrder ASC;`;
+  try {
+    const [results, _fields] = await req.dbconn.query(query, ext);
+    res.status(200).send(results);
+  } catch (error) {
+    console.error('Error /iprelayscenario:', error)
+    c
+  }
+});
+
+//TODO: Move this out of the Routes file.
 function translate(text, settings, callback) {
   if (settings.sourceLanguage === settings.targetLanguage) {
     callback(null, text); // no need to translate
   } else {
+    let ttsConfig;
     let engine;
-    let configs;
     switch (settings.translationEngine) {
       case 'GOOGLE':
-        info.info('Translating with google');
+        console.info('Translating with google');
         engine = new GoogleT();
         break;
       case 'WATSON':
-        info.info('Translating with watson');
-        configs = JSON.parse(
+        console.info('Translating with watson');
+        ttsConfig = JSON.parse(
           fs.readFileSync('./configs/watson/watson-translation.json'),
         );
-
-        if (decode(nconf.get('proxy'))) {
-          const proxy = new URL(decode(nconf.get('proxy')));
-          configs.proxy = proxy.hostname;
-          configs.proxy_port = proxy.port;
+        if (proxy) {
+          ttsConfig.proxy = proxy.hostname;
+          ttsConfig.proxy_port = proxy.port;
         }
-
-        engine = new WatsonT(configs);
+        engine = new WatsonT(ttsConfig);
         break;
       case 'AZURE':
-        info.info('Translating with azure');
-        configs = JSON.parse(
-          fs.readFileSync('./translation_configs/microsoft-azure.json'),
+        console.info('Translating with azure');
+        ttsConfig = JSON.parse(
+          fs.readFileSync('./configs/azure/azure-translation.json'),
         );
-
-        if (decode(nconf.get('proxy'))) {
-          const proxy = new URL(decode(nconf.get('proxy')));
-          configs.proxy = proxy;
+        if (proxy) {
+          ttsConfig.proxy = proxy.hostname;
+          ttsConfig.proxy_port = proxy.port;
         }
-        engine = new AzureT(configs);
+        engine = new AzureT(ttsConfig);
         break;
       case 'AMAZON':
-        info.info('Translating with Amazon');
+        console.info('Translating with Amazon');
         engine = new AmazonT();
         break;
       default:
@@ -173,188 +210,142 @@ function translate(text, settings, callback) {
     );
   }
 }
-
-router.get('/loadACConfig', (req, res) => {
-  info.info('req.query results ', req.query);
+router.get('/loadACConfig', async (req, res) => {
   const ext = req.query.extension;
   const sql = 'Select * from device_settings where extension = ?;';
-  req.dbconn.query(sql, ext, (err, results) => {
-    if (err) {
-      error.error(`SQL Error: ${err}`);
-    } else {
-      info.info('loadACConfig results ', results);
-      res.send(results[0]);
-    }
-  });
+  try {
+    const [results, _fields] = await req.dbconn.query(sql, ext);
+    res.send(results[0]);
+  } catch (error) {
+    console.error('Error /loadACConfig:', error);
+  }
 });
 
-router.post('/iprelay/updateIprelay', (req, res) => {
-  const isIprelay = req.body.isIprelay;
-
-  var config = fs.readFileSync("./configs/acequill.json");
-
-  config = JSON.parse(config);
-
-  if (isIprelay == "true") {
-    config.isIprelay = "true";
-    fs.writeFileSync("./configs/acequill.json", JSON.stringify(config));
-  } else {
-    config.isIprelay = "false";
-    fs.writeFileSync("./configs/acequill.json", JSON.stringify(config));  }
-});
-
-router.post('/iprelay/savenotes', (req, res) => {
-  const { notes } = req.body;
-  const ext = req.body.extension;
+router.post('/iprelay/savenotes', async (req, res) => {
+  const { notes, extension } = req.body;
   const sqlGetCurrentCallRecord = `SELECT id FROM research_data
-  WHERE extension = ? AND call_end IS NULL ORDER BY id DESC LIMIT 1;`;
+    WHERE extension = ? AND call_end IS NULL ORDER BY id DESC LIMIT 1;`;
   const sqlSaveNotes = 'UPDATE research_data SET notes = ? WHERE id = ?;';
-  if (ext && notes) {
-    req.dbconn.query(sqlGetCurrentCallRecord, [ext], (err1, result1) => {
-      if (err1 || result1.length < 1) {
+
+  if (extension && notes) {
+    try {
+      const [results1, _fields1] = await req.dbconn.query(sqlGetCurrentCallRecord, [ext]);
+      if (results1.length < 1) {
         res.status(304).send({ status: 'no record updated or found' });
       } else {
-        req.dbconn.query(sqlSaveNotes, [notes, result1[0].id], (err2) => {
-          if (err2) {
-            error.error(err2);
-            res.status(304).send({ status: 'no record updated or found' });
-          } else {
-            res.status(200).send({ status: 'success', callID: result1[0].id });
-          }
-        });
+        const [results2, _fields2] = await req.dbconn.query(sqlSaveNotes, [notes, results1[0].id]);
+        res.status(200).send({ status: 'success', callID: results1[0].id });
       }
-    });
+    } catch (error) {
+      console.error("ERROR /iprelay/savenotes:", error)
+      res.status(304).send({ status: 'no record updated or found' });
+    }
   } else {
     res.status(400).send({ status: 'invalid arguements' });
   }
 });
 
-router.post('/terminal/texttospeech', (req, res) => {
+router.post('/terminal/texttospeech', async (req, res) => {
   const { text, extension } = req.body;
   const sql_getDeviceSettings = 'SELECT * FROM device_settings WHERE extension = ?;';
-  req.dbconn.query(sql_getDeviceSettings, extension, (err, result) => {
-    if (err) {
-      error.error('ERROR: ', err.code);
-      res.status(500).send({ status: 'Error' });
-    } else {
-      // if no tts engine selected, use stt engine
-      const engine = (result[0].tts_engine == null) ? result[0].stt_engine : result[0].tts_engine;
-      console.log("")
-      let tts;
-      switch (engine) {
-        case 'AMAZON':
-          info.info('using azure stt');
-          tts = new AmazonTTS();
-          break;
-        case 'AZURE':
-          info.info('using azure stt');
-          let aconfig = require('./../configs/azure/azure-cognitive.json');
-          if (decode(nconf.get('proxy'))) {
-            const proxy = new URL(decode(nconf.get('proxy')));
-            aconfig.proxy = proxy.hostname;
-            aconfig.proxy_port = proxy.port;
-          }
-          tts = new AzureTTS(aconfig);
-          break;
-        case 'GOOGLE':
-          info.info('using google stt');
-          tts = new GoogleTTS();
-          break;
-        case 'WATSON':
-          info.info('using watson stt');
-          const wconfigs = require('./../configs/watson/watson-tts.json');
-          if (decode(nconf.get('proxy'))) {
-            const proxy = new URL(decode(nconf.get('proxy')));
-            wconfigs.proxy = proxy.hostname;
-            wconfigs.proxy_port = proxy.port;
-          }
-          tts = new WatsonTTS(wconfigs);
-          break;
-        default:
-          info.info('using default google stt');
-          tts = new GoogleTTS();
-          break;
-      }
+  try {
+    const [results1, _fields1] = await req.dbconn.query(sql_getDeviceSettings, extension);
+    const engine = (results1[0].tts_engine == null) ? results1[0].stt_engine : results1[0].tts_engine;
+    let tts;
+    switch (engine) {
+      case 'AMAZON':
+        console.info('using AWS tts');
+        tts = new AmazonTTS();
+        break;
+      case 'AZURE':
+        console.info('using azure tts');
+        let azure_config = JSON.parse(
+          fs.readFileSync('./configs/azure/azure-cognitive.json'),
+        );
+        if (proxy) {
+          azure_config.proxy = proxy.hostname;
+          azure_config.proxy_port = proxy.port;
+        }
+        tts = new AzureTTS(azure_config);
+        break;
+      case 'GOOGLE':
+        console.info('using google tts');
+        tts = new GoogleTTS();
+        break;
+      case 'WATSON':
+        console.info('using watson tts');
+        const watson_configs = JSON.parse(
+          fs.readFileSync('./configs/watson/watson-tts.json'),
+        );
+        if (proxy) {
+          watson_configs.proxy = proxy.hostname;
+          watson_configs.proxy_port = proxy.port;
+        }
+        tts = new WatsonTTS(watson_configs);
+        break;
+      default:
+        console.info('using default google tts');
+        tts = new GoogleTTS();
+        break;
+    }
+    let sql_researchdata = 'SELECT * FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
+    const [results2, _fields2] = await req.dbconn.query(sql_researchdata, extension);
+    const researchDataId = results2[0].id;
+    if (results1[0].tts_translate === 1 && results1[0].source_language !== results1[0].target_language) {
+      const settings = {
+        // This is confusing but source and target language
+        // are reversed for the tts end of the call.
+        targetLanguage: results1[0].source_language,
+        sourceLanguage: results1[0].target_language,
+        translationEngine: results1[0].translation_engine,
+      };
 
-      let sql_researchdata = 'SELECT * FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
-      req.dbconn.query(sql_researchdata, extension, (err2, result2) => {
-        if (err2) {
-          error.error(err2)
+      translate(text, settings, (_err3, translation) => {
+        tts.textToSpeech(translation, results1[0].source_language, results1[0].tts_voice, async (err4, audiofile) => {
+          if (err4) {
+            res.status(500).send({ status: 'Error' });
+          } else {
+            const d = new Date();
+            const dataStore = {
+              transcript: translation + " (" + text + ")",
+              extension: extension,
+              final: true,
+              timestamp: d,
+              sttEngine: engine,
+              research_data_id: researchDataId,
+              is_iprelay: config.isIprelay,
+            };
+            await req.dbconn.query('INSERT INTO data_store SET ?', dataStore);
+            res.status(200).send({ status: 'Success', audiofile, translation });
+          }
+        });
+      });
+    } else {
+      tts.textToSpeech(text, results1[0].target_language, results1[0].tts_voice, async (err6, audiofile) => {
+        if (err6) {
+          console.error(`Error running TTS: ${JSON.stringify(err6)}`);
           res.status(500).send({ status: 'Error' });
         } else {
-          const researchDataId = result2[0].id;
-
-          if (result[0].tts_translate === 1 && result[0].source_language !== result[0].target_language) {
-            const settings = {
-              // This is confusing but source and target language
-              // are reversed for the tts end of the call.
-              targetLanguage: result[0].source_language,
-              sourceLanguage: result[0].target_language,
-              translationEngine: result[0].translation_engine,
-            };
-
-            translate(text, settings, (_err3, translation) => {
-
-              tts.textToSpeech(translation, result[0].source_language, result[0].tts_voice, (err4, audiofile) => {
-                if (err4) {
-                  res.status(500).send({ status: 'Error' });
-                } else {
-                  const d = new Date();
-                  const dataStore = {
-                    transcript: translation + " (" + text + ")",
-                    extension: extension,
-                    final: true,
-                    timestamp: d,
-                    sttEngine: engine,
-                    research_data_id: researchDataId,
-                    is_iprelay: is_iprelay,
-                  };
-                  req.dbconn.query('INSERT INTO data_store SET ?', dataStore, (
-                    err5,
-                    result5
-                  ) => {
-                    if (err5) {
-                      error.error(`Error in INSERT: ${JSON.stringify(err5)}`);
-                    } else {
-                      info.info(`INSERT result: ${JSON.stringify(result5)}`);
-                    }
-                  });
-                  res.status(200).send({ status: 'Success', audiofile, translation });
-                }
-              });
-            });
-          } else {
-            tts.textToSpeech(text, result[0].target_language, result[0].tts_voice, (err6, audiofile) => {
-              if (err6) {
-                res.status(500).send({ status: 'Error' });
-              } else {
-                const d = new Date();
-                const dataStore = {
-                  transcript: text,
-                  extension: extension,
-                  final: true,
-                  timestamp: d,
-                  sttEngine: engine,
-                  research_data_id: researchDataId,
-                  is_iprelay: is_iprelay,
-                };
-                req.dbconn.query('INSERT INTO data_store SET ?', dataStore, (
-                  err7, result7
-                ) => {
-                  if (err7) {
-                    error.error(`Error in INSERT: ${JSON.stringify(err7)}`);
-                  } else {
-                    info.info(`INSERT result: ${JSON.stringify(result7)}`);
-                  }
-                });
-                res.status(200).send({ status: 'Success', audiofile });
-              }
-            });
-          }
+          const d = new Date();
+          const dataStore = {
+            transcript: text,
+            extension: extension,
+            final: true,
+            timestamp: d,
+            sttEngine: engine,
+            research_data_id: researchDataId,
+            is_iprelay: config.isIprelay,
+          };
+          await req.dbconn.query('INSERT INTO data_store SET ?', dataStore);
+          res.status(200).send({ status: 'Success', audiofile });
         }
       });
     }
-  });
+  } catch (error) {
+    console.error('ERROR: /terminal/texttospeech ', error);
+    res.status(500).send({ status: 'Error' });
+  }
+
 });
 
 router.get('/terminal/playTextToSpeech', (req, res) => {
@@ -366,243 +357,196 @@ router.get('/terminal/playTextToSpeech', (req, res) => {
       'Content-Length': stat.size,
     });
     fs.createReadStream(`./texttospeech/audiofiles/${audiofile}`).pipe(res);
-  } catch (error) {
-    error.error(error);
+  } catch (err) {
+    console.error(err);
     res.send('No results');
   }
 });
 
-router.get('/terminal/audioprofiles', (req, res) => {
+router.get('/terminal/playAudibleCue', (req, res) => {
+  const { audiofile } = req.query;
+  try {
+    const stat = fs.statSync(`./uploads/audible_cues/${audiofile}`);
+    res.writeHead(200, {
+      'Content-Type': 'audio/wav',
+      'Content-Length': stat.size,
+    });
+    fs.createReadStream(`./uploads/audible_cues/${audiofile}`).pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.send('No results');
+  }
+});
+
+router.get('/terminal/getAudibleCue', async (req, res) => {
+  const { id } = req.query;
+  const sql = 'SELECT * FROM audible_cues WHERE id = ?;';
+  try {
+    const [results, _fields] = await req.dbconn.query(sql, id)
+    res.status(200).send({ status: 'Success', cue: results[0] });
+  } catch (error) {
+    console.error("Error /terminal/getAudibleCue:", error);
+    res.status(500).send({ status: 'Error' });
+  }
+});
+
+router.get('/terminal/audioprofiles', async (req, res) => {
   const { extension } = req.query;
   const sql = 'SELECT * FROM audio_profiles where active=1;';
-  req.dbconn.query(sql, (err, results) => {
-    if(err){
-      res.status(500).send({ status: 'Error' });
-    } else {
-      res.status(200).send({ status: 'Success', profiles: results });
-    }
-  });
+  try {
+    const [results, _fields] = await req.dbconn.query(sql);
+    res.status(200).send({ status: 'Success', profiles: results });
+  } catch (error) {
+    console.error("Error /terminal/audioprofiles:", error);
+    res.status(500).send({ status: 'Error' });
+  }
 });
 
-router.get('/terminal/audioprofilefilters', (req, res) => {
+router.get('/terminal/audioprofilefilters', async (req, res) => {
   const { profileId } = req.query;
   const sql = 'SELECT gain, frequency, type, rolloff, q_value as Q, pitchshift FROM audio_filters WHERE profile_id = ?;';
-  req.dbconn.query(sql, profileId, (err, results) => {
-    if(err){
-      res.status(500).send({ status: 'Error' });
-    } else {
-      res.status(200).send({ status: 'Success', filters: results });
-    }
-  });
+  try {
+    const [results, _fields] = await req.dbconn.query(sql, profileId);
+    res.status(200).send({ status: 'Success', filters: results });
+  } catch (error) {
+    console.error("Error /terminal/audioprofilefilters:", error);
+    res.status(500).send({ status: 'Error' });
+  }
 });
 
-router.get('/iprelay/playScenarioSpeech', (req, res) => {
+router.get('/iprelay/playScenarioSpeech', async (req, res) => {
   const { audioId } = req.query;
   const sql = 'SELECT audioFilePath FROM iprelay_scenario_content WHERE id = ?;';
-  req.dbconn.query(sql, audioId, (err, results) => {
-    if (err) {
-      error.error(`SQL Error: ${err}`);
-    } else {
-      try {
-        const stat = fs.statSync(results[0].audioFilePath);
-        res.writeHead(200, {
-          'Content-Type': 'audio/wav',
-          'Content-Length': stat.size,
-        });
-        fs.createReadStream(results[0].audioFilePath).pipe(res);
-      } catch (error) {
-        error.error(error);
-        res.send('No results');
-      }
-    }
-  });
+  try {
+    const [results, _fields] = await req.dbconn.query(sql, audioId);
+    res.writeHead(200, {
+      'Content-Type': 'audio/wav',
+      'Content-Length': stat.size,
+    });
+    fs.createReadStream(results[0].audioFilePath).pipe(res);
+  } catch (error) {
+    console.error("Error /iprelay/playScenarioSpeech:", error);
+    res.send('No results');
+  }
 });
 
-router.post('/iprelay/logIPRelay', (req, res) => {
-  let sql_researchdata = 'SELECT * FROM data_store ORDER BY id DESC LIMIT 1;';
-      req.dbconn.query(sql_researchdata, (err, result) => {
-        if (err) {
-          error.error(err)
-          res.status(500).send({ status: 'Error' });
-        } else {
-          const callID = result[0].research_data_id;
-
+router.post('/iprelay/logIPRelay', async (req, res) => {
   const { text } = req.body;
   const { isDUT } = req.body;
+  let sql_researchdata = 'SELECT * FROM data_store ORDER BY id DESC LIMIT 1;';
 
-  if (callID && text) {
-    const sql = 'INSERT INTO iprelay_log (fk_call_id, text, is_dut, timestamp) VALUES (?,?,?,NOW());';
-    req.dbconn.query(sql, [callID, text, (isDUT === 'true') ? 1 : 0], (err) => {
-      if (err) {
-        res.status(500).send('err');
+  try {
+    const [results, _fields] = await req.dbconn.query(sql_researchdata);
+    const callID = results[0].research_data_id;
+    if (callID && text) {
+      const sql = 'INSERT INTO iprelay_log (fk_call_id, text, is_dut, timestamp) VALUES (?,?,?,NOW());';
+      await req.dbconn.query(sql, [callID, text, (isDUT === 'true') ? 1 : 0])
+      res.status(200).send('success');
+    } else {
+      res.status(400).send('Bad Inputs');
+    }
+  } catch (error) {
+    console.error("Error /iprelay/logIPRelay:", error);
+    res.status(500).send({ status: 'Error' });
+  }
+});
+
+router.post('/terminal/ariaSettings', async (req, res) => {
+  const ext = req.body.extension;
+  try {
+    const [results, _fields] = await req.dbconn.query('SELECT ARIA_settings FROM device_settings WHERE extension = ?', ext);
+    const aria = results[0].ARIA_settings;
+    res.status(200).send({ status: 'Success', aria });
+  } catch (error) {
+    console.error("Error /terminal/ariaSettings:", error);
+    res.status(500).send("error");
+  }
+});
+
+router.post('/terminal/getEntities', async (req, res) => {
+  const ext = req.body.extension;
+  const engine = new GoogleTA();
+  const sql1 = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
+  const sql2 = 'SELECT translation, extension, timestamp FROM translation_data where research_data_id = ?;';
+  const sql3 = 'SELECT * FROM data_store where research_data_id = ? and final = 1;';
+
+  try {
+    const [results1, _fields1] = await req.dbconn.query(sql1, ext);
+    let id = results1[0].id
+
+    if (typeof id === 'undefined' || Number.isNaN(id))
+      id = 0;
+
+    const [results2, _fields2] = await req.dbconn.query(sql2, id)
+    if (results2.length === 0) {
+      // send non translated transcription data back
+      const [results3, _fields3] = await req.dbconn.query(sql3, id);
+      if (results3.length !== 0) {
+        let records = '';
+        results3.forEach((row) => {
+          records += row.transcript + '. ';
+        });
+
+        engine.getEntities(records, (data) => {
+          res.status(200).send({ status: 'Success', results: data });
+        },
+        );
       } else {
-        res.status(200).send('success');
+        res.status(500).send({ status: 'No Data' });
       }
-    });
-  } else {
-    res.status(400).send('Bad Inputs');
+    } else {
+      res.status(500).send({ status: 'No Data' });
+    }
+  } catch (error) {
+    console.error("Error /terminal/getEntities:", error);
+    res.status(500).send({ status: 'Error' });
   }
-  }
+
+});
+
+router.post('/terminal/getClassification', async (req, res) => {
+  const ext = req.body.extension;
+  const engine = new GoogleTA();
+  const sql1 = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
+  const sql2 = 'SELECT translation, extension, timestamp FROM translation_data where research_data_id = ?;';
+  const sql3 = 'SELECT * FROM data_store where research_data_id = ? and final = 1;';
+  try {
+    const [results1, _fields1] = await req.dbconn.query(sql1, ext);
+    const id = (results1[0].id === 'undefined' || Number.isNaN(results1[0].id)) ? 0 : results1[0].id;
+    const [results2, _fields2] = await req.dbconn.query(sql2, id);
+    if (results2.length === 0) {
+      const [results3, _fields3] = await req.dbconn.query(sql3, id);
+      let records = '';
+      results3.forEach((row) => {
+        records += row.transcript + '. '
       });
-});
-
-router.post('/terminal/ariaSettings', (req, res) => {
-  const ext = req.body.extension;
-  let aria;
-  info.info('This is getting called');
-  req.dbconn.query(
-    'SELECT ARIA_settings FROM device_settings WHERE extension = ?',
-    ext,
-    (err, result) => {
-      if (err) {
-        error.error('ERROR: ', err.code);
-      } else {
-        info.info(`results are: ${result[0]}`);
-        aria = result[0].ARIA_settings;
-      }
-
-      if (aria === 'final') {
-        info.info('final aria settings');
-      } else if (aria === 'continuous') {
-        info.info('continuous');
-      }
-      info.info(aria);
-      res.status(200).send({ status: 'Success', aria });
-    },
-  );
-});
-
-router.post('/terminal/getEntities', (req, res) => {
-  const ext = req.body.extension;
-  let aria;
-  let engine;
-  let configs;
-  info.info('text analysis with google');
-  engine = new GoogleTA();
-
-  const sql = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
-  req.dbconn.query(sql, ext, (err2, lastCall) => {
-    if (err2 || lastCall.length < 1) {
-      error.error('sql error:', err2);
+      engine.getClassification(records, (data) => {
+        res.status(200).send({ status: 'Success', results: data });
+      });
     } else {
-      id = lastCall[0].id
-      console.log("id ",  id)
-      if (typeof id === 'undefined' || Number.isNaN(id)) id = 0;
-
-      req.dbconn.query(
-        'SELECT translation, extension, timestamp FROM translation_data where research_data_id = ?;',
-        id,
-        (err, rows) => {
-          if (err) {
-            error.error('/getTranscripts ERROR: ' + err);
-          } else if (rows.length === 0) {
-            // send non translated transcription data back
-            req.dbconn.query(
-              'SELECT * FROM data_store where research_data_id = ? and final = 1;',
-              id,
-              (err2, rows2) => {
-                if (err2) {
-                  error.error('/getTranscripts ERROR: ', err.code);
-                } else if (rows2.length !== 0) {
-                  let records = '';
-                  rows2.forEach((row) => {
-                    records += row.transcript + '. '
-                    console.log("row.transcript ", row.transcript)
-                  });
-                  engine.getEntites(
-                    records,
-                    (results) => {
-                      res.status(200).send({ status: 'Success', results});
-                    },
-                  );
-                }
-              },
-            );
-          } else {
-            // res.send('no records');
-          }
-        },
-      );
+      res.status(500).send({ status: 'No Data' });
     }
-  });
-});
-
-router.post('/terminal/getClassification', (req, res) => {
-  const ext = req.body.extension;
-  let aria;
-  let engine;
-  let configs;
-  info.info('text analysis with google');
-  engine = new GoogleTA();
-
-  const sql = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
-  req.dbconn.query(sql, ext, (err2, lastCall) => {
-    if (err2 || lastCall.length < 1) {
-      error.error('sql error:', err2);
-    } else {
-      id = lastCall[0].id
-      console.log("id ",  id)
-      if (typeof id === 'undefined' || Number.isNaN(id)) id = 0;
-
-      req.dbconn.query(
-        'SELECT translation, extension, timestamp FROM translation_data where research_data_id = ?;',
-        id,
-        (err, rows) => {
-          if (err) {
-            error.error('/getTranscripts ERROR: ' + err);
-          } else if (rows.length === 0) {
-            // send non translated transcription data back
-            req.dbconn.query(
-              'SELECT * FROM data_store where research_data_id = ? and final = 1;',
-              id,
-              (err2, rows2) => {
-                if (err2) {
-                  error.error('/getTranscripts ERROR: ', err.code);
-                } else if (rows2.length !== 0) {
-                  let records = '';
-                  rows2.forEach((row) => {
-                    records += row.transcript + '. '
-                    console.log("row.transcript ", row.transcript)
-                  });
-                  console.log("records ", records)
-                  engine.getClassification(
-                    records,
-                    (results) => {
-                      res.status(200).send({ status: 'Success', results});
-                    },
-                  );
-                }
-              },
-            );
-          } else {
-            // res.send('no records');
-          }
-        },
-      );
-    }
-  });
+  } catch (error) {
+    console.error("Error /terminal/getClassification:", error);
+    res.status(500).send({ status: 'Error' });
+  }
 });
 
 router.post('/terminal/sentenceAnalysis', (req, res) => {
   const text = req.body.text;
-  let engine;
-  let configs;
-  engine = new GoogleTA();
-
-  engine.getSentiment(
-    text,
-    (results) => {
-      console.log(results)
-      res.status(200).send({ status: 'Success', results});
-    },
-  );
+  const engine = new GoogleTA();
+  engine.getSentiment(text,(data) => {
+      res.status(200).send({ status: 'Success', results:data });
+  });
 });
 
 // upload recording web.m file
-router.post('/iprelay/uploadRecording', (req, res) => {
-  info.info('/iprelay/uploadRecording Called');
+router.post('/iprelay/uploadRecording', async (req, res) => {
+  console.info('/iprelay/uploadRecording Called');
   const form = new formidable.IncomingForm();
   const dir = process.platform.match(/^win/) ? '\\..\\uploads\\recordings\\' : '/../uploads/recordings/';
+  const sqlLatestCall = 'SELECT id FROM research_data WHERE extension = ? or dest_phone_number = ? ORDER BY id DESC LIMIT 1;';
+  const sqlInsertRecording = `INSERT INTO iprelay_recordings (source, filepath, fk_research_data_id) VALUES (?,?,?);`;
 
   form.uploadDir = path.join(__dirname, dir);
   form.keepExtensions = true;
@@ -610,47 +554,62 @@ router.post('/iprelay/uploadRecording', (req, res) => {
   form.maxFields = 1000;
   form.multiples = false;
 
-  form.parse(req, (err, fields, files) => {
-    if (err) {
-      error.error('oh no an error', err);
+  try {
+    const [fields, files] = await new Promise(function (resolve, reject) {
+      form.parse(req, function (err, fields, files) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve([fields, files]);
+      });
+    });
+
+    const [results, _fields] = await req.dbconn.query(sqlLatestCall, [fields.extension, fields.extension]);
+    if (results.length < 1) {
+      console.error('sql error:', err2);
       res.writeHead(200, {
         'content-type': 'text/plain',
       });
       res.write('an error occurred');
     } else {
-      info.info(JSON.stringify(fields));
-      // {"source":"screen", "extension": "5001"}
-      // res.status(200).send({ status: "Success" })
+      const params = [fields.source, files.file.path, results[0].id];
+      await req.dbconn.query(sqlInsertRecording, params);
 
-      const sqlLatestCall = 'SELECT id FROM research_data WHERE extension = ? ORDER BY id DESC LIMIT 1;';
-      req.dbconn.query(sqlLatestCall, fields.extension, (err2, lastCall) => {
-        if (err2 || lastCall.length < 1) {
-          error.error('sql error:', err2);
-          res.writeHead(200, {
-            'content-type': 'text/plain',
-          });
-          res.write('an error occurred');
-        } else {
-          const sqlInsertRecording = `INSERT INTO iprelay_recordings (source, filepath, fk_research_data_id)
-          VALUES (?,?,?);`;
-          const params = [fields.source, files.file.path, lastCall[0].id];
-          req.dbconn.query(sqlInsertRecording, params, (err3) => {
-            if (err3) {
-              error.error('sql error:', err3);
-              res.writeHead(200, {
-                'content-type': 'text/plain',
-              });
-              res.write('an error occurred');
-            } else {
-              info.info(`File Uploaded: ${JSON.stringify(files)}`);
-              res.status(200).send({ status: 'Success' });
-            }
-          });
-        }
-      });
+      console.info(`File Uploaded: ${JSON.stringify(files)}`);
+      res.status(200).send({ status: 'Success' });
     }
-  });
+  } catch (error) {
+    console.log("Error /iprelay/uploadAudioRecording:", error)
+    res.writeHead(200, {
+      'content-type': 'text/plain',
+    });
+    res.write('an error occurred');
+  }
 });
 
+router.post('/terminal/saveCustomName', async (req, res) => {
+  const { customName, extension } = req.body;
+  const sqlGetCurrentCallRecord = `SELECT id FROM research_data
+                                   WHERE extension = ? AND call_end IS NULL 
+                                   ORDER BY id DESC LIMIT 1;`;
+  const sqlSaveCustomName = 'UPDATE research_data SET custom_name = ? WHERE id = ?;';
+  try {
+    if (customName && extension) {
+      const [results1, _fields1] = await req.dbconn.query(sqlGetCurrentCallRecord, extension);
+      if(results1.length < 1) {
+        res.status(304).send({ status: 'no record updated or found' });
+      } else {
+        await req.dbconn.query(sqlSaveCustomName, [customName, results1[0].id])
+        res.status(200).send({ status: 'success', callID: result1[0].id });
+      }
+      } else {
+        res.status(400).send({ status: 'invalid arguments' });
+      }
+  } catch (error) {
+    console.error("Error /terminal/saveCustomName:", error);
+    res.status(500).send({ status: 'Error' });
+  }
+});
 
 module.exports = router;

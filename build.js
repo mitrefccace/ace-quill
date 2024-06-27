@@ -1,8 +1,22 @@
+/*
+                                 NOTICE
+
+This (software/technical data) was produced for the U. S. Government under
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
+Regulation Clause 52.227-14, Rights in Data-General. No other use other than
+that granted to the U. S. Government, or to those acting on behalf of the U. S.
+Government under that Clause is authorized without the express written
+permission of The MITRE Corporation. For further information, please contact
+The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
+McLean, VA 22102-7539, (703) 983-6000.
+
+                        ©2024 The MITRE Corporation.
+*/
+
 const path = require('path');
 var fs = require('fs');
 const shell = require('shelljs');
-const config = require('./configs/acequill.json');
-
+const config = require('./configs/config.js');
 
 const CSS = [
     'admin-lte/dist/css/adminlte.min.css',
@@ -36,15 +50,15 @@ const JS = [
     'jquery/dist/jquery.min.js',
     'jquery-csv/src/jquery.csv.min.js',
     'jquery-validation/dist/jquery.validate.min.js',
-    'jssip/dist/jssip.min.js',
     'moment/moment.js',
     'recordrtc/RecordRTC.js',
     'popper.js/dist/umd/popper.js',
     'popper.js/dist/umd/popper.js.map',
     'tone/build/Tone.js',
-    'tone/build/Tone.js.map'
+    'tone/build/Tone.js.map',
+    'wavesurfer.js/dist/wavesurfer.min.js',
+    'wavesurfer.js/dist/wavesurfer.min.js.map'
 ];
-
 
 if (!fs.existsSync('./public/assets')) {
     fs.mkdirSync('./public/assets');
@@ -94,8 +108,9 @@ FONT.map(asset => {
     }
 });
 
+
 shell.exec('./python.sh')
-if (config.accuracy.ace2 == 'true') {
+if (config.accuracy.ace2) {
     shell.exec('git clone ' + config.accuracy.ace2_repo, {cwd: './resources'})
     shell.exec('git lfs pull', {cwd: './resources/ace-code-master'})
     shell.exec('sudo pip3.6 install -r requirements.txt', {cwd: './resources/ace-code-master'})
@@ -104,8 +119,30 @@ if (config.accuracy.ace2 == 'true') {
     shell.exec('gzip -d GoogleNews-vectors-negative300.bin.gz', {cwd: './resources/ace-code-master/res/w2v'})
 }
 
-if (config.accuracy.sclite == 'true') {
+if (config.accuracy.sclite) {
     shell.exec('git clone https://github.com/usnistgov/SCTK.git', {cwd: './resources'})
     shell.exec('make config && make all && make check && make install && make doc', {cwd: './resources/SCTK'})
 }
 
+
+
+//shell.exec('git clone https://github.com/brownhci/WebGazer.git', {cwd: './resources'});
+//shell.exec('npm install && npm run build', {cwd: './resources/WebGazer'});
+//shell.exec('cp ./dist/webgazer.js ./../../public/assets/js/webgazer.js', {cwd: './resources/WebGazer'});
+
+//create database.json
+const databaseJson = {
+  "dev": {
+      "host": config.mysql.host,
+      "user": config.mysql.user,
+      "password" : config.mysql.password,
+      "database": config.mysql.database,
+      "driver": "mysql",
+      "multipleStatements": true
+    }
+ }
+
+ fs.writeFileSync('./configs/database.json', JSON.stringify(databaseJson, null, 2));
+
+
+shell.exec('node node_modules/db-migrate/bin/db-migrate up', {cwd: './'})

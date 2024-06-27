@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 */
 
 const express = require('express');
@@ -19,15 +19,14 @@ const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
 const favicon = require('serve-favicon');
 const bodyParser = require('body-parser');
-const nconf = require('nconf');
-const mysql = require('mysql');
-const decode = require('./utils/decode');
+const mysql = require('mysql2/promise');
+const config = require('./configs/config.js');
 
 const mysqlOptions = {
-  host: decode(nconf.get('mysql:host')),
-  user: decode(nconf.get('mysql:user')),
-  password: decode(nconf.get('mysql:password')),
-  database: decode(nconf.get('mysql:database')),
+  host: config.mysql.host,
+  user:  config.mysql.user,
+  password:  config.mysql.password,
+  database:  config.mysql.database,
   connectionLimit : 50,
   dateStrings: true
 };
@@ -50,10 +49,10 @@ app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-  name: decode(nconf.get('session:name')),
+  name: config.session.name,
   resave: true,
   saveUninitialized: true,
-  secret: decode(nconf.get('session:secret')),
+  secret: config.session.secret,
   secure: true,
   store: sessionStore,
 }));
@@ -61,10 +60,9 @@ app.use(session({
 // Make the db and configs accessible to routes
 
 app.use((req, res, next) => {
-  req.configs = nconf;
   req.dbconn = mysqlConnection;
 
-  res.locals.version = nconf.get('version');
+  res.locals.version = process.env.npm_package_version;
   res.locals.fullname = (req.session.firstname) ? `${req.session.firstname} ${req.session.lastname}` : 'Unknown';
   res.locals.role = (req.session.role) ? req.session.role : 'Unknown';
   res.locals.group = (req.session.group_name) ? req.session.group_name : 'Unknown';
@@ -79,7 +77,7 @@ app.use('/', terminal);
 app.use('/admin', admin);
 // catch 404 and forward to error handler
 
-app.use((req, res, next) => {
+app.use((_req, _res, next) => {
   const err = new Error('Not Found');
   err.status = 404;
   next(err);

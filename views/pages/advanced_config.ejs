@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 -->
 <!DOCTYPE html>
 <html>
@@ -53,34 +53,48 @@ McLean, VA 22102-7539, (703) 983-6000.
       <section class="content">
         <div class="card">
             <div class="card-header with-border">
-                <div class="row"><h3 class="card-title font-weight-bold">Extension</h3></div>
-                    <div class="row">
-                        <div class="col-md-auto">
-                            <select class="form-control" id="curExtension" onchange="testThisFunc()">
-                                <% extensions.forEach(function(s) {  %>
-                                    <!-- <tr id="scenario_<%= s.extension %>"> -->
-                                        <option>
-                                            <%= s.extension %>
-                                        </option>
-                                    <!-- </tr> -->
-                                <% }) %>
-                            </select>
-                        </div>
+                <div class="row">
+                  <h3 class="card-title font-weight-bold">Extension</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-auto">
+                        <select class="form-control" id="curExtension" onchange="testThisFunc()">
+                            <% extensions.forEach(function(s) {  %>
+                                <!-- <tr id="scenario_<%= s.extension %>"> -->
+                                    <option>
+                                        <%= s.extension %>
+                                    </option>
+                                <!-- </tr> -->
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div id="aws-cred-warning" class="alert alert-danger aws-cred-warning" style="display:none;">
+                      Warning, AWS services selected but AWS credentials are expired or invalid. Fix here: <a href="/admin/csp-amazon" target="_blank">AWS Config Page</a>
+                    </div>
                 </div>
             </div>
-            <div class="card-header with-border">
+            <div class="card-body">
                 <div class="row">
                     <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Speech to Text</h3>
                 </div>
+                <div class = "w-25">
+                  <div class="form-check" style="margin-left:7px" >
+                      <input class="form-check-input" type="checkbox" value="" checked="" id="caller_captions_enabled">
+                      <label class="form-check-label" for="caller_captions_enabled">
+                      enabled
+                      </label>
+                  </div>
+                  
+              </div>
                 <div class="row">
                     <div class="w-25">
                         <h6 class="col-md-auto">Engine</h6>
                         <div class="col-md-auto">
-                        <select class="form-control" id="stt_engine" onchange="showPrecanned()">
+                        <select class="form-control" id="stt_engine" onchange="showSpecificFields()">
                             <option value='AZURE' selected="selected">A - Microsoft Azure</option>
                             <option value='GOOGLE'>G - Google</option>
                             <option value='WATSON'>W - IBM Watson</option>
-                            <!--option value='AMAZON'>AWS - Amazon</option-->
+                            <option value='AMAZON'>AWS - Amazon</option>
                             <option value='PREDEFINED'>P - Predefined</option>
                         </select>
                         </div>
@@ -115,16 +129,114 @@ McLean, VA 22102-7539, (703) 983-6000.
                             Show Finalized Captions only
                             </label>
                         </div>
-                    <!-- </div>
-                    <div class="w-25"> -->
-                        <h6 class="col-md-auto" id="delayVar">0s delay</h6>
+                        <h6 class="col-md-auto" id="delayVar">0.00s delay</h6>
                         <div class="slidecontainer">
-                            <input type="range" min="0" max="100" step="1" value="0" id="delay">
+                            <input type="range" min="0" max="10" step="0.25" value="0" id="delay">
                         </div>
                     </div>
+                    <div class="w-25" id="watsonDiv">
+                      <h6 class="col-md-auto" id="backgroundVar">0.50 background audio suppression</h6>
+                      <div class="slidecontainer">
+                          <input type="range" min="0" max="1" step="0.01" value="0.50" id="background">
+                          <button type="button" class="btn btn-primary" id="background_audio_suppression_button">Reset</button>
+                      </div>
+                      <h6 class="col-md-auto" id="speechDetectorVar">0.50 speech detector sensitivity</h6>
+                      <div class="slidecontainer">
+                          <input type="range" min="0" max="1" step="0.01" value="0.50" id="speechDetector">
+                          <button type="button" class="btn btn-primary" id="speech_detector_sensitivity_button">Reset</button>
+                      </div>
+                    </div>
+                    <div class="w-25" id="googleDiv">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" checked="" id="autoPunctuation">
+                        <label class="form-check-label" for="autoPunctuation">
+                        Enable Automatic Punctuation
+                        </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="" checked="" id="v2">
+                      <label class="form-check-label" for="v2">
+                        Use Google Cloud Speech V2
+                      </label>
+                    </div>
+                  </div>
+                  <div class="w-50 text-danger" id="amazonDiv">
+                    <div>Warning, AWS Transcription may be too slow for real-time calling.</div>
+                  </div>
                 </div>
+                  <div class="w-25" id="azureDiv">
+                    <input class="form-check-input" type="checkbox" id="stt_dropout_enabled" onchange="toggleSimulations()">
+                    <label class="form-check-label" for="stt_dropout_enabled">
+                      Enable Caption Error Simulation
+                      <a href="#" class="helpPopover" data-toggle="popover"
+                      data-trigger="focus" title="STT Caption Simulation Help"
+                      data-html="true" data-placement="right"
+                      data-content="Display incomplete or incorrect captions to the terminal user by muting parts of the audio being sent to the STT engine. <br/> <br/> 
+                      The audio being played to the users on both sides of the call will be unaffected. <br/> <br/> 
+                      The terminal user <strong>WILL NOT</strong> have any explicit indication that this simulation is active, so that it cannot be distinguished from actual STT errors.">
+                    <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+                    </label>
+                    <br/>
+                    <br/>
+                    <div id="stt_dropout_container">
+                      <h6 class="col-md-auto">Dropout Interval (seconds)
+                        <a href="#" class="helpPopover" data-toggle="popover"
+                          data-trigger="focus" title="STT Caption Simulation Help"
+                          data-html="true" data-placement="right"
+                          data-content="How often to mute the audio sent to the STT engine, whole seconds only">
+                          <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i>
+                        </a>
+                      </h6>
+                      <div class="rangeSlideContainer">
+                        <input type="text" id="stt_dropout_interval"
+                          data-slider-id="stt_dropout_interval_slider" 
+                          data-slider-min="1"
+                          data-slider-max="30"
+                          data-slider-step="1"
+                          data-slider-tooltip="always"
+                          data-slider-tooltip-position="bottom" />
+                          <button style="margin-left: 20px;" type="button" class="btn btn-primary" id="stt_dropout_interval_button"
+                                  onclick="resetDropoutSlider('stt_dropout_interval', 1)">Reset</button>
+                      </div>
+                      <br/>
+                      <br/>
+                      <h6 class="col-md-auto">Dropout Length (milliseconds)
+                        <a href="#" class="helpPopover" data-toggle="popover"
+                          data-trigger="focus" title="Audio Dropout Simulation Help"
+                          data-html="true" data-placement="right"
+                          data-content="How long to mute the audio sent to the STT engine, will be a random value in this range, changing for each mute event.">
+                          <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i>
+                        </a>
+                      </h6>
+                      <div class="rangeSlideContainer">
+                        <input type="text" id="stt_dropout_length"
+                          data-slider-id="stt_dropout_length_slider" 
+                          data-slider-range="true"
+                          data-slider-min="100"
+                          data-slider-max="1000"
+                          data-slider-step="100"
+                          data-slider-tooltip="always"
+                          data-slider-tooltip-split="true"
+                          data-slider-tooltip-position="bottom" />
+                        <button style="margin-left: 20px;" type="button" class="btn btn-primary" id="stt_dropout_length_button"
+                                onclick="resetDropoutSlider('stt_dropout_length', 100, 200)">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                
                 <hr>
-
+                <div class="row">
+                  <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px" >Stenograph</h3>
+              </div>
+              <div class="row">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" checked="" id="steno_enabled">
+                  <label class="form-check-label" for="steno_enabled">
+                  Show Stenograph
+                  </label>
+              </div>
+              </div>
+              <hr>
                 <div class="row">
                     <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px" >Translation</h3>
                 </div>
@@ -132,7 +244,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                     <div class="w-25">
                         <h6 class="col-md-auto">Engine</h6>
                         <div class="col-md-auto">
-                        <select class="form-control" id="translation_engine">
+                        <select class="form-control" id="translation_engine" onchange="showCSPWarning(this.value)">
                             <option value='AZURE' selected="selected">A - Microsoft Azure</option>
                             <option value='GOOGLE'>G - Google</option>
                             <option value='WATSON'>W - IBM Watson</option>
@@ -159,7 +271,7 @@ McLean, VA 22102-7539, (703) 983-6000.
                     <div class="w-25">
                         <h6 class="col-md-auto">Engine</h6>
                         <div class="col-md-auto">
-                            <select class="form-control" id="tts_engine">
+                            <select class="form-control" id="tts_engine" onchange="showCSPWarning(this.value)">
                                 <option value='AZURE' selected="selected">A - Microsoft Azure</option>
                                 <option value='GOOGLE'>G - Google</option>
                                 <option value='WATSON'>W - IBM Watson</option>
@@ -194,23 +306,331 @@ McLean, VA 22102-7539, (703) 983-6000.
                     </div>
                 </div>
                 <hr>
-
                 <div class="row">
-                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Braille Device</h3>
+                  <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px" >Audible Cues</h3>
                 </div>
-                <div class="row">
-                    <div class = "w-25">
-                        <h6 class="col-md-auto">Aria Region</h6>
-                        <div class="col-md-auto">
-                        <select class="form-control" id="ARIA_settings">
-                            <option value='final' selected="selected">Final</option>
-                            <option value='continuous'>Continuous</option>
+              <div class="row">
+                  <div class="w-25">
+                      <h6 class="col-md-auto">Audible Greeting</h6>
+                      <div class="col-md-auto">
+                        <select class="form-control" id="greeting_id" onchange="showCueTranscript('greeting')">
+                            <option value='-1' data-transcript='(None)' selected="selected">(None)</option>
+                            <% cues.forEach(function(s) {  %>
+                              <% if(s.type ==='greeting'){%>
+                                  <option value="<%= s.id %>" data-transcript="<%= s.transcript %>">
+                                      <%= s.title %>
+                                  </option>
+                              <% } %>
+                            <% }) %>
                         </select>
-                        </div>
+                      </div>
+                      <div class="col-md-auto">
+                        <span id="greeting_transcript"></span>
+                      </div>
+                  </div>
+                  <div class="w-10" style="margin-right: 20px;">
+                    <h6 class="col-md-auto">Play Greeting Delay</h6>
+                    <h6 class="col-md-auto" id="greeting_delay_val">0.5s delay</h6>
+                    <div class="slidecontainer">
+                      <input type="range" min=".5" max="10" step="0.5" value=".5" id="greeting_delay">
+                      <button type="button" class="btn btn-primary" id="greeting_delay_button">Reset</button>
                     </div>
+                    <br/>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="" checked="" id="greeting_show_transcript">
+                      <label class="form-check-label" for="greeting_show_transcript">
+                      Show transcript when played
+                      </label>
+                    </div>
+                  </div>
+                  <div class="w-25">
+                      <h6 class="col-md-auto">Typing Sound</h6>
+                      <div class="col-md-auto">
+                        <select class="form-control" id="typing_id" onchange="showCueTranscript('typing')">
+                          <option value='-1' data-transcript='(None)' selected="selected">(None)</option>
+                          <% cues.forEach(function(s) {  %>
+                            <% if(s.type ==='typing'){%>
+                                <option value="<%= s.id %>" data-transcript="<%= s.transcript %>">
+                                    <%= s.title %>
+                                </option>
+                            <% } %>
+                          <% }) %>
+                        </select>
+                      </div>
+                      <div class="col-md-auto">
+                        <span id="typing_transcript"></span>
+                      </div>
+                  </div>
+                  <div class="w-24">
+                    <br/>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="typingRadio" id="typing_radio_once" value="once" onchange="toggleRepeatDelay()" checked>
+                      <label class="form-check-label" for="typing_radio_once">
+                        Play once
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="typingRadio" id="typing_radio_repeat" value="repeat" onchange="toggleRepeatDelay()">
+                      <label class="form-check-label" for="typing_radio_repeat">
+                        Play repeatedly
+                      </label>
+                    </div>
+                    <br/>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="" checked="" id="typing_show_transcript">
+                      <label class="form-check-label" for="typing_show_transcript">
+                      Show transcript when played
+                      </label>
+                    </div>
+                  </div>
+                  <div class="w-24" style="margin-left: 20px;" id="repeatDelaySlider" hidden>
+                    <h6 class="col-md-auto">Repeat Delay</h6>
+                    <h6 class="col-md-auto" id="typing_repeat_delay_val">0.25s delay</h6>
+                    <div class="slidecontainer">
+                        <input type="range" min=".25" max="5" step="0.25" value="0" id="typing_repeat_delay">
+                        <button type="button" class="btn btn-primary" id="typing_repeat_delay_button">Reset</button>
+                    </div>
+                  </div>
+              </div>
+              <hr>
+            <div class="row">
+              <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px" >Audio Dropout Simulation
+                <a href="#" class="helpPopover" data-toggle="popover"
+                  data-trigger="focus" title="Audio Dropout Simulation Help"
+                  data-html="true" data-placement="right"
+                  data-content="Simulate bad connections and packet loss by randomly muting and unmuting incoming and outgoing audio. <br/> <br/> 
+                  The terminal user <strong>WILL NOT</strong> have any explicit indication that this simulation is active, so that it cannot be distinguished from actual connection problems.">
+                <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+              </h3>
+            </div>
+            <div class="row">
+              <div class="w-100">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="dropout_incoming_enabled" onchange="toggleSimulations()">
+                    <label class="form-check-label" for="dropout_incoming_enabled">
+                      Enable Incoming Audio Dropout Simulation
+                    </label>
+                    <a href="#" class="helpPopover" data-toggle="popover"
+                      data-trigger="focus" title="Audio Dropout Simulation Help"
+                      data-html="true" data-placement="right"
+                      data-content="Simulate a bad connection and packet loss by randomly muting and unmuting <strong>incoming</strong> audio for the terminal user. <br/> <br/>
+                      This muting occurs in the browser <strong>after</strong> the terminal ASR engine has processed the audio, so captions are unaffected.<br/><br/>
+                      The audio for the other side of the call is unaffected.">
+                    <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+                  </div>
+              </div>
+              <div class="w-25 incomingDropoutContainer"  style=" margin-top: 20px;">
+                <h6 class="col-md-auto">Incoming Dropout Interval (milliseconds)
+                  <a href="#" class="helpPopover" data-toggle="popover"
+                    data-trigger="focus" title="Audio Dropout Simulation Help"
+                    data-html="true" data-placement="right"
+                    data-content="How often to mute the incoming audio, will be a random value in this range, changing for each mute event.">
+                  <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+                </h6>
+                <div class="rangeSlideContainer">
+                  <input type="text" id="dropout_incoming_interval"
+                    data-slider-id="dropout_incoming_interval_slider" 
+                    data-slider-range="true"
+                    data-slider-min="1000"
+                    data-slider-max="60000"
+                    data-slider-step="200"
+                    data-slider-tooltip="always"
+                    data-slider-tooltip-split="true"
+                    data-slider-tooltip-position="bottom" >
+                  <button style="margin-left: 20px;" type="button" class="btn btn-primary" id="dropout_incoming_interval_button"
+                          onclick="resetDropoutSlider('dropout_incoming_interval', 2000, 2000)">Reset</button>
                 </div>
+                <br/>
+              </div>
+              <div class="w-25 incomingDropoutContainer" style="margin-top: 20px;">
+                <h6 class="col-md-auto">Incoming Dropout Length (milliseconds)
+                  <a href="#" class="helpPopover" data-toggle="popover"
+                    data-trigger="focus" title="Audio Dropout Simulation Help"
+                    data-html="true" data-placement="right"
+                    data-content="How long to mute the incoming audio, will be a random value in this range, changing for each mute event.">
+                    <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i>
+                  </a>
+                </h6>
+                <div class="rangeSlideContainer">
+                  <input type="text" id="dropout_incoming_length"
+                    data-slider-id="dropout_incoming_length_slider" 
+                    data-slider-range="true"
+                    data-slider-min="100"
+                    data-slider-max="1000"
+                    data-slider-step="100"
+                    data-slider-tooltip="always"
+                    data-slider-tooltip-split="true"
+                    data-slider-tooltip-position="bottom" >
+                    <button style="margin-left: 20px;" type="button" class="btn btn-primary" id="dropout_incoming_length_button"
+                            onclick="resetDropoutSlider('dropout_incoming_length', 100, 200)">Reset</button>
+                </div>
+                <br/>
+              </div>
+              <br/>
+            <div class="w-100" style="margin-top: 20px;">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="dropout_outgoing_enabled" onchange="toggleSimulations()">
+                  <label class="form-check-label" for="dropout_outgoing_enabled">
+                    Enable Outgoing Audio Dropout Simulation
+                  </label>
+                  <a href="#" class="helpPopover" data-toggle="popover"
+                  data-trigger="focus" title="Audio Dropout Simulation Help"
+                  data-html="true" data-placement="right"
+                  data-content="Simulate a bad connection and packet loss by randomly muting and unmuting <strong>outgoing</strong> audio. <br/> <br/>
+                  This muting occurs in the browser <strong>before</strong> it is sent, this means the audio for the receiving user will be affected. 
+                  If the receiving user is another ACE Quill user or is using a caption phone, their ASR engine performance will be affected and have reduced caption quality. <br/><br/>
+                  The local audio for the terminal user will be unaffected.">
+                <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+                </div>
+            </div>
+            <br/>
+            <br/>
+            <div class="w-25 outgoingDropoutContainer"  style=" margin-top:20px;">
+              <h6 class="col-md-auto">Outgoing Dropout Interval (milliseconds)
+                <a href="#" class="helpPopover" data-toggle="popover"
+                data-trigger="focus" title="Audio Dropout Simulation Help"
+                data-html="true" data-placement="right"
+                data-content="How often to mute the outgoing audio, will be a random value in this range, changing for each mute event.">
+                <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+              </h6>
+              <div class="rangeSlideContainer">
+                <input type="text" id="dropout_outgoing_interval"
+                  data-slider-id="dropout_outgoing_interval_slider" 
+                  data-slider-range="true"
+                  data-slider-min="1000"
+                  data-slider-max="60000"
+                  data-slider-step="200"
+                  data-slider-tooltip="always"
+                  data-slider-tooltip-split="true"
+                  data-slider-tooltip-position="bottom" >
+                  <button style="margin-left: 20px;" type="button" class="btn btn-primary" id="dropout_outgoing_interval_button"
+                          onclick="resetDropoutSlider('dropout_outgoing_interval', 2000, 2000)">Reset</button>
+              </div>
+              <br/>
+            </div>
+            <div class="w-25 outgoingDropoutContainer" style="margin-top: 20px;">
+              <h6 class="col-md-auto">Outgoing Dropout Length (milliseconds)
+                <a href="#" class="helpPopover" data-toggle="popover"
+                  data-trigger="focus" title="Audio Dropout Simulation Help"
+                  data-html="true" data-placement="right"
+                  data-content="How long to mute the outgoing audio, will be a random value in this range, changing for each mute event.">
+                  <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i>
+                </a>
+              </h6>
+              <div class="rangeSlideContainer">
+                <input type="text" id="dropout_outgoing_length"
+                  data-slider-id="dropout_outgoing_length_slider" 
+                  data-slider-range="true"
+                  data-slider-min="100"
+                  data-slider-max="1000"
+                  data-slider-step="100"
+                  data-slider-tooltip="always"
+                  data-slider-tooltip-split="true"
+                  data-slider-tooltip-position="bottom" >
+                  <button style="margin-left: 20px;" type="button" class="btn btn-primary" id="dropout_outgoing_length_button"
+                          onclick="resetDropoutSlider('dropout_outgoing_length', 100, 200)">Reset</button>
+              </div>
+              <br/>
+            </div>
+            </div>
+            <hr>
+            <div class="row">
+              <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px" >Background Noise Simulation
+                <a href="#" class="helpPopover" data-toggle="popover"
+                data-trigger="focus" title="Background Noise Simulation Help"
+                data-html="true" data-placement="right"
+                data-content="Simulate background noise by overlaying a background noise audio track on incoming or outgoing audio.<br/><br/>
+                The terminal user <strong>WILL NOT</strong> have any explicit indication that this simulation is active, so that it cannot be distinguished from actual background noise.">
+                <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+              </h3>
+            </div>
+          <div class="row">
+              <div class="w-25">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="background_noise_incoming_enabled" onchange="toggleSimulations()">
+                  <label class="form-check-label" for="background_noise_incoming_enabled">
+                    Enable Incoming Background Noise Simulation
+                  </label>
+                  <a href="#" class="helpPopover" data-toggle="popover"
+                  data-trigger="focus" title="Background Noise Simulation Help"
+                  data-html="true" data-placement="right"
+                  data-content="Simulate background noise by overlaying a background noise audio track on <strong>incoming</strong> audio for the terminal user.<br/><br/>
+                  This noise overlay occurs in the browser <strong>after</strong> the terminal ASR engine has processed the audio, so captions are unaffected.<br/><br/>
+                  The audio for the other side of the call is unaffected."">
+                  <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+                </div>
+                <br/>
+                <div id="incoming_noise_container">
+                  <h6 class="col-md-auto">Incoming Background Noise</h6>
+                  <div class="col-md-auto">
+                    <select class="form-control" id="background_noise_incoming_id" onchange="showCueTranscript('background_noise_incoming')">
+                        <option value='-1' data-transcript='(None)' selected="selected">(None)</option>
+                        <% cues.forEach(function(s) {  %>
+                          <% if(s.type ==='noise'){%>
+                              <option value="<%= s.id %>" data-transcript="<%= s.transcript %>">
+                                  <%= s.title %>
+                              </option>
+                          <% } %>
+                        <% }) %>
+                    </select>
+                  </div>
+                  <div class="col-md-auto">
+                    <span id="background_noise_incoming_transcript"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="w-25" style="padding-left: 20px;">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="background_noise_outgoing_enabled" onchange="toggleSimulations()">
+                  <label class="form-check-label" for="background_noise_outgoing_enabled">
+                    Enable Outgoing Background Noise Simulation
+                  </label>
+                  <a href="#" class="helpPopover" data-toggle="popover"
+                  data-trigger="focus" title="Background Noise Simulation Help"
+                  data-html="true" data-placement="right"
+                  data-content="Simulate background noise by overlaying a background noise audio track on <strong>outgoing</strong> audio. <br/> <br/>
+                  This noise overlay occurs in the browser <strong>before</strong> it is sent, this means the audio for the receiving user will be affected. 
+                  If the receiving user is another ACE Quill user or is using a caption phone, their ASR engine performance will be affected and have reduced caption quality. <br/><br/>
+                  The local audio for the terminal user will be unaffected.">
+                  <i class="fa fa-question-circle-o text-muted" aria-hidden="true"></i></a>
+                </div>
+                <br/>
+                <div id="outgoing_noise_container">
+                <h6 class="col-md-auto">Outgoing Background Noise</h6>
+                  <div class="col-md-auto">
+                    <select class="form-control" id="background_noise_outgoing_id" onchange="showCueTranscript('background_noise_outgoing')">
+                        <option value='-1' data-transcript='(None)' selected="selected">(None)</option>
+                        <% cues.forEach(function(s) {  %>
+                          <% if(s.type ==='noise'){%>
+                              <option value="<%= s.id %>" data-transcript="<%= s.transcript %>">
+                                  <%= s.title %>
+                              </option>
+                          <% } %>
+                        <% }) %>
+                    </select>
+                  </div>
+                  <div class="col-md-auto">
+                    <span id="background_noise_outgoing_transcript"></span>
+                  </div>
+                </div>
+            </div>
+            </div>
+              <hr>
+              <div class="row">
+                  <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Braille Device</h3>
+              </div>
+              <div class="row">
+                  <div class = "w-25">
+                      <h6 class="col-md-auto">Aria Region</h6>
+                      <div class="col-md-auto">
+                      <select class="form-control" id="ARIA_settings">
+                          <option value='final' selected="selected">Final</option>
+                          <option value='continuous'>Continuous</option>
+                      </select>
+                      </div>
+                  </div>
+              </div>
                 <hr>
-
                 <div class="row">
                     <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Confidence</h3>
                 </div>
@@ -274,19 +694,19 @@ McLean, VA 22102-7539, (703) 983-6000.
                         </div>
                     </div>
                     <div class="w-25">
-                        <div class="form-check" style="margin-left:7px" >
+                        <div class="form-check" style="margin-left:15px" >
                             <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_bold">
                             <label class="form-check-label" for="confidence_bold">
                             Bold
                             </label>
                         </div>
-                        <div class="form-check" style="margin-left:7px" >
+                        <div class="form-check" style="margin-left:15px" >
                             <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_italicize">
                             <label class="form-check-label" for="confidence_italicize">
                             Italicize
                             </label>
                         </div>
-                        <div class="form-check" style="margin-left:7px" >
+                        <div class="form-check" style="margin-left:15px" >
                             <input class="form-check-input" type="checkbox" value="" checked="" id="confidence_underline">
                             <label class="form-check-label" for="confidence_underline">
                             Underline
@@ -309,6 +729,124 @@ McLean, VA 22102-7539, (703) 983-6000.
                       </div>
                   </div>
                 </div>
+                <hr>
+
+                <div class="row">
+                    <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">Dual Captions</h3>
+                </div>
+                <div class="row">
+                  <div class = "w-25">
+                      <div class="form-check" style="margin-left:7px" >
+                          <input class="form-check-input" type="checkbox" value="" checked="" id="dual_enabled">
+                          <label class="form-check-label" for="dual_enabled">
+                          enabled
+                          </label>
+                      </div>
+                      
+                  </div>
+                  <div >
+                    <div class="row">
+                        <div class="form-group row">
+                            <label for="dual_font_color" class=" col-form-label col-form-label-sm">Font color: </label>
+                           
+                            <div >
+                                <select class="form-control form-control-sm" id="dual_font_color" style="margin-left:7px" >
+                                    <option value="none">None</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="green">Green</option>
+                                    <option value="orange">Orange</option>
+                                    <option value="red">Red</option>
+                                    <option value="yellow" selected="selected">Yellow</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+
+              </div>
+              <br>
+                <div class="row">
+                    <div class = "w-25">
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="caller_confidence_show_word">
+                            <label class="form-check-label" for="caller_confidence_show_word">
+                            Show Caller Word Confidence
+                            </label>
+                        </div>
+                        <div class="form-check" style="margin-left:7px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="caller_confidence_show_phrase">
+                            <label class="form-check-label" for="caller_confidence_show_phrase">
+                            Show Caller Phrase Confidence
+                            </label>
+                        </div>
+                    </div>
+                    <div class = "w-25">
+                        <div class="row">
+                            <div class="form-group row">
+                                <label for="mediumCallerConfidence" class="col-sm-3 col-form-label col-form-label-sm">less
+                                    than</label>
+                                <div class="col-sm-3">
+                                    <input type="number" class="form-control form-control-sm" id="caller_confidence_upper_lim"
+                                        placeholder="%" value='75'>
+                                </div>
+                                <label for="mediumCallerConfidence" style="text-align: center" class="col-sm-3 col-form-label col-form-label-sm"> % are </label>
+                                <div class="col-sm-3">
+                                    <select class="form-control form-control-sm" id="caller_confidence_upper_color">
+                                        <option value="none">None</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="green">Green</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="red">Red</option>
+                                        <option value="yellow" selected="selected">Yellow</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group row">
+                                <label for="mediumCallerConfidence" class="col-sm-3 col-form-label col-form-label-sm">less
+                                    than</label>
+                                <div class="col-sm-3">
+                                    <input type="number" class="form-control form-control-sm" id="caller_confidence_lower_lim"
+                                        placeholder="%" value='75'>
+                                </div>
+                                <label for="mediumCallerConfidence" style="text-align: center" class="col-sm-3 col-form-label col-form-label-sm"> % are </label>
+                                <div class="col-sm-3">
+                                    <select class="form-control form-control-sm" id="caller_confidence_lower_color">
+                                        <option value="none">None</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="green">Green</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="red">Red</option>
+                                        <option value="yellow" selected="selected">Yellow</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-25">
+                        <div class="form-check" style="margin-left:15px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="caller_confidence_bold">
+                            <label class="form-check-label" for="caller_confidence_bold">
+                            Bold
+                            </label>
+                        </div>
+                        <div class="form-check" style="margin-left:15px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="caller_confidence_italicize">
+                            <label class="form-check-label" for="caller_confidence_italicize">
+                            Italicize
+                            </label>
+                        </div>
+                        <div class="form-check" style="margin-left:15px" >
+                            <input class="form-check-input" type="checkbox" value="" checked="" id="caller_confidence_underline">
+                            <label class="form-check-label" for="caller_confidence_underline">
+                            Underline
+                            </label>
+                        </div>
+                    </div>
+                    
+                </div>
+                
                 <hr>
                 <div class="row">
                     <h3 class="card-title font-weight-bold" style="margin-top: 10px; margin-bottom: 5px">IP Relay Testing</h3>
@@ -378,64 +916,6 @@ McLean, VA 22102-7539, (703) 983-6000.
                       placeholder="Enter a Device Name ex. Phone 1" maxlength="45" required>
                   </div>
                 </div>
-                <div class="form-group row">
-                  <label for="inputPassword" class="col-sm-3 control-label">STT Engine</label>
-                  <div class="col-sm-9">
-                    <select class="form-control" id="configEngine">
-                      <option value='AZURE' selected="selected">A - Microsoft Azure</option>
-                      <option value='GOOGLE'>G - Google</option>
-                      <option value='WATSON'>W - IBM Watson</option>
-                      <option value='AMAZON'>AWS - Amazon</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label for="inputPassword" class="col-sm-3 control-label">Translation Engine</label>
-                  <div class="col-sm-9">
-                    <select class="form-control" id="translationEngine">
-                      <option value='NONE' selected="selected">N - No Translation</option>
-                      <option value='GOOGLE'>G - Google</option>
-                      <option value='WATSON'>W - IBM Watson</option>
-                      <option value='AZURE'>M -  Azure</option>
-                      <option value='AMAZON'>AWS - Amazon</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label for="inputPassword" class="col-sm-3 control-label">Callee Language</label>
-                  <div class="col-sm-9">
-                    <select class="form-control" id="calleeLanguage">
-                      <option value='en' selected="selected">English</option>
-                      <option value='es'>Spanish</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label for="inputPassword" class="col-sm-3 control-label">Caller Language</label>
-                  <div class="col-sm-9">
-                    <select class="form-control" id="callerLanguage">
-                      <option value='en' selected="selected">English</option>
-                      <option value='es'>Spanish</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label for="inputPassword" class="col-sm-3 control-label">ARIA Setting</label>
-                  <div class="col-sm-9">
-                    <select class="form-control" id="ariaSettings">
-                      <option value='None' selected="selected">None</option>
-                      <option value='final'>Final</option>
-                      <option value='continuous'>Continuous</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label for="inputFirstname" class="col-sm-3 control-label">Delay</label>
-                  <div class="col-sm-9">
-                    <input id="delaySlider" class="slider form-control" data-slider-id='red' type="text"
-                      data-slider-min="0" data-slider-max="25" data-slider-step="1" data-slider-value="0" />
-                  </div>
-                </div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id='saveExtension'>Save</button>
@@ -456,32 +936,21 @@ McLean, VA 22102-7539, (703) 983-6000.
   </div>
   <!-- ./wrapper -->
 
-
-  <!-- Socket.io -->
-  <script src='/socket.io/socket.io.js'></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
-  <script>var device_setting = "<%= device_setting %>";</script>
   <script type="text/javascript">
-
+    $('[data-toggle="popover"]').popover();
+    
     var socket = io('/admin', {
             path:'/socket.io'
     });
 
-    $('#delaySlider').bootstrapSlider();
-
-    var device_setting = device_setting.replace(/&#34;/g,'"');
+    var device_setting = "<%= device_setting %>".replace(/&#34;/g,'"').replace(/&#39;/g,"'");
     device_setting = JSON.parse(device_setting)
-
     console.log("device_setting", device_setting)
 
     $(document).ready(function () {
         $('#settings_advanced_controls_treeview').addClass('active');
         set_setting(device_setting);
-        if ($('#stt_engine').val() == "PREDEFINED") {
-          $("#predefined_transcript").show();
-        } else {
-          $("#predefined_transcript").hide();
-        }
+        showSpecificFields();
     });
     socket.on('connect', function (data) {
       socket.emit('get-ac-configs');
@@ -493,27 +962,28 @@ McLean, VA 22102-7539, (703) 983-6000.
     });
 
     function load_config(ext) {
-            $.get("./loadACConfig", {
-                "extension": ext
-            },
-            function (data, status) {
-                console.log("loading: ", data);
-                set_setting(data);
-            });
+        $.get("./loadACConfig", {
+            "extension": ext
+        },
+        function (data, status) {
+            console.log("loading: ", data);
+            set_setting(data);
+            showSpecificFields();
+        });
     }
 
     function save_config(data) {
-            $.get("./saveACConfig", {
-                "data": data
-            },
-            function (data, status) {
-                console.log("config saved");
-                $('#snackbar').html("Saved");
-                $('#snackbar').addClass("show");
-                setTimeout(function () {
-                    $('#snackbar').removeClass("show");
-                }, 3000)
-            });
+        $.post("./saveACConfig", {
+            "data": data
+        },
+        function (data, status) {
+            console.log("config saved");
+            $('#snackbar').html("Saved");
+            $('#snackbar').addClass("show");
+            setTimeout(function () {
+                $('#snackbar').removeClass("show");
+            }, 3000)
+        });
     }
 
     function testThisFunc(){
@@ -524,22 +994,66 @@ McLean, VA 22102-7539, (703) 983-6000.
     }
 
 
-    function showPrecanned(){
-        if ($('#stt_engine').val() == "PREDEFINED") {
+    function showSpecificFields(){
+        const val = $('#stt_engine').val();
+        if (val == "PREDEFINED") {
           $("#predefined_transcript").show();
         } else {
           $("#predefined_transcript").hide();
         }
+        if (val == "WATSON") {
+          $("#watsonDiv").show();
+        } else {
+          $("#watsonDiv").hide();
+        }
+        if (val == "GOOGLE") {
+          $("#googleDiv").show();
+        } else {
+          $("#googleDiv").hide();
+        }
+        if (val == "AZURE") {
+          $("#azureDiv").show();
+        } else {
+          $("#azureDiv").hide();
+        }
+        if (val == "AMAZON") {
+          $("#amazonDiv").show();
+        } else {
+          $("#amazonDiv").hide();
+        }
+        showCSPWarning(val);
+    }
+  
+    function showCueTranscript(cue_prefix){
+      var transcript = $('#'+ cue_prefix +'_id option').filter(':selected').attr('data-transcript');
+      $('#'+ cue_prefix +'_transcript').html(transcript);
     }
 
+    function toggleRepeatDelay(){
+      $('#repeatDelaySlider').attr('hidden', $("input[name='typingRadio']:checked").val() != 'repeat');
+    }
+  
+    function toggleSimulations(){
+      $('.incomingDropoutContainer').attr('hidden', !$('#dropout_incoming_enabled').is(":checked"));
+      $('.outgoingDropoutContainer').attr('hidden', !$('#dropout_outgoing_enabled').is(":checked"));
+      $('#incoming_noise_container').attr('hidden', !$('#background_noise_incoming_enabled').is(":checked"));
+      $('#outgoing_noise_container').attr('hidden', !$('#background_noise_outgoing_enabled').is(":checked"));
+      $('#stt_dropout_container').attr('hidden', !$('#stt_dropout_enabled').is(":checked"));
+    }
+  
     $('#save_btn').on('click', function (e) {
       var data = {};
       data.extension = $('#curExtension').val();
       data.stt_engine = $('#stt_engine').val();
       data.source_language = $('#source_language').val();
       data.stt_show_final_caption = $('#stt_show_final_caption').prop('checked');
+      data.auto_punctuation = $('#autoPunctuation').prop('checked');
+      data.v2 = $('#v2').prop('checked');
       data.stt_show_entity_sentiment = $('#stt_show_entity_sentiment').val();
       data.delay = $('#delay').val();
+      data.background_audio_suppression = $('#background').val();
+      data.speech_detector_sensitivity = $('#speechDetector').val();
+      data.caller_captions_enabled = $('#caller_captions_enabled').prop('checked');
 
       data.translation_engine = $('#translation_engine').val();
       data.target_language = $('#target_language').val();
@@ -549,6 +1063,8 @@ McLean, VA 22102-7539, (703) 983-6000.
       data.tts_voice = $('#tts_voice').val();
       data.tts_enabled = $('#tts_enabled').prop('checked');
       data.ARIA_settings = $('#ARIA_settings').val();
+
+      data.steno_enabled = $('#steno_enabled').prop('checked');
 
       data.confidence_show_word = $('#confidence_show_word').prop('checked');
       data.confidence_show_phrase = $('#confidence_show_phrase').prop('checked');
@@ -560,21 +1076,87 @@ McLean, VA 22102-7539, (703) 983-6000.
       data.confidence_italicize = $('#confidence_italicize').prop('checked');
       data.confidence_underline = $('#confidence_underline').prop('checked');
 
+      data.dual_enabled = $('#dual_enabled').prop('checked');
+      data.dual_font_color = $('#dual_font_color').val();
+      data.caller_confidence_show_word = $('#caller_confidence_show_word').prop('checked');
+      data.caller_confidence_show_phrase = $('#caller_confidence_show_phrase').prop('checked');
+      data.caller_confidence_upper_lim = $('#caller_confidence_upper_lim').val();
+      data.caller_confidence_lower_lim = $('#caller_confidence_lower_lim').val();
+      data.caller_confidence_upper_color = $('#caller_confidence_upper_color').val();
+      data.caller_confidence_lower_color = $('#caller_confidence_lower_color').val();
+      data.caller_confidence_bold = $('#caller_confidence_bold').prop('checked');
+      data.caller_confidence_italicize = $('#caller_confidence_italicize').prop('checked');
+      data.caller_confidence_underline = $('#caller_confidence_underline').prop('checked');
+
       data.iprelay = $('#iprelay').prop('checked');
       data.iprelay_scenario = $('#iprelay_scenario').val();
 
       data.predefined_id = $('#predefined_id').val();
-      console.log("id is: " + data.predefined_id);
-      save_config(data)
+
+      data.greeting_id = $("#greeting_id").val();
+      data.greeting_delay = $("#greeting_delay").val();
+      data.greeting_show_transcript = $("#greeting_show_transcript").prop('checked');
+      data.typing_id = $("#typing_id").val();
+      data.typing_repeat = $("#typing_radio_repeat").prop('checked');
+      data.typing_repeat_delay = $("#typing_repeat_delay").val();
+      data.typing_show_transcript = $("#typing_show_transcript").prop('checked');
+
+      data.dropout_incoming_enabled = $('#dropout_incoming_enabled').prop('checked');
+      data.dropout_outgoing_enabled = $('#dropout_outgoing_enabled').prop('checked');
+      [data.dropout_incoming_length_min, data.dropout_incoming_length_max]  = $('#dropout_incoming_length').bootstrapSlider('getValue');
+      [data.dropout_incoming_interval_min, data.dropout_incoming_interval_max] = $('#dropout_incoming_interval').bootstrapSlider('getValue');
+      [data.dropout_outgoing_length_min, data.dropout_outgoing_length_max]  = $('#dropout_outgoing_length').bootstrapSlider('getValue');
+      [data.dropout_outgoing_interval_min, data.dropout_outgoing_interval_max] = $('#dropout_outgoing_interval').bootstrapSlider('getValue');
+
+      data.background_noise_incoming_enabled = $('#background_noise_incoming_enabled').prop('checked');
+      data.background_noise_outgoing_enabled = $('#background_noise_outgoing_enabled').prop('checked');
+      data.background_noise_incoming_id = $("#background_noise_incoming_id").val();
+      data.background_noise_outgoing_id = $("#background_noise_outgoing_id").val();
+
+      data.stt_dropout_enabled  = $('#stt_dropout_enabled').prop('checked');
+      data.stt_dropout_interval = $("#stt_dropout_interval").val();
+      [data.stt_dropout_length_min, data.stt_dropout_length_max] = $('#stt_dropout_length').bootstrapSlider('getValue');
+
+      save_config(data);
     });
 
     var slider = document.getElementById("delay");
     var output = document.getElementById("delayVar");
+
+    var sliderBackground = document.getElementById("background");
+    var outputBackgroud = document.getElementById("backgroundVar");
+
+    var sliderSpeechDetector = document.getElementById("speechDetector");
+    var outputSpeechDetector = document.getElementById("speechDetectorVar");
+
+    var sliderGreetingDelay = document.getElementById("greeting_delay");
+    var outputGreetingDelay = document.getElementById("greeting_delay_val");
+
+    var sliderTypingDelay = document.getElementById("typing_repeat_delay");
+    var outputTypingDelay = document.getElementById("typing_repeat_delay_val");
+
     output.innerHTML = slider.value; // Display the default slider value
+    outputBackgroud.innerHTML = slider.value; // Display the default slider value
 
     // Update the current slider value (each time you drag the slider handle)
     slider.oninput = function() {
-    output.innerHTML = this.value + "s delay";
+      output.innerHTML = (Math.round(this.value * 100) / 100).toFixed(2) + "s delay";
+    }
+
+    sliderBackground.oninput = function() {
+      outputBackgroud.innerHTML = (Math.round(this.value * 100) / 100).toFixed(2) + " background audio suppression";
+    }
+
+    sliderSpeechDetector.oninput = function() {
+      outputSpeechDetector.innerHTML = (Math.round(this.value * 100) / 100).toFixed(2) + " speech detector sensitivity";
+    }
+
+    sliderGreetingDelay.oninput = function() {
+      outputGreetingDelay.innerHTML = (Math.round(this.value * 100) / 100).toFixed(2) + "s delay";
+    }
+    
+    sliderTypingDelay.oninput = function() {
+      outputTypingDelay.innerHTML = (Math.round(this.value * 100) / 100).toFixed(2) + "s delay";
     }
 
     function set_setting(data){
@@ -582,9 +1164,17 @@ McLean, VA 22102-7539, (703) 983-6000.
         $('#stt_engine').val(data.stt_engine);
         $('#source_language').val(data.source_language);
         $('#stt_show_final_caption').prop('checked', data.stt_show_final_caption);
+        $('#autoPunctuation').prop('checked', data.auto_punctuation);
+        $('#v2').prop('checked', data.v2);
         $('#stt_show_entity_sentiment').val(data.stt_show_entity_sentiment);
-        $('#delayVar').text(data.delay + "s delay")
+        $('#delayVar').text((Math.round(data.delay * 100) / 100).toFixed(2) + "s delay")
         $('#delay').val(data.delay);
+        $('#backgroundVar').text((Math.round(data.background_audio_suppression * 100) / 100).toFixed(2) + " background audio suppression")
+        $('#background').val(data.background_audio_suppression);
+        $('#speechDetectorVar').text((Math.round(data.speech_detector_sensitivity * 100) / 100).toFixed(2) + " speech detector sensitivity")
+        $('#speechDetector').val(data.speech_detector_sensitivity);
+        $('#caller_captions_enabled').prop('checked', data.caller_captions_enabled);
+
 
         $('#translation_engine').val(data.translation_engine);
         $('#target_language').val(data.target_language);
@@ -593,6 +1183,8 @@ McLean, VA 22102-7539, (703) 983-6000.
         $('#tts_translate').prop('checked', data.tts_translate);
         $('#tts_voice').val(data.tts_voice);
         $('#tts_enabled').prop('checked', data.tts_enabled);
+
+        $('#steno_enabled').prop('checked', data.steno_enabled);
 
         $('#ARIA_settings').val(data.ARIA_settings);
 
@@ -606,10 +1198,74 @@ McLean, VA 22102-7539, (703) 983-6000.
         $('#confidence_italicize').prop('checked', data.confidence_italicize);
         $('#confidence_underline').prop('checked', data.confidence_underline);
 
+        $('#dual_enabled').prop('checked', data.dual_enabled);
+        $('#dual_font_color').val(data.dual_font_color);
+        $('#caller_confidence_show_word').prop('checked', data.caller_confidence_show_word);
+        $('#caller_confidence_show_phrase').prop('checked', data.caller_confidence_show_phrase);
+        $('#caller_confidence_upper_lim').val(data.caller_confidence_upper_lim);
+        $('#caller_confidence_lower_lim').val(data.caller_confidence_lower_lim);
+        $('#caller_confidence_upper_color').val(data.caller_confidence_upper_color);
+        $('#caller_confidence_lower_color').val(data.caller_confidence_lower_color);
+        $('#caller_confidence_bold').prop('checked', data.caller_confidence_bold)
+        $('#caller_confidence_italicize').prop('checked', data.caller_confidence_italicize);
+        $('#caller_confidence_underline').prop('checked', data.caller_confidence_underline);
+
         $('#iprelay').prop('checked', data.iprelay);
+        console.log("ip: " + data.iprelay_scenario);
         $('#iprelay_scenario').val(data.iprelay_scenario);
 
         $('#predefined_id').val(data.predefined_id);
+
+        $('#greeting_id').val(data.greeting_id || '-1');
+        $('#greeting_delay_val').text((Math.round(data.greeting_delay * 100) / 100).toFixed(2) + "s delay")
+        $('#greeting_delay').val(data.greeting_delay);
+        $('#typing_id').val(data.typing_id || '-1');
+        $('#typing_radio_repeat').prop('checked', data.typing_repeat);
+        $('#typing_repeat_delay').val(data.typing_repeat_delay);
+
+        $('#dropout_incoming_enabled').prop('checked', data.dropout_incoming_enabled);
+        $('#dropout_outgoing_enabled').prop('checked', data.dropout_outgoing_enabled);
+
+        $("#dropout_incoming_interval").bootstrapSlider().bootstrapSlider('setValue',
+          [ data.dropout_incoming_interval_min || 2000, 
+            data.dropout_incoming_interval_max || 2000 ]
+        );
+
+        $("#dropout_incoming_length").bootstrapSlider().bootstrapSlider('setValue',
+          [ data.dropout_incoming_length_min || 100, 
+            data.dropout_incoming_length_max || 200 ]
+        );
+        
+        $("#dropout_outgoing_interval").bootstrapSlider().bootstrapSlider('setValue',
+          [ data.dropout_outgoing_interval_min || 2000, 
+            data.dropout_outgoing_interval_max || 2000 ]
+        );
+
+        $("#dropout_outgoing_length").bootstrapSlider().bootstrapSlider('setValue',
+          [ data.dropout_outgoing_length_min || 100, 
+            data.dropout_outgoing_length_max || 200 ]
+        );
+
+        $("#stt_dropout_interval").bootstrapSlider().bootstrapSlider('setValue', data.stt_dropout_interval || 1 );
+
+        $("#stt_dropout_length").bootstrapSlider().bootstrapSlider('setValue',
+          [ data.stt_dropout_length_min || 100, 
+            data.stt_dropout_length_max || 200 ]
+        );
+
+        $('#background_noise_incoming_enabled').prop('checked', data.background_noise_incoming_enabled);
+        $('#background_noise_outgoing_enabled').prop('checked', data.background_noise_outgoing_enabled);
+        $('#background_noise_incoming_id').val(data.background_noise_incoming_id ? data.background_noise_incoming_id:'-1');
+        $('#background_noise_outgoing_id').val(data.background_noise_outgoing_id ? data.background_noise_outgoing_id:'-1');
+
+        $('#stt_dropout_enabled').prop('checked', data.stt_dropout_enabled);
+
+        toggleRepeatDelay();
+        toggleSimulations();
+        showCueTranscript('greeting');
+        showCueTranscript('typing');
+        showCueTranscript('background_noise_incoming');
+        showCueTranscript('background_noise_outgoing');
     }
 
     function addExtension() {
@@ -627,26 +1283,73 @@ McLean, VA 22102-7539, (703) 983-6000.
         });
     }
 
+    function resetDropoutSlider(name, defaultMin, defaultMax){
+      if(defaultMax){
+        $("#"+name).bootstrapSlider('setValue', 
+          [ device_setting[name+'_min'] ? device_setting[name+'_min'] : defaultMin, 
+            device_setting[name+'_max'] ? device_setting[name+'_max'] : defaultMax ]);
+      }
+      else{
+        // Not a dual slider
+        $("#"+name).bootstrapSlider('setValue', device_setting[name] ? device_setting[name] : defaultMin);
+      }
+    }
+
+    // if engine == AMAZON, check if creds are valid
+    function showCSPWarning(engine){
+      $("#aws-cred-warning").hide();
+      if(engine==='AMAZON'){
+        $.get("amazon-mfa-status", {},
+            function (resp, status) {
+              if(resp === 'invalid'){
+                $("#aws-cred-warning").show()
+              }
+            }
+          );
+      }
+    }
+
+    $("#background_audio_suppression_button").on("click", function () {
+      var outputBackgroud = document.getElementById("backgroundVar");
+      outputBackgroud.innerHTML = "0.50 background audio suppression";
+
+      $('#background').val(0.5);      
+    });
+
+    $("#speech_detector_sensitivity_button").on("click", function () {
+      var outputSpeechDetector = document.getElementById("speechDetectorVar");
+      outputSpeechDetector.innerHTML = "0.50 speech detector sensitivity";
+
+      $('#speechDetector').val(0.5);    
+    });
+
+    $("#greeting_delay_button").on("click", function () {
+      document.getElementById("greeting_delay_val").innerHTML = "0.50s delay";
+      $('#greeting_delay').val(0.5);    
+    });
+
+    $("#typing_repeat_delay_button").on("click", function () {
+      document.getElementById("typing_repeat_delay_val").innerHTML = "0.25s delay";
+      $('#repeat_delay').val(0.25);      
+    });
+
     //$("#AddModifyExtensionForm").submit(function (event) {
     $("#saveExtension").on("click", function () {
-      //event.preventDefault();
-      console.log("hererere")
       $.post("./UpdateConfig", {
         "extension": $('#inputExtension').val(),
-        "name": $('#inputDeviceName').val(),
-        "stt_engine": $('#configEngine').val(),
-        "translation_engine": $('#translationEngine').val(),
-        "source_language": $('#calleeLanguage').val(),
-        "target_language": $('#callerLanguage').val(),
-        "aria_settings": $('#ariaSettings').val(),
-        "delay": $('#delaySlider').bootstrapSlider('getValue')
+         "name": $('#inputDeviceName').val() //,
       },
         function (data, status) {
           console.log("Saved!!!!")
           location.reload();
         });
     });
-
+  
+    // Prevent annoying scroll behavior
+    $(".helpPopover").on("click", function (e) {
+      e.preventDefault();
+      return false;
+    });
   </script>
 </body>
 

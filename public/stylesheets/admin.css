@@ -2,7 +2,7 @@
                                  NOTICE
 
 This (software/technical data) was produced for the U. S. Government under
-Contract Number HHSM-500-2012-00008I, and is subject to Federal Acquisition
+Contract Number 75FCMC18D0047/75FCMC23D0004, and is subject to Federal Acquisition
 Regulation Clause 52.227-14, Rights in Data-General. No other use other than
 that granted to the U. S. Government, or to those acting on behalf of the U. S.
 Government under that Clause is authorized without the express written
@@ -10,7 +10,7 @@ permission of The MITRE Corporation. For further information, please contact
 The MITRE Corporation, Contracts Management Office, 7515 Colshire Drive,
 McLean, VA 22102-7539, (703) 983-6000.
 
-                        ©2018 The MITRE Corporation.
+                        ©2024 The MITRE Corporation.
 */
 
 .nav>li>a {
@@ -131,14 +131,90 @@ However, delay the fade out process for 2.5 seconds */
     font-family: monospace;
 }
 
-.slider.slider-horizontal{
-    width:1400px; /* sample value - set it as you like*/
+  .loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 60px;
+    height: 60px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+  }
+
+  /* Safari */
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
   }
   
-  .slider.slider-vertical{
-    writing-mode: bt-lr; /* IE */
-    -webkit-appearance: slider-vertical; /* Chromium */
-    width: 8px;
-    height: 175px;
-    padding: 0 5px;
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
+
+
+.slider .tooltip-inner{
+    background-color: grey;
+}
+
+.slider .arrow::before{
+    border-top-color:grey !important;
+    border-bottom-color:grey !important;
+}
+
+.slider .tooltip{
+    z-index: 1;
+}
+
+#dropout_incoming_interval_slider .slider-selection{
+    background: #0480BE;
+}
+
+#dropout_incoming_length_slider .slider-selection{
+    background: #0480BE;
+}
+
+#dropout_outgoing_interval_slider .slider-selection{
+    background: #0480BE;
+}
+
+#dropout_outgoing_length_slider .slider-selection{
+    background: #0480BE;
+}
+
+.rangeSlideContainer{
+    margin-left: 25px;
+}
+
+.languageSelect{
+    margin-right: 20px !important;
+}
+
+#test_stt_btn{
+    margin-top: 5px;
+}
+
+.test_hidden{
+    display: none;
+}
+
+.aws-cred-warning {
+    line-height: .8;
+    margin-left: 50px;
+}
+
+.user-actions {
+    padding-left: 20px !important;
+}
+
+.btn-delete-user {
+    margin-left: 40px;
+}
+
+.pwd-hidden {
+    display: none;
+}
+
+.pwd-warning-block {
+    margin-top: 10px;
+}

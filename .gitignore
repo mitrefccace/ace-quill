@@ -4,11 +4,22 @@ logs/*.log*
 uploads/scenarios/*.wav
 uploads/iprelay/*.wav
 uploads/recordings/*.webm
+uploads/recordings/*.wav
+uploads/accuracy/*.txt
+uploads/transcription/*.txt
+uploads/transcription/*.wav
+uploads/audible_cues/*.wav
+resources/*.txt
+resources/*.trn
 texttospeech/audiofiles/*.mp3
 configs/*.json
+configs/config.js
 configs/**/*.json
+resources/SCKT/
+recources/ace-code-master/
 .DS_Store
-
+*/.DS_Store
+*/*/.DS_Store
 
 
 
